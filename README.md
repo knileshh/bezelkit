@@ -7,7 +7,7 @@ Text gets stretched, tab bars get cropped and headers disappear under the notch.
 ![bezelkit: typical mockup vs fit="auto"](assets/og-image.png) One zero-dependency web component covering iPhone, Android, iPad, Galaxy Tab, Apple Watch, MacBook, iMac, Studio Display and browser windows.
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/bezelkit"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/bezelkit@0/dist/bezelkit.js"></script>
 
 <bezel-device device="iphone-17-pro" src="screenshot.png"></bezel-device>
 ```

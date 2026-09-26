@@ -15,10 +15,12 @@
   "module": "./src/bezel.js",
   "exports": {
     ".": "./src/bezel.js",
-    "./devices": "./src/devices.js"
+    "./devices": "./src/devices.js",
+    "./bundle": "./dist/bezelkit.js"
   },
   "files": [
     "src",
+    "dist",
     "README.md",
     "LICENSE"
   ],
@@ -26,7 +28,9 @@
     "./src/bezel.js"
   ],
   "scripts": {
-    "dev": "python -m http.server 8766"
+    "dev": "python -m http.server 8766",
+    "build": "node scripts/build.mjs",
+    "prepublishOnly": "node scripts/build.mjs"
   },
   "keywords": [
     "mockup",
@@ -39,5 +43,7 @@
     "screenshot",
     "custom-element"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "jsdelivr": "./dist/bezelkit.js",
+  "unpkg": "./dist/bezelkit.js"
 }

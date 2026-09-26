@@ -893,7 +893,7 @@ function apply() {
   const attrStr = Object.entries(shown).map(([k, v]) => v === '' ? ` <span class="tok-attr">${k}</span>` : ` <span class="tok-attr">${k}</span>=<span class="tok-str">"${escapeHtml(v)}"</span>`).join('');
   const inner = state.source === 'html' && !src ? '\n  <span style="opacity:.6">&lt;!-- your HTML --&gt;</span>\n' : '';
   document.getElementById('snippet').innerHTML =
-    `<span style="opacity:.55">&lt;!-- once, anywhere on the page --&gt;</span>\n<span class="tok-tag">&lt;script</span> <span class="tok-attr">type</span>=<span class="tok-str">"module"</span> <span class="tok-attr">src</span>=<span class="tok-str">"https://cdn.jsdelivr.net/npm/bezelkit"</span><span class="tok-tag">&gt;&lt;/script&gt;</span>\n\n<span class="tok-tag">&lt;bezel-device</span>${attrStr}<span class="tok-tag">&gt;</span>${inner}<span class="tok-tag">&lt;/bezel-device&gt;</span>`;
+    `<span style="opacity:.55">&lt;!-- once, anywhere on the page --&gt;</span>\n<span class="tok-tag">&lt;script</span> <span class="tok-attr">type</span>=<span class="tok-str">"module"</span> <span class="tok-attr">src</span>=<span class="tok-str">"https://cdn.jsdelivr.net/npm/bezelkit@0/dist/bezelkit.js"</span><span class="tok-tag">&gt;&lt;/script&gt;</span>\n\n<span class="tok-tag">&lt;bezel-device</span>${attrStr}<span class="tok-tag">&gt;</span>${inner}<span class="tok-tag">&lt;/bezel-device&gt;</span>`;
 }
 const escapeHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 

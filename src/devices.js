@@ -51,6 +51,7 @@ export function defineDevice(spec) {
   }
   const device = Object.freeze({ kind: 'phone', brand: '', colors: [['Default', '#2b2b2e']], ...spec });
   registry.set(device.id, device);
+  globalThis.dispatchEvent?.(new CustomEvent('bezelkit:define', { detail: { id: device.id } }));
   return device;
 }
 

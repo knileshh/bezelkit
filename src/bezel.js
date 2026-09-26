@@ -11,6 +11,20 @@ const VID_RE = /(^data:video\/)|\.(mp4|webm|mov|m4v|ogv)([?#]|$)/i;
 // Single quotes only: this is interpolated into style="…" attributes.
 const FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, system-ui, sans-serif";
 const DEFAULT_FRONT = '#050506';
+// Hex, named colours and colour functions with numeric arguments only: no var(), url() or quotes.
+const SAFE_COLOR = /^(#[0-9a-f]{3,8}|[a-z]{3,30}|(rgba?|hsla?|hwb|lab|lch|oklab|oklch)\([\d\s.,%/+-]*(deg|turn|rad)?[\d\s.,%/+-]*\))$/i;
+
+// H1: allow only schemes that can't run script in the host page.
+function safeSrc(src) {
+  if (!src) return null;
+  try {
+    const u = new URL(src, document.baseURI);
+    if (u.protocol === 'http:' || u.protocol === 'https:' || u.protocol === 'blob:') return src;
+    if (u.protocol === 'data:' && /^data:(image|video)\//i.test(src)) return src;
+  } catch { /* fall through */ }
+  console.warn(`bezelkit: refusing to load src with an unsupported scheme: ${String(src).slice(0, 40)}`);
+  return null;
+}
 
 const STYLES = `
 :host { display: block; position: relative; width: 100%; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -67,7 +81,7 @@ function resolveColor(device, value) {
   if (value) {
     const hit = device.colors.find(([name]) => slug(name) === slug(value));
     if (hit) return { name: hit[0], frame: hit[1], front: hit[2] ?? DEFAULT_FRONT };
-    if (globalThis.CSS?.supports?.('color', value)) {
+    if (SAFE_COLOR.test(value) && globalThis.CSS?.supports?.('color', value)) {
       return { name: value, frame: value, front: defFront ?? DEFAULT_FRONT };
     }
   }
@@ -433,6 +447,7 @@ export class BezelDevice extends HTMLElement {
   #size = { W: 0, H: 0 };
   #box = { w: 0, h: 0 };
   #mediaKey = null;
+  #fitKey = null;
   #kind = 'slot';
   #natural = null;
   #fit = 'cover';
@@ -458,13 +473,16 @@ export class BezelDevice extends HTMLElement {
     this.#back = q('.back');
   }
 
+  #onDefine = (e) => { if (getDevice(this.getAttribute('device') || 'iphone-17-pro')?.id === e.detail.id) this.#render(); };
+
   connectedCallback() {
+    addEventListener('bezelkit:define', this.#onDefine);
     this.#render();
     this.#ro ??= new ResizeObserver(() => this.#scale());
     this.#ro.observe(this);
   }
 
-  disconnectedCallback() { this.#ro?.disconnect(); }
+  disconnectedCallback() { this.#ro?.disconnect(); removeEventListener('bezelkit:define', this.#onDefine); }
 
   attributeChangedCallback() {
     if (!this.isConnected || this.#queued) return;
@@ -505,7 +523,7 @@ export class BezelDevice extends HTMLElement {
     this.#size = { W: S.W, H: S.H };
 
     // media kind
-    const src = attr('src');
+    const src = safeSrc(attr('src'));
     const type = attr('type');
     this.#kind = !src ? 'slot' : type && ['image', 'video', 'iframe'].includes(type) ? type : IMG_RE.test(src) || src.startsWith('blob:') ? 'image' : VID_RE.test(src) ? 'video' : 'iframe';
     const interactive = this.#kind === 'slot' || this.#kind === 'iframe';
@@ -638,7 +656,9 @@ export class BezelDevice extends HTMLElement {
     const fit = this.#kind === 'image' || this.#kind === 'video' ? resolveFit(req, this.#kind, media, this.#box) : 'cover';
     this.#fit = fit;
     this.#media.dataset.fit = fit;
-    if (media) {
+    const fitKey = media && `${this.#mediaKey}|${fit}|${media.w}x${media.h}|${this.#box.w}x${this.#box.h}`;
+    if (media && fitKey !== this.#fitKey) {
+      this.#fitKey = fitKey;
       const mediaRatio = media.w / media.h, screenRatio = this.#box.w / this.#box.h;
       this.dispatchEvent(new CustomEvent('bezel-fit', {
         bubbles: true,
