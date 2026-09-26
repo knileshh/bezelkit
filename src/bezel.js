@@ -48,6 +48,7 @@ const STYLES = `
 .media[data-fit="scroll"] > img { height: auto; }
 ::slotted(img), ::slotted(video) { display: block; width: 100%; height: 100%; object-fit: cover; }
 .chrome, .cutout, .glare { position: absolute; inset: 0; pointer-events: none; }
+.ring { position: absolute; box-sizing: border-box; pointer-events: none; }
 .chrome > *, .cutout > * { position: absolute; box-sizing: border-box; }
 .chrome { z-index: 2; } .cutout { z-index: 3; } .glare { z-index: 4; display: none; }
 :host([glare]:not([glare="false"])) .glare { display: block; background: linear-gradient(115deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.05) 26%, transparent 40%); }
@@ -94,6 +95,19 @@ const metal = (c) =>
   `linear-gradient(135deg, ${lighten(c, 38)} 0%, ${c} 18%, ${darken(c, 22)} 48%, ${c} 80%, ${lighten(c, 30)} 100%)`;
 const div = (cls, style, inner = '') => `<div class="${cls}" style="${style}">${inner}</div>`;
 const lens = (d) => `border-radius:50%;background:radial-gradient(circle at 35% 35%, #33455a 0 14%, #0b0d12 46%, #000 70%);width:${d}px;height:${d}px`;
+// Inside a Dynamic Island the camera is barely darker-than-black on Apple's art, not a visible bead.
+const islandLens = (d) => `border-radius:50%;background:radial-gradient(circle at 40% 40%, #10141b 0 30%, #050608 60%, #000 75%);opacity:.6;width:${d}px;height:${d}px`;
+
+// Rim cross-section, drawn over the .body: concentric inset bands (outer dark line, specular band, falloff
+// toward the glass) that follow the rounded outline like a tube, then one soft top-lit/bottom-dark overlay.
+function rimShade(x, y, w, h, r, rim, c) {
+  const at = `left:${x}px;top:${y}px;width:${w}px;height:${h}px;border-radius:${r}px;pointer-events:none`;
+  const band = (f, col) => `inset 0 0 0 ${+(rim * f).toFixed(2)}px ${col}`;
+  return div('rimband', `${at};box-shadow:${[band(0.15, darken(c, 55)), band(0.3, lighten(c, 25)), band(0.45, lighten(c, 50)), band(0.65, lighten(c, 14)), band(0.85, darken(c, 16))].join(', ')}`) +
+    div('rimlight', `${at};background:linear-gradient(to bottom, rgba(255,255,255,.16), transparent 30% 70%, rgba(0,0,0,.16))`);
+}
+// Black glass meets the rim with a dark edge and a faint polished hairline.
+const glassEdge = (front) => `box-shadow:inset 0 0 0 1px ${darken(front, 60)}, inset 0 0 0 1.75px rgba(255,255,255,.18)`;
 
 function resolveColor(device, value) {
   const [defName, defFrame, defFront] = device.colors[0];
@@ -112,13 +126,16 @@ function button(b, x0, y0, bw, bh, color) {
   const bg = b.color ?? (b.crown
     ? `repeating-linear-gradient(to bottom, ${darken(color, 25)} 0 2px, ${lighten(color, 15)} 2px 4px)`
     : `linear-gradient(to right, ${darken(color, 20)}, ${lighten(color, 20)}, ${darken(color, 15)})`);
-  const r = Math.min(t, 3);
+  // Rounded end caps (radius across = protrusion, along = ~2.5× that), a dark seam against the frame and a
+  // lit leading end. Crowns stay squarer. The first px of each button sits under the body.
+  const r = b.crown ? Math.min(t, 4) : t, e = b.crown ? r : Math.min(b.len / 2, t * 2.5);
+  const lit = 'rgba(255,255,255,.35)', dim = 'rgba(0,0,0,.25)', seam = 'rgba(0,0,0,.35)';
   if (b.side === 'top') {
-    return div('btn', `left:${x0 + b.at}px;top:${y0 - t}px;width:${b.len}px;height:${t + 1}px;border-radius:${r}px ${r}px 0 0;background:${bg}`);
+    return div('btn', `left:${x0 + b.at}px;top:${y0 - t}px;width:${b.len}px;height:${t + 1}px;border-radius:${e}px ${e}px 0 0 / ${r}px ${r}px 0 0;background:${bg};box-shadow:inset 0 -2px 0 ${seam}, inset 1px 0 0 ${lit}, inset -1px 0 0 ${dim}`);
   }
-  const left = b.side === 'left' ? x0 - t : x0 + bw - 1;
-  const radius = b.side === 'left' ? `${r}px 0 0 ${r}px` : `0 ${r}px ${r}px 0`;
-  return div('btn', `left:${left}px;top:${y0 + b.at}px;width:${t + 1}px;height:${b.len}px;border-radius:${radius};background:${bg}`);
+  const L = b.side === 'left', left = L ? x0 - t : x0 + bw - 1;
+  const radius = L ? `${r}px 0 0 ${r}px / ${e}px 0 0 ${e}px` : `0 ${r}px ${r}px 0 / 0 ${e}px ${e}px 0`;
+  return div('btn', `left:${left}px;top:${y0 + b.at}px;width:${t + 1}px;height:${b.len}px;border-radius:${radius};background:${bg};box-shadow:inset ${L ? -2 : 2}px 0 0 ${seam}, inset 0 1px 0 ${lit}, inset 0 -1px 0 ${dim}`);
 }
 
 // Camera dot sitting in a bezel, centred on one side of the rectangle (x, y, w, h).
@@ -126,6 +143,8 @@ function bezelCamera(cut, x, y, w, h, bz) {
   if (!cut || cut.type !== 'camera') return '';
   const d = cut.d ?? 8;
   if (cut.side === 'left') return div('cam', `left:${x + (bz.l - d) / 2}px;top:${y + (h - d) / 2}px;${lens(d)}`);
+  // 'right' = the landscape top edge of iPad Pro/Air and Galaxy Tab (landscape turns the frame -90°)
+  if (cut.side === 'right') return div('cam', `left:${x + w - bz.r + (bz.r - d) / 2}px;top:${y + (h - d) / 2}px;${lens(d)}`);
   return div('cam', `left:${x + (w - d) / 2}px;top:${y + (bz.t - d) / 2}px;${lens(d)}`);
 }
 
@@ -137,7 +156,7 @@ function screenCutout(cut, w) {
     case 'island-v': { // vertical Dynamic Island in the top-right corner (iPhone Duo)
       const x = w - cut.right - cut.w;
       return div('island', `left:${x}px;top:${cut.top}px;width:${cut.w}px;height:${cut.h}px;border-radius:${cut.w / 2}px;background:#000`) +
-        div('lens', `left:${x + cut.w * 0.28}px;top:${cut.top + cut.w * 0.28}px;${lens(cut.w * 0.44)}`);
+        div('lens', `left:${x + cut.w * 0.28}px;top:${cut.top + cut.w * 0.28}px;${islandLens(cut.w * 0.44)}`);
     }
     case 'flexcam': { // rear cameras the cover screen wraps around (Galaxy Z Flip)
       const d = cut.d, g = cut.gap ?? 8, ring = `;box-shadow:0 0 0 3px #2b2d31, 0 0 0 4.5px #8a8d93`;
@@ -146,7 +165,7 @@ function screenCutout(cut, w) {
     }
     case 'island':
       return div('island', `left:${cx}px;top:${cut.top}px;width:${cut.w}px;height:${cut.h}px;border-radius:${cut.h / 2}px;background:#000`) +
-        div('lens', `left:${cx + cut.w - cut.h * 0.78}px;top:${cut.top + cut.h * 0.28}px;${lens(cut.h * 0.44)}`);
+        div('lens', `left:${cx + cut.w - cut.h * 0.78}px;top:${cut.top + cut.h * 0.28}px;${islandLens(cut.h * 0.44)}`);
     case 'notch':
     case 'mac-notch': {
       const ear = cut.type === 'notch' ? 6 : 4;
@@ -176,16 +195,17 @@ function buildHandheld(d, color, screen) {
 
   let f = (d.buttons ?? []).map((b) => button(b, x0, y0, bw, bh, color.frame)).join('');
   f += div('body', `left:${x0}px;top:${y0}px;width:${bw}px;height:${bh}px;border-radius:${br}px;background:${metal(color.frame)}`);
-  f += div('glass', `left:${gx}px;top:${gy}px;width:${bw - rim * 2}px;height:${bh - rim * 2}px;border-radius:${Math.max(br - rim, 0)}px;background:${color.front};box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)`);
+  f += rimShade(x0, y0, bw, bh, br, rim, color.frame);
+  f += div('glass', `left:${gx}px;top:${gy}px;width:${bw - rim * 2}px;height:${bh - rim * 2}px;border-radius:${Math.max(br - rim, 0)}px;background:${color.front};${glassEdge(color.front)}`);
   f += bezelCamera(d.cutout, gx, gy, bw - rim * 2, bh - rim * 2, bz);
 
-  if (d.earpiece) {
-    const cx = gx + (bw - rim * 2) / 2;
-    f += div('ear', `left:${cx - 26}px;top:${gy + bz.t / 2 - 3}px;width:52px;height:6px;border-radius:3px;background:#1a1b1e;box-shadow:inset 0 1px 1px #000`);
-    f += div('cam', `left:${cx - 3}px;top:${gy + bz.t / 2 - 26}px;${lens(8)}`);
+  if (d.earpiece) { // iPhone SE: 76 × 8 pt receiver, FaceTime camera level with it on the left
+    const cx = gx + (bw - rim * 2) / 2, cy = gy + bz.t / 2;
+    f += div('ear', `left:${cx - 38}px;top:${cy - 4}px;width:76px;height:8px;border-radius:4px;background:#1a1b1e;box-shadow:inset 0 1px 1px #000`);
+    f += div('cam', `left:${cx - 68 - 5}px;top:${cy - 5}px;${lens(10)}`);
   }
-  if (d.home === 'button') {
-    const s = Math.min(bz.b * 0.62, 66);
+  if (d.home === 'button') { // SE: Ø 10.9 mm ≈ 70 pt, ~0.64 of the bottom border
+    const s = (bz.b + rim) * 0.64;
     f += div('home', `left:${gx + (bw - rim * 2 - s) / 2}px;top:${gy + bz.t + h + (bz.b - s) / 2}px;width:${s}px;height:${s}px;border-radius:50%;border:3px solid ${lighten(color.frame, 12)};background:${color.front}`);
   }
   return { W: bw + pad.l + pad.r, H: bh + pad.t + pad.b, frame: f, screen: { x: gx + bz.l, y: gy + bz.t, w, h, radius: `${r}px` }, cutout: screenCutout(d.cutout, w) };
@@ -208,15 +228,21 @@ function buildLaptop(d, color, screen) {
   return { W, H, frame: f, screen: { x: ov + rim + bz.l, y: rim + bz.t, w, h, radius: `${r}px ${r}px 0 0` }, cutout: screenCutout(d.cutout, w) };
 }
 
+// iMac / Studio Display stand: a flat plate (slightly darker side edges), not a cylinder.
+const plateEdges = (c) => `linear-gradient(to right, ${darken(c, 14)} 0 1.5%, ${c} 6% 94%, ${darken(c, 14)} 98.5%)`;
+const standPlate = (c) => `linear-gradient(to bottom, ${darken(c, 22)}, transparent 12%), ${plateEdges(c)}`;
+const standFoot = (c) => `linear-gradient(${lighten(c, 24)}, ${lighten(c, 8)} 40%, ${darken(c, 16)})`;
+
 function buildDesktop(d, color, screen) {
   const { w, h } = screen;
   const bz = box(d.bezel ?? 34), rim = d.rim ?? 0, chin = d.chin ?? 0;
   const sw = d.stand?.w ?? 440, sh = d.stand?.h ?? 360, foot = 16, br = 26;
   const bw = w + bz.l + bz.r + rim * 2, glassH = h + bz.t + bz.b, bh = glassH + rim * 2 + chin;
-  const c = color.frame;
+  const c = color.frame, sc = backTint(d, color); // the stand is the back's (deeper) colour when there is one
 
-  let f = div('neck', `left:${(bw - sw) / 2}px;top:${bh - 30}px;width:${sw}px;height:${sh + 30}px;background:linear-gradient(to right, ${darken(c, 25)}, ${c} 20%, ${lighten(c, 25)} 50%, ${c} 80%, ${darken(c, 25)})`);
-  f += div('body', `left:${(bw - sw * 1.12) / 2}px;top:${bh + sh}px;width:${sw * 1.12}px;height:${foot}px;border-radius:3px 3px 10px 10px;background:linear-gradient(${lighten(c, 20)}, ${darken(c, 20)})`);
+  // One bent aluminium sheet: a flat neck and a foot of the same width, with a lighter bend line.
+  let f = div('neck', `left:${(bw - sw) / 2}px;top:${bh - 30}px;width:${sw}px;height:${sh + 30}px;background:${standPlate(sc)}`);
+  f += div('body', `left:${(bw - sw) / 2}px;top:${bh + sh}px;width:${sw}px;height:${foot}px;border-radius:0 0 4px 4px;background:${standFoot(sc)}`);
   f += div('body', `left:0;top:0;width:${bw}px;height:${bh}px;border-radius:${br}px;background:${chin ? c : metal(c)}`);
   f += div('glass', `left:${rim}px;top:${rim}px;width:${bw - rim * 2}px;height:${glassH}px;border-radius:${chin ? `${br - rim}px ${br - rim}px 0 0` : `${br - rim}px`};background:${color.front}`);
   f += bezelCamera(d.cutout, rim, rim, bw - rim * 2, glassH, bz);
@@ -242,7 +268,7 @@ function buildBrowser(d, _color, screen, { theme, url }) {
     f += div('url', `left:${(W - pw) / 2}px;top:${(bar - 30) / 2}px;width:${pw}px;height:30px;border-radius:8px;background:${dark ? '#3a3a3f' : '#e8e8ed'};justify-content:center;${text}`, `<span style="opacity:.55;display:flex">${ICON.lock}</span>${host}`);
   } else {
     f += div('nav', `left:92px;top:${bar / 2 - 8}px;${text};opacity:.55;font-size:16px;gap:18px`, '←<span>→</span><span>↻</span>');
-    f += div('url', `left:178px;top:${(bar - 30) / 2}px;width:${Math.max(W - 238, 120)}px;height:30px;border-radius:15px;background:${pill};padding:0 14px;${text}`, `<span style="opacity:.55;display:flex">${ICON.lock}</span>${host}`);
+    f += div('url', `left:178px;top:${(bar - 34) / 2}px;width:${Math.max(W - 238, 120)}px;height:34px;border-radius:17px;background:${pill};padding:0 14px;${text}`, `<span style="opacity:.55;display:flex">${ICON.lock}</span>${host}`);
   }
   return { W, H, frame: f, screen: { x: 1, y: bar + 1, w, h, radius: '0 0 11px 11px' }, cutout: '' };
 }
@@ -324,6 +350,7 @@ function backHandheld(d, color, screen, logo) {
 
   let f = (d.buttons ?? []).map((b) => button(swap[b.side] ? { ...b, side: swap[b.side] } : { ...b, at: bw - b.at - b.len }, x0, y0, bw, bh, color.frame)).join('');
   f += div('body', `left:${x0}px;top:${y0}px;width:${bw}px;height:${bh}px;border-radius:${br}px;background:${metal(color.frame)}`);
+  f += rimShade(x0, y0, bw, bh, br, rim, color.frame);
   f += div('panel', `${inner};background:${finish(fin, c)}`);
   if (spec.window) f += plate({ flat: true, ...spec.window }, c, x0, y0, 'glass');
   f += div('sheen', `${inner};background:${sheen(fin)}`);
@@ -357,8 +384,8 @@ function backDesktop(d, color, screen, logo) {
 
   let f = div('body', `left:0;top:0;width:${bw}px;height:${bh}px;border-radius:${br}px;background:${finish(fin, c)}`);
   f += div('sheen', `left:0;top:0;width:${bw}px;height:${bh}px;border-radius:${br}px;background:${sheen(fin)}`);
-  f += div('neck', `left:${(bw - sw) / 2}px;top:${top}px;width:${sw}px;height:${bh + sh - top}px;border-radius:${sw * 0.04}px ${sw * 0.04}px 0 0;background:linear-gradient(to bottom, rgba(0,0,0,.18), transparent 8%), linear-gradient(to right, ${darken(c, 14)}, ${c} 6%, ${lighten(c, 8)} 50%, ${c} 94%, ${darken(c, 14)});box-shadow:0 6px 18px -6px rgba(0,0,0,.35)`);
-  f += div('body', `left:${(bw - sw * 1.12) / 2}px;top:${bh + sh}px;width:${sw * 1.12}px;height:${foot}px;border-radius:3px 3px 10px 10px;background:linear-gradient(${lighten(c, 16)}, ${darken(c, 22)})`);
+  f += div('neck', `left:${(bw - sw) / 2}px;top:${top}px;width:${sw}px;height:${bh + sh - top}px;border-radius:${sw * 0.04}px ${sw * 0.04}px 0 0;background:linear-gradient(to bottom, rgba(0,0,0,.18), transparent 8%), ${plateEdges(c)};box-shadow:0 6px 18px -6px rgba(0,0,0,.35)`);
+  f += div('body', `left:${(bw - sw) / 2}px;top:${bh + sh}px;width:${sw}px;height:${foot}px;border-radius:0 0 4px 4px;background:${standFoot(c)}`);
   return f + logoMark(logo, bw / 2, d.back?.logo?.y ?? bh * 0.27, bh * 0.09, c);
 }
 
@@ -561,13 +588,13 @@ function buildDesktopDeck(d, color, screen) {
   const { w, h } = screen;
   const bz = box(d.bezel ?? 34), rim = d.rim ?? 0, chin = d.chin ?? 0, br = 26;
   const bw = w + bz.l + bz.r + rim * 2, glassH = h + bz.t + bz.b, bh = glassH + rim * 2 + chin;
-  const c = color.frame, S = desktopSolid(d, bw), { fw, fd, ft } = S, k = 1.12;
+  const c = color.frame, sc = backTint(d, color), S = desktopSolid(d, bw), { fw, fd, ft } = S, k = 1.12;
   const tt = Math.max(4, Math.round(S.t * 0.2)), fx = (bw - fw) / 2, floor = tt + bh + S.lift, ny = tt + bh - 40;
   const fy = floor - ft - tip(fd, k).proj(fd);
-  const foot = deckSlab(fx, fy, fw, fd, k, fw * 0.07, ft, c, `linear-gradient(${darken(c, 16)}, ${c} 30%, ${lighten(c, 10)})`);
+  const foot = deckSlab(fx, fy, fw, fd, k, fw * 0.07, ft, sc, `linear-gradient(${darken(sc, 16)}, ${sc} 30%, ${lighten(sc, 10)})`);
 
   let f = div('shadow3', `left:${fx - fw * 0.06}px;top:${floor - ft * 1.3}px;width:${fw * k * 1.07}px;height:${ft * 2.2}px;border-radius:50%;background:rgba(0,0,0,.5);filter:blur(${ft * 0.6}px)`);
-  f += div('neck', `left:${fx}px;top:${ny}px;width:${fw}px;height:${fy - ny + 4}px;background:linear-gradient(rgba(0,0,0,.3), transparent 30%, transparent calc(100% - 22px), rgba(255,255,255,.3) calc(100% - 8px), rgba(0,0,0,.1)), linear-gradient(to right, ${darken(c, 18)}, ${c} 3%, ${lighten(c, 6)} 50%, ${c} 97%, ${darken(c, 18)})`);
+  f += div('neck', `left:${fx}px;top:${ny}px;width:${fw}px;height:${fy - ny + 4}px;background:linear-gradient(rgba(0,0,0,.3), transparent 30%, transparent calc(100% - 22px), rgba(255,255,255,.3) calc(100% - 8px), rgba(0,0,0,.1)), ${plateEdges(sc)}`);
   f += foot.html;
   // A copy of the display raised by its (foreshortened) thickness shows the top edge.
   f += div('edge', `left:0;top:0;width:${bw}px;height:${bh}px;border-radius:${br}px;background:linear-gradient(${lighten(c, 26)}, ${darken(c, 8)} ${tt * 2}px)`);
@@ -664,7 +691,7 @@ function buildDesktop3d(d, color, screen, { pose }) {
   const { w, h } = screen;
   const bz = box(d.bezel ?? 34), rim = d.rim ?? 0, chin = d.chin ?? 0, br = 26;
   const bw = w + bz.l + bz.r + rim * 2, glassH = h + bz.t + bz.b, bh = glassH + rim * 2 + chin;
-  const c = color.frame, S = desktopSolid(d, bw), { fw, fd, ft } = S, Td = S.t, F = S.lift;
+  const c = color.frame, sc = backTint(d, color), S = desktopSolid(d, bw), { fw, fd, ft } = S, Td = S.t, F = S.lift;
   const zf = Math.round(fd * 0.06); // the foot's front edge pokes out just past the glass
   // Neck: a plate from the back of the foot up to the middle of the display's back. It stops just
   // behind the back face: intersecting planes make Chrome's depth sort leave specks.
@@ -675,15 +702,15 @@ function buildDesktop3d(d, color, screen, { pose }) {
 
   let f = face('shadow3', fw * 1.5, fd * 1.3, `translate3d(0,${F + 1}px,${zf - fd / 2}px) rotateX(90deg)`, 'background:radial-gradient(closest-side, rgba(0,0,0,.4), rgba(0,0,0,.16) 55%, transparent)');
   f += g3(`translate3d(0,${(nb[0] + nt[0]) / 2}px,${(nb[1] + nt[1]) / 2}px) rotateX(${-tilt}deg)`, slab(fw, Math.hypot(ny, nz), ft, 0, {
-    front: `linear-gradient(${darken(c, 12)}, ${lighten(c, 8)})`, back: darken(c, 8), edge: c, light: -90,
+    front: `linear-gradient(${darken(sc, 12)}, ${lighten(sc, 8)})`, back: darken(sc, 8), edge: sc, light: -90,
   }));
   f += g3(`translate3d(0,${F - ft / 2}px,${zf - fd / 2}px) rotateX(90deg)`, slab(fw, fd, ft, fw * 0.07, {
-    front: `linear-gradient(${darken(c, 10)}, ${lighten(c, 8)})`, back: darken(c, 25), edge: c, light: 90,
+    front: `linear-gradient(${darken(sc, 10)}, ${lighten(sc, 8)})`, back: darken(sc, 25), edge: sc, light: 90,
   }));
   f += g3(`translate3d(0,${-bh / 2}px,${-Td / 2}px)`, slab(bw, bh, Td, br, {
     front: chin ? c : metal(c), edge: c, light: -90,
     inner: div('glass', `left:${rim}px;top:${rim}px;width:${bw - rim * 2}px;height:${glassH}px;border-radius:${chin ? `${br - rim}px ${br - rim}px 0 0` : `${br - rim}px`};background:${color.front}`) + bezelCamera(d.cutout, rim, rim, bw - rim * 2, glassH, bz),
-    back: `linear-gradient(200deg, ${lighten(c, 14)}, ${c} 50%, ${darken(c, 8)})`,
+    back: `linear-gradient(200deg, ${lighten(sc, 14)}, ${sc} 50%, ${darken(sc, 8)})`,
   }));
   return {
     W: cam.W, H: cam.H, frame: f, screen: { x: 0, y: 0, w, h, radius: '0' }, cutout: '',
@@ -740,12 +767,12 @@ function statusBar(d, lw, safe, theme) {
 
 function homeIndicator(d, lw, lh, theme) {
   const ink = theme === 'dark' ? 'rgba(255,255,255,.85)' : 'rgba(0,0,0,.85)';
-  if (d.home === 'indicator') {
-    const w = d.kind === 'tablet' ? Math.min(lw * 0.3, 320) : Math.min(lw * 0.35, 140);
+  if (d.home === 'indicator') { // iOS: 134 × 5 pt, 8 pt from the bottom, on every iPhone
+    const w = d.kind === 'tablet' ? Math.min(lw * 0.3, 320) : 134;
     return div('home', `left:${(lw - w) / 2}px;top:${lh - 13}px;width:${w}px;height:5px;border-radius:3px;background:${ink}`);
   }
-  if (d.home === 'pill') {
-    return div('home', `left:${(lw - 108) / 2}px;top:${lh - 12}px;width:108px;height:4px;border-radius:2px;background:${ink}`);
+  if (d.home === 'pill') { // AOSP gesture handle: 108 × 4 dp, 10 dp from the bottom
+    return div('home', `left:${(lw - 108) / 2}px;top:${lh - 14}px;width:108px;height:4px;border-radius:2px;background:${ink}`);
   }
   return '';
 }
@@ -784,7 +811,7 @@ function sampleEdges(img) {
 export class BezelDevice extends HTMLElement {
   static observedAttributes = [...ATTRS, ...FOLD_ATTRS];
 
-  #stage; #device; #frame; #screen; #content; #media; #chrome; #cutout; #dyn;
+  #stage; #device; #frame; #screen; #content; #media; #chrome; #cutout; #ring; #dyn;
   #size = { W: 0, H: 0 };
   #box = { w: 0, h: 0 };
   #mediaKey = null;
@@ -808,12 +835,13 @@ export class BezelDevice extends HTMLElement {
           <div class="content" part="content"><div class="media" part="media"></div><div class="chrome" aria-hidden="true"></div></div>
           <div class="cutout" aria-hidden="true"></div><div class="glare" aria-hidden="true"></div>
         </div>
+        <div class="ring" aria-hidden="true"></div>
       </div></div>`;
     const q = (s) => root.querySelector(s);
     this.#dyn = root.querySelectorAll('style')[1];
     this.#stage = q('.stage'); this.#device = q('.device'); this.#frame = q('.frame'); this.#screen = q('.screen');
     this.#content = q('.content'); this.#media = q('.media'); this.#chrome = q('.chrome'); this.#cutout = q('.cutout');
-    this.#back = q('.back');
+    this.#back = q('.back'); this.#ring = q('.ring');
     this.addEventListener('pointerdown', (e) => this.#grab(e));
   }
 
@@ -895,7 +923,9 @@ export class BezelDevice extends HTMLElement {
     const pad = safeAttr === 'pad' || (safeAttr === 'auto' && interactive);
 
     const st = d.safe?.top ?? 0, sb = d.safe?.bottom ?? 0;
-    const safe = rotatesChrome ? { t: 0, r: st, b: sb ? 21 : 0, l: st } : { t: st, r: d.safe?.right ?? 0, b: sb, l: d.safe?.left ?? 0 };
+    // Landscape: the home indicator keeps 20 at the bottom; only a notch/island/hole gets side insets (not the SE).
+    const side = d.cutout && d.cutout.type !== 'camera' ? st : 0;
+    const safe = rotatesChrome ? { t: 0, r: side, b: sb ? 20 : 0, l: side } : { t: st, r: d.safe?.right ?? 0, b: sb, l: d.safe?.left ?? 0 };
     const inset = pad ? safe : { t: 0, r: 0, b: 0, l: 0 };
     this.#box = { w: lw - inset.l - inset.r, h: lh - inset.t - inset.b };
 
@@ -905,6 +935,13 @@ export class BezelDevice extends HTMLElement {
     Object.assign(this.#device.style, { width: `${L.W}px`, height: `${L.H}px`, transform: S.front, visibility: S.side === 'back' ? 'hidden' : '' });
     this.#frame.innerHTML = L.frame;
     Object.assign(this.#screen.style, { left: `${L.screen.x}px`, top: `${L.screen.y}px`, width: `${screen.w}px`, height: `${screen.h}px`, borderRadius: L.screen.radius });
+    // A thin bezel-coloured ring over the screen edge hides the 1 px seams a scaled overflow clip leaves
+    // between raster tiles. Not on browsers (no bezel), foldables (split screen) or variant="3d" (the screen moves).
+    const ring = !L.fold && !L.three && d.kind !== 'browser';
+    Object.assign(this.#ring.style, ring ? {
+      display: '', left: `${L.screen.x - 1}px`, top: `${L.screen.y - 1}px`, width: `${screen.w + 2}px`, height: `${screen.h + 2}px`,
+      borderRadius: L.screen.radius.replace(/[\d.]+px/g, (v) => `${parseFloat(v) + 1}px`), border: `1.5px solid ${color.front}`,
+    } : { display: 'none' });
     Object.assign(this.#content.style, { width: `${lw}px`, height: `${lh}px`, transform: landscape ? `translateX(${screen.w}px) rotate(90deg)` : '' });
     this.#content.style.setProperty('--_safe-bg', theme === 'dark' ? '#000' : '#fff');
     Object.assign(this.#media.style, { top: `${inset.t}px`, right: `${inset.r}px`, bottom: `${inset.b}px`, left: `${inset.l}px` });
@@ -1201,7 +1238,8 @@ export class BezelDevice extends HTMLElement {
     const pad = safeAttr === 'pad' || (safeAttr === 'auto' && interactive);
     const [lw, lh] = g.land ? [cv.h, cv.w] : [cv.w, cv.h];
     const cs = cv.safe ?? {}, st = cs.top ?? 0, sb = cs.bottom ?? 0;
-    const safe = g.land ? { t: 0, r: st, b: sb ? 21 : 0, l: st } : { t: st, r: cs.right ?? 0, b: sb, l: cs.left ?? 0 };
+    const side = cv.cutout && cv.cutout.type !== 'camera' ? st : 0;
+    const safe = g.land ? { t: 0, r: side, b: sb ? 20 : 0, l: side } : { t: st, r: cs.right ?? 0, b: sb, l: cs.left ?? 0 };
     const inset = pad ? safe : { t: 0, r: 0, b: 0, l: 0 };
     f.cbox = { w: lw - inset.l - inset.r, h: lh - inset.t - inset.b };
 
