@@ -148,3 +148,20 @@
   .hx-row { bottom: 92px; height: 20%; gap: 10px; }
   .hx-row figcaption { font-size: 9.5px; }
 }
+
+.hx-star { margin: 18px 0 0; font-size: 14px; color: var(--dim); }
+.hx-star a { color: var(--ink); font-weight: 600; text-decoration: none; border-bottom: 1px solid rgba(0,0,0,.2); }
+.hx-star a:hover { border-color: var(--ink); }
+
+/* headline: two lines, two colours; ?h=a|b|c|d previews font pairings */
+.hx-title { font-size: clamp(56px, 7.4vw, 124px); line-height: .9; letter-spacing: -.045em; margin-bottom: 28px; }
+.hx-title .l1, .hx-title .l2 { display: block; width: max-content; white-space: nowrap; }
+.hx-title .l2 { color: rgb(var(--warm)); }
+.hx-title[data-v="a"] .l1 { font-family: "Archivo", sans-serif; font-weight: 900; font-stretch: 118%; }
+.hx-title[data-v="a"] .l2 { font-family: "Instrument Serif", Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.12em; letter-spacing: -.02em; line-height: .95; padding-left: .04em; }
+.hx-title[data-v="b"] { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; letter-spacing: -.05em; }
+.hx-title[data-v="b"] .l2 { background: linear-gradient(95deg, #5b4bff 10%, #e8643a 90%); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: .06em; }
+.hx-title[data-v="c"] { font-family: "Fraunces", Georgia, serif; font-weight: 700; letter-spacing: -.035em; font-variation-settings: "SOFT" 100, "WONK" 1; }
+.hx-title[data-v="c"] .l2 { font-style: italic; font-weight: 500; color: #5b4bff; }
+.hx-title[data-v="d"] { font-family: "Syne", sans-serif; font-weight: 800; letter-spacing: -.04em; line-height: .92; }
+@media (max-width: 760px) { .hx-title { font-size: clamp(48px, 15vw, 72px); } }

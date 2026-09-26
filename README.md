@@ -1,5 +1,7 @@
 # bezelkit
 
+[![GitHub stars](https://img.shields.io/github/stars/knileshh/bezelkit?style=flat&logo=github&label=stars)](https://github.com/knileshh/bezelkit/stargazers) [![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) ![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen) ![41 devices](https://img.shields.io/badge/devices-41-orange)
+
 **Most mockups break your screenshots. bezelkit fixes that.** · [bezelkit.dev](https://bezelkit.dev)
 
 Text gets stretched, tab bars get cropped and headers disappear under the notch. bezelkit compares your image with the device's real screen and fits it properly.
@@ -13,6 +15,8 @@ Text gets stretched, tab bars get cropped and headers disappear under the notch.
 ```
 
 That's all you need. It works in plain HTML, React 19, Vue, Svelte, Astro, MDX, Webflow/Framer embeds and Markdown docs sites.
+
+> ⭐ If bezelkit saves you time, **[star it on GitHub](https://github.com/knileshh/bezelkit)**. It is the main way other developers find it.
 
 ## Why another mockup library?
 

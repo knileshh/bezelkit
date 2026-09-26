@@ -202,12 +202,13 @@ hero.innerHTML = `
 <div class="hx${RM ? ' hx-rm' : ''}">
   <div class="hx-copy">
     <p class="hx-kick"><i></i>&lt;bezel-device&gt; · <span class="hx-os">open source · </span>zero dependencies</p>
-    <h1 class="hx-title" id="heroTitle">Screenshot in.<br>Mockup out.</h1>
+    <h1 class="hx-title" id="heroTitle" data-v="${new URLSearchParams(location.search).get('h') || 'a'}"><span class="l1">Screenshot in.</span><span class="l2">Mockup out.</span></h1>
     <p class="hx-sub">Drop a screenshot into any phone, tablet, laptop or watch. It fits perfectly. One HTML tag, ${count} devices, free.</p>
     <div class="hx-actions">
       <a class="hx-btn hx-primary" href="#play">Try it with your screenshot<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3.5 8.5 8 13l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       <button class="hx-btn hx-npm" type="button" aria-label="Copy the install command: npm i bezelkit"><span class="hx-npm-t"><b>$</b> npm i bezelkit</span><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.25" y="5.25" width="8" height="8" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 3.2V3a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 3v5A1.5 1.5 0 0 0 4 9.5h.3" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
     </div>
+    <p class="hx-star">Free and open source · <a href="https://github.com/knileshh/bezelkit">★ Star on GitHub</a></p>
   </div>
   <div class="hx-stage" role="img" aria-label="A running-app screenshot is squashed and covered by a generic mockup's notch, then fitted correctly into a real iPhone 17 Pro frame, then shown in a Pixel 10 Pro, an iPad Pro in landscape, a MacBook Pro and an Apple Watch Ultra.">
     <div class="hx-glow" aria-hidden="true"><i class="g-bad"></i><i class="g-ok"></i></div>
@@ -476,4 +477,19 @@ function build(gsap) {
   const sync = () => (inView && !document.hidden ? tl.resume() : tl.pause());
   new IntersectionObserver(([e]) => { inView = e.isIntersecting; hero.classList.toggle('hx-off', !inView); sync(); }, { threshold: 0.05 }).observe(hero);
   document.addEventListener('visibilitychange', sync);
+}
+
+// ─── headline: size it so "Screenshot in." fills the text column on one line ───
+{
+  const title = document.getElementById('heroTitle'), col = title?.parentElement;
+  const fit = () => {
+    if (!title || !col) return;
+    title.style.fontSize = '100px';
+    const w = Math.max(...[...title.children].map((l) => l.getBoundingClientRect().width));
+    const max = innerWidth < 760 ? 88 : 150;
+    title.style.fontSize = `${Math.min(max, Math.floor((col.clientWidth / w) * 100 * 0.98))}px`;
+  };
+  fit();
+  document.fonts?.ready.then(fit);
+  new ResizeObserver(fit).observe(col);
 }
