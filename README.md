@@ -48,14 +48,19 @@ The gap bezelkit fills: **correct content fitting + real viewports + every devic
 | `glare` | boolean | Subtle screen reflection |
 | `shadow` | `none` | Turns off the drop shadow |
 | `alt` | text | Alt text for the image, or a title for the iframe |
+| `side` | `front` (default) `back` `both` | `back` draws the rear: camera module, finish and mirrored buttons. `both` is a stacked hero shot with the back tilted behind the front. Not available for browser frames |
+| `stack` | `left` (default) `right` | With `side="both"`, the side the back peeks out from. The camera sits top-left on the back, so `left` shows it |
+| `logo` | `none` (default) `dot` | Brand logos are never drawn. `dot` adds a neutral placeholder mark on the back |
 
 Every attribute is also a property (`el.safeArea = 'pad'`).
 
 **Read-only properties:** `spec` (the device object), `resolvedFit`, `screenSize`.
 
-**Event:** `bezel-fit` fires with `{ requested, fit, media, screen, mediaRatio, screenRatio, mismatch }` once media loads. Use it to flag screenshots that came from the wrong device.
+**Method:** `el.flip(side?)` turns the device over with an 800 ms 3D turn and returns a Promise that resolves with the new side. With no argument it toggles between `front` and `back`. Setting `side` directly animates the same way. Calling it again mid-turn reverses the turn. With `prefers-reduced-motion`, the side switches instantly.
 
-**Styling:** use `::part(frame | screen | content | media | image | video | iframe)`, `--bezel-screen-bg` and `--bezel-safe-bg`.
+**Events:** `bezel-fit` fires with `{ requested, fit, media, screen, mediaRatio, screenRatio, mismatch }` once media loads. Use it to flag screenshots that came from the wrong device. `bezel-flip` fires with `{ side }` when a front/back turn settles.
+
+**Styling:** use `::part(frame | screen | content | media | image | video | iframe | back)`, `--bezel-screen-bg` and `--bezel-safe-bg`.
 
 ### Sizing tips
 
@@ -75,7 +80,7 @@ defineDevice({
 });
 ```
 
-See the schema at the top of [`src/devices.js`](src/devices.js).
+See the schema at the top of [`src/devices.js`](src/devices.js). To give a device a rear view, add a `back: { finish, camera: { plates, parts } }` entry. The renderer needs no changes. Without an entry, the back gets a generic lens and flash.
 
 ## Devices
 
@@ -97,7 +102,7 @@ No build step. Any static server works:
 python -m http.server 8766
 ```
 
-Then open `http://localhost:8766` for the playground or `/examples/states.html` for the visual state matrix.
+Then open `http://localhost:8766` for the playground or `/examples/states.html` for the visual state matrix. `/examples/back.html` shows every back, the flip and stacked compositions.
 
 ## Roadmap
 
