@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bezelkit — device frames that actually fit</title>
+<meta name="description" content="Open-source, zero-dependency device mockups (iPhone, Android, iPad, MacBook, iMac, Watch, browser) as one web component. Screenshots fit correctly, automatically.">
+<link rel="canonical" href="https://bezelkit.dev/">
+<meta property="og:title" content="bezelkit — device frames that actually fit">
+<meta property="og:url" content="https://bezelkit.dev/">
+<meta property="og:description" content="Mockups that stretch, crop and hide your screenshots, fixed. One zero-dependency web component for 26+ devices.">
+<meta property="og:image" content="https://bezelkit.dev/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#f4efe7">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../../assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script type="module" src="../../src/bezel.js"></script>
+<style>
+  :root {
+    --bg: #f4efe7; --panel: #fbf8f3; --ink: #1d1a16; --muted: #6f675d; --line: #e3dbcf;
+    --accent: #d2522b; --accent-ink: #fff; --code: #1d1a16;
+    --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+    --sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  code, pre { font-family: var(--mono); }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+
+  header.top { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -.01em; text-decoration: none; }
+  .logo img { display: block; border-radius: 6px; }
+  .eyebrow { margin: 0 0 18px; font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .btn { display: inline-flex; align-items: center; padding: 13px 18px; border-radius: 10px; font: 600 14.5px var(--sans); cursor: pointer; text-decoration: none; }
+  .btn.primary { background: var(--accent); color: #fff; box-shadow: 0 8px 20px -10px rgba(210,82,43,.8); transition: transform .15s; }
+  .btn.primary:hover { transform: translateY(-1px); }
+  .hint { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
+  .split { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 48px; align-items: center; }
+
+  /* before/after */
+  .ba { display: flex; flex-direction: column; gap: 14px; }
+  .ba-stage { position: relative; height: 560px; touch-action: pan-y; user-select: none; --split: 50%; }
+  .ba-stage bezel-device { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  #baBad { clip-path: inset(0 calc(100% - var(--split)) 0 0); }
+  .ba-line { position: absolute; top: 0; bottom: 0; left: var(--split); width: 0; border-left: 2px solid var(--ink); z-index: 3; cursor: ew-resize; }
+  .ba-handle { position: absolute; top: 50%; left: 0; width: 42px; height: 42px; margin: -21px 0 0 -22px; border: 0; border-radius: 50%; background: var(--ink); color: #fff; font-size: 18px; cursor: ew-resize; box-shadow: 0 6px 16px -6px rgba(0,0,0,.5); }
+  .ba-handle:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .ba-tag { position: absolute; top: 6px; z-index: 3; padding: 5px 10px; font: 600 11.5px var(--mono); border-radius: 6px; pointer-events: none; }
+  .ba-tag.bad { left: 0; color: #fff; background: #b3261e; }
+  .ba-tag.good { right: 0; color: #fff; background: #2e7d4f; }
+  .ba-drop { position: absolute; inset: 0; z-index: 4; display: none; place-items: center; font: 600 16px var(--sans); color: var(--accent); background: rgba(255,245,240,.8); border: 2px dashed var(--accent); border-radius: 18px; }
+  .ba-stage.over .ba-drop { display: grid; }
+  .ba-meta { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+  .ba-devices { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .ba-devices button { padding: 6px 11px; font: 500 12.5px var(--sans); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; cursor: pointer; }
+  .ba-devices button[aria-pressed=true] { color: #fff; background: var(--ink); border-color: var(--ink); }
+  .ba-explain { min-height: 20px; font: 13px var(--mono); color: var(--muted); }
+  .ba-explain b { color: var(--ink); }
+  .logo i { width: 22px; height: 30px; border: 2.5px solid var(--ink); border-radius: 7px; position: relative; }
+  .logo i::after { content: ""; position: absolute; top: 3px; left: 50%; width: 7px; height: 3px; margin-left: -3.5px; border-radius: 2px; background: var(--ink); }
+  nav a { margin-left: 22px; color: var(--muted); text-decoration: none; font-size: 14px; }
+  nav a:hover { color: var(--ink); }
+
+  .hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; padding: 36px 0 64px; }
+  h1 { font: 400 clamp(46px, 6vw, 82px)/.98 var(--serif); letter-spacing: -.02em; margin: 0 0 22px; }
+  h1 em { color: var(--accent); }
+  .lede { font-size: 18px; color: var(--muted); max-width: 34em; margin: 0 0 26px; }
+  .install { display: inline-flex; align-items: center; gap: 12px; background: var(--code); color: #f4efe7; padding: 12px 16px; border-radius: 10px; font: 14px var(--mono); }
+  .install button { all: unset; cursor: pointer; opacity: .6; font: 12px var(--sans); }
+  .install button:hover { opacity: 1; }
+  /* hero: morphing device */
+  .typed { display: inline-block; margin: 0 0 22px; padding: 12px 16px; font: 15px/1.5 var(--mono); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  .typed .tok-tag { color: #b5471f; } .typed .tok-attr { color: #4d7a3a; } .typed .tok-str { color: #8a5a00; }
+  .caret { display: inline-block; width: 2px; height: 1.1em; margin-left: 1px; vertical-align: -3px; background: var(--accent); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .morph { position: relative; height: 560px; perspective: 1400px; }
+  .morph-tilt { position: absolute; inset: 0 0 76px; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .3s ease-out; transform-style: preserve-3d; }
+  .morph-float { position: absolute; inset: 0; animation: float 7s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translateY(-10px); } }
+  .morph-float bezel-device { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  .morph-meta { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .chip { padding: 6px 12px; font: 12.5px var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; }
+  .chip b { color: var(--ink); font-weight: 600; }
+  .dots { display: flex; gap: 6px; }
+  .dots button { position: relative; width: 26px; height: 5px; padding: 0; border: 0; border-radius: 3px; background: #e3dbcf; cursor: pointer; overflow: hidden; }
+  .dots button[aria-current=true]::after { content: ""; position: absolute; inset: 0; background: var(--accent); transform-origin: left; animation: fillbar var(--hold) linear forwards; }
+  .dots.paused button[aria-current=true]::after { animation: none; }
+  @keyframes fillbar { from { transform: scaleX(0); } }
+
+  /* marquee */
+  .marquee { overflow: hidden; padding: 16px 0; border-top: 1px solid var(--line); -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  .marquee-track { display: flex; gap: 34px; width: max-content; animation: marquee 70s linear infinite; }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+  .marquee span { font-size: 13.5px; color: var(--muted); white-space: nowrap; }
+  .marquee span b { margin-left: 7px; font: 600 12.5px var(--mono); color: var(--ink); }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+
+  /* story: how fit=auto thinks */
+  .story { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 56px; }
+  .story-stage { position: sticky; top: 3vh; height: 94vh; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+  .readout { position: relative; z-index: 5; display: flex; align-items: center; gap: 14px; padding: 10px 16px; font: 12px var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  .readout b { display: block; font: 600 20px var(--mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+  .readout .op { font-size: 18px; }
+  .verdict { margin-left: auto; padding: 8px 12px; font: 600 13px var(--mono); color: #fff; background: var(--ink); border-radius: 8px; transition: background .4s; white-space: nowrap; }
+  .stage-wrap { position: relative; flex: 1; min-height: 0; margin: 34px 0 44px; clip-path: inset(-34px -100vw -44px -100vw); }
+  .stage-wrap bezel-device { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  .ghost { position: absolute; z-index: 2; pointer-events: none; opacity: 0; transition: top .8s cubic-bezier(.2,.8,.2,1), height .8s cubic-bezier(.2,.8,.2,1), left .8s, width .8s, opacity .4s; }
+  .ghost.live { transition: opacity .4s; }
+  .ghost-fill { position: absolute; inset: 0; background: repeating-linear-gradient(135deg, var(--hatch, rgba(210,82,43,.4)) 0 6px, transparent 6px 12px);
+    -webkit-mask: linear-gradient(#000 0 0) 0 0 / 100% 100% no-repeat, linear-gradient(#000 0 0) 0 var(--sy, 0px) / 100% var(--sh, 0px) no-repeat; -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) 0 0 / 100% 100% no-repeat exclude, linear-gradient(#000 0 0) 0 var(--sy, 0px) / 100% var(--sh, 0px) no-repeat; }
+  .ghost-border { position: absolute; inset: -3px; border: 2px dashed var(--accent); border-radius: 10px; }
+  .ghost-label { position: absolute; left: -3px; top: -30px; padding: 4px 8px; font: 600 11.5px var(--mono); color: #fff; background: var(--accent); border-radius: 6px; white-space: nowrap; }
+  .ghost-note { position: absolute; left: 50%; top: calc(var(--sy, 0px) + var(--sh, 0px) + 14px); transform: translateX(-50%); padding: 4px 9px; font: 600 11.5px var(--mono); color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 6px; white-space: nowrap; }
+  .ghost-note:empty { display: none; }
+  .band { position: absolute; z-index: 2; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; outline: 1.5px solid var(--accent); background: repeating-linear-gradient(135deg, rgba(210,82,43,.35) 0 6px, rgba(210,82,43,.1) 6px 12px); transition: opacity .5s, top .6s, height .6s; }
+  .band.on { opacity: 1; animation: pulse 2.4s ease-in-out infinite; }
+  .band.lb { outline-style: dashed; background: none; }
+  .band span { position: absolute; left: calc(100% + 18px); top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; padding: 3px 8px; font: 600 11px var(--mono); color: #fff; background: var(--accent); border-radius: 5px; white-space: nowrap; }
+  .band span::before { content: ""; position: absolute; right: 100%; top: 50%; width: 14px; border-top: 1.5px solid var(--accent); }
+  .band i { width: 12px; height: 12px; border-radius: 3px; border: 1px solid #fff; }
+  @keyframes pulse { 50% { outline-color: rgba(210,82,43,.35); } }
+  .steps { padding: 18vh 0 34vh; }
+  .step { min-height: 76vh; display: flex; flex-direction: column; justify-content: center; opacity: .25; transition: opacity .45s; }
+  .step.active { opacity: 1; }
+  .step .num { font: 600 12px var(--mono); letter-spacing: .1em; color: var(--accent); }
+  .step h3 { margin: 8px 0 12px; font: 400 36px/1.08 var(--serif); letter-spacing: -.01em; }
+  .step p { max-width: 30em; margin: 0 0 12px; color: var(--muted); }
+  .step code { padding: 1px 6px; font-size: 13px; background: #efe8dd; border-radius: 5px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .morph-float, .marquee-track, .caret, .band.on { animation: none !important; }
+    .ghost, .step, .morph-tilt { transition: none !important; }
+  }
+
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+  h2 { font: 400 44px/1.05 var(--serif); letter-spacing: -.015em; margin: 0 0 10px; }
+  .sub { color: var(--muted); max-width: 44em; margin: 0 0 32px; }
+
+  /* problem vs fix */
+  .compare { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+  .card h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+  .card p { margin: 0 0 16px; color: var(--muted); font-size: 13.5px; }
+  .card .shot { height: 440px; display: grid; place-items: center; }
+  .bad { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #b3261e; }
+  .good { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #2e7d4f; }
+  .naive { width: 210px; height: 440px; border: 11px solid #151517; border-radius: 38px; overflow: hidden; position: relative; background: #000; box-shadow: 0 20px 40px -18px rgba(0,0,0,.4); }
+  .naive::before { content: ""; position: absolute; top: 8px; left: 50%; width: 64px; height: 19px; margin-left: -32px; border-radius: 10px; background: #000; z-index: 2; }
+  .naive img { width: 100%; height: 100%; display: block; }
+
+  /* playground */
+  .play { display: grid; grid-template-columns: 330px 1fr; gap: 22px; align-items: start; }
+  .controls { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; position: sticky; top: 16px; }
+  .field { margin-bottom: 16px; }
+  .field > label, .field > .lbl { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 7px; }
+  select, input[type=text] { width: 100%; font: 14px var(--sans); padding: 9px 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink); }
+  .seg { display: flex; flex-wrap: wrap; gap: 4px; background: #efe8dd; border-radius: 10px; padding: 3px; }
+  .seg button { flex: 1; min-width: 0; border: 0; background: transparent; padding: 7px 6px; border-radius: 7px; font: 500 12.5px var(--sans); color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .seg button[aria-pressed=true] { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+  .swatches button { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line); cursor: pointer; padding: 0; }
+  .swatches button[aria-pressed=true] { box-shadow: 0 0 0 2px var(--ink); }
+  .drop { border: 1.5px dashed #cfc4b4; border-radius: 10px; padding: 14px; text-align: center; font-size: 13px; color: var(--muted); cursor: pointer; }
+  .drop.over { border-color: var(--accent); color: var(--accent); background: #fff5f0; }
+  .stagebox { position: relative; background: radial-gradient(ellipse at 50% 40%, #fff 0%, #efe8dd 70%); border: 1px solid var(--line); border-radius: 16px; height: min(78vh, 780px); }
+  .stagebox bezel-device { position: absolute; left: 36px; top: 36px; width: calc(100% - 72px); height: calc(100% - 72px); }
+  .report { font: 13px var(--mono); color: var(--muted); padding: 12px 4px 0; min-height: 34px; }
+  .report b { color: var(--ink); font-weight: 600; }
+  .code { position: relative; margin-top: 12px; }
+  .code pre { margin: 0; background: var(--code); color: #efe6d8; padding: 18px 20px; border-radius: 12px; font-size: 13px; line-height: 1.6; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+  .code button { position: absolute; top: 10px; right: 10px; border: 0; background: rgba(255,255,255,.1); color: #efe6d8; padding: 6px 10px; border-radius: 7px; font: 12px var(--sans); cursor: pointer; }
+  .code .tok-tag { color: #ffb38a; } .code .tok-attr { color: #b9d4a8; } .code .tok-str { color: #f2d49b; }
+
+  /* gallery */
+  .kind { font: 400 26px var(--serif); margin: 34px 0 14px; }
+  .grid { display: grid; gap: 18px; }
+  .grid.phone { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .grid.tablet { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+  .grid.watch { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .grid.wide { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+  .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 14px 12px; cursor: pointer; transition: transform .15s, box-shadow .15s; text-align: left; font: inherit; color: inherit; }
+  .tile:hover { transform: translateY(-2px); box-shadow: 0 12px 30px -18px rgba(0,0,0,.35); }
+  .tile .shot { height: 300px; }
+  .grid.tablet .tile .shot { height: 320px; } .grid.watch .tile .shot { height: 180px; } .grid.wide .tile .shot { height: 250px; }
+  .tile bezel-device { width: 100%; height: 100%; pointer-events: none; }
+  .tile .name { font-weight: 600; font-size: 13.5px; margin-top: 12px; }
+  .tile .meta { font: 12px var(--mono); color: var(--muted); }
+
+  /* docs */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+  td code { background: #efe8dd; padding: 1px 6px; border-radius: 5px; font-size: 12.5px; white-space: nowrap; }
+  footer { padding: 40px 0 60px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); }
+
+  @media (max-width: 900px) {
+    .hero, .play, .compare, .split { grid-template-columns: 1fr; }
+    .ba-stage { height: 480px; }
+    .morph { height: 460px; }
+    .story { grid-template-columns: 1fr; gap: 0; }
+    .story-stage { top: 0; z-index: 3; height: 64vh; padding-top: 8px; background: var(--bg); }
+    .step { min-height: 58vh; }
+    .controls { position: static; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="#"><img src="../../assets/favicon.svg" width="26" height="26" alt="">bezelkit</a>
+    <nav><a href="#how">How it works</a><a href="#every">Devices</a><a href="#play">Playground</a><a href="#devices">Gallery</a><a href="#docs">API</a><a href="https://github.com/knileshh/bezelkit">GitHub</a></nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Open-source device mockups · MIT</div>
+      <h1>Most mockups <em>break</em> your screenshots.</h1>
+      <p class="lede">Text gets stretched, tab bars get cropped and headers disappear under the notch. bezelkit compares your image with the device's real screen and fits it properly on 26 devices. It's one HTML tag.</p>
+      <div class="cta">
+        <label class="btn primary" for="heroFile">Try it with your screenshot</label><input type="file" id="heroFile" accept="image/*,video/*" hidden>
+        <div class="install"><span>npm i bezelkit</span><button data-copy="npm i bezelkit">copy</button></div>
+      </div>
+      <p class="hint">Or drag an image onto the phone. It stays in your browser and nothing is uploaded.</p>
+    </div>
+    <div class="ba" id="ba">
+      <div class="ba-stage" id="baStage">
+        <bezel-device id="baGood" device="iphone-17-pro"></bezel-device>
+        <bezel-device id="baBad" device="iphone-17-pro" fit="fill" aria-hidden="true"></bezel-device>
+        <div class="ba-line" id="baLine"><button class="ba-handle" id="baHandle" role="slider" aria-label="Compare typical mockup and bezelkit" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">⟷</button></div>
+        <span class="ba-tag bad">Typical mockup: stretched</span><span class="ba-tag good">bezelkit: fit="auto"</span>
+        <div class="ba-drop" id="baDrop">Drop to frame it</div>
+      </div>
+      <div class="ba-meta">
+        <div class="ba-devices" id="baDevices"></div>
+        <div class="ba-explain" id="baExplain"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="marquee" aria-hidden="true"><div class="marquee-track" id="marquee"></div></div>
+
+  <section id="why">
+    <h2>Three frames, one screenshot</h2>
+    <p class="sub">Most mockups are a rounded box with <code>width:100%; height:100%</code> on the image. When the screenshot's shape doesn't match the frame, it gets stretched or cropped, and the notch covers the top of it. Below is the same 16:9 screenshot (from an older phone) in three frames.</p>
+    <div class="compare">
+      <div class="card"><div class="bad">Typical mockup</div><h3>Stretched to fill</h3><p>Text gets squashed and the fake notch covers the header.</p><div class="shot"><div class="naive"><img id="naiveImg" alt=""></div></div></div>
+      <div class="card"><div class="bad">object-fit: cover</div><h3>Cropped blindly</h3><p>No stretching, but the top and bottom of the screenshot are lost.</p><div class="shot"><bezel-device id="coverDemo" device="iphone-17-pro" fit="cover" style="height:440px"></bezel-device></div></div>
+      <div class="card"><div class="good">bezelkit fit="auto"</div><h3>Detects the mismatch</h3><p>Letterboxes using the screenshot's own edge colours, so nothing is lost or distorted.</p><div class="shot"><bezel-device id="autoDemo" device="iphone-17-pro" style="height:440px"></bezel-device></div></div>
+    </div>
+  </section>
+
+  <section id="how">
+    <h2>How <code style="font-size:.8em">fit="auto"</code> thinks</h2>
+    <p class="sub">Scroll through the steps. The dashed outline is your image and the frame is the screen. bezelkit compares their shapes and picks the strategy that loses the least.</p>
+    <div class="story">
+      <div class="story-stage" id="storyStage">
+        <div class="readout">
+          <div><span id="l0">image</span><b id="v0">0.460</b></div><div class="op" id="op0">÷</div>
+          <div><span id="l1">screen</span><b id="v1">0.460</b></div><div class="op" id="op1">=</div>
+          <div><span id="l2">mismatch</span><b id="v2">1.00</b></div>
+          <div class="verdict" id="verdict">fit: cover</div>
+        </div>
+        <div class="stage-wrap" id="stageWrap">
+          <bezel-device id="storyDevice" device="iphone-17-pro"></bezel-device>
+          <div class="ghost" id="ghost"><div class="ghost-fill"></div><div class="ghost-border"></div><span class="ghost-label" id="ghostLabel"></span><span class="ghost-note" id="ghostNote"></span></div>
+          <div class="band" id="bandTop"><span></span></div>
+          <div class="band" id="bandBottom"><span></span></div>
+        </div>
+      </div>
+      <div class="steps">
+        <article class="step" data-step="match"><span class="num">01 · SAME SHAPE</span><h3>Matches within 4%: cover</h3><p>A 1206×2622 screenshot on a 402×874 screen. The shapes agree, so it fills the screen edge to edge and loses at most a few pixels.</p></article>
+        <article class="step" data-step="long"><span class="num">02 · MUCH TALLER</span><h3>A full-page capture: scroll</h3><p>This one is nearly three screens long. Cropping would throw most of it away, so bezelkit keeps the width and lets the screen scroll, the way the real phone would.</p></article>
+        <article class="step" data-step="tall"><span class="num">03 · A LITTLE TALLER</span><h3>Up to 15% taller: pin to top</h3><p>Headers usually matter more than footers, so the image is anchored at the top and the bottom is trimmed. If the tab bar matters, set <code>fit="contain"</code>.</p></article>
+        <article class="step" data-step="wide"><span class="num">04 · WIDER</span><h3>From an older phone: letterbox</h3><p>A 16:9 screenshot on a 19.5:9 screen. It is centred instead of stretched, and the empty bands are painted with colours sampled from the image's own top and bottom rows.</p></article>
+        <article class="step" data-step="safe"><span class="num">05 · LIVE HTML</span><h3>Your markup: safe areas</h3><p>Slotted HTML and iframes are padded clear of the Dynamic Island and home indicator, with a status bar drawn in. For full-bleed layouts, use <code>safe-area="none"</code> and read <code>--bezel-safe-top</code> yourself.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="every">
+    <div class="split">
+      <div>
+        <h2>One tag. Every device.</h2>
+        <p class="sub">Change one attribute to switch between phones, tablets, laptops, desktops, watches and browser windows. Every frame uses the device's real screen size in CSS pixels, so screenshots map 1:1 and embedded sites hit their real breakpoints. Hover over the device to tilt it.</p>
+        <pre class="typed" aria-label="Example markup"><span class="tok-tag">&lt;bezel-device</span> <span class="tok-attr">device</span>=<span class="tok-str">"<span id="typedDevice">iphone-17-pro</span><i class="caret"></i>"</span> <span class="tok-attr">src</span>=<span class="tok-str">"shot.png"</span><span class="tok-tag">&gt;</span></pre>
+      </div>
+      <div class="morph" id="morph">
+        <div class="morph-tilt" id="morphTilt"><div class="morph-float"><bezel-device></bezel-device><bezel-device style="opacity:0"></bezel-device></div></div>
+        <div class="morph-meta"><div class="chip" id="morphChip"></div><div class="dots" id="morphDots"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="play">
+    <h2>Playground</h2>
+    <p class="sub">Drop in your own screenshot, recording, or URL. Everything here runs locally in your browser.</p>
+    <div class="play">
+      <div class="controls">
+        <div class="field"><label for="device">Device</label><select id="device"></select></div>
+        <div class="field"><span class="lbl">Colour</span><div class="swatches" id="colors"></div></div>
+        <div class="field"><span class="lbl">Content</span>
+          <div class="seg" data-name="source">
+            <button data-v="sample" aria-pressed="true">Sample</button><button data-v="long">Long shot</button><button data-v="mismatch">Wrong ratio</button><button data-v="html">HTML</button>
+          </div>
+        </div>
+        <div class="field"><div class="drop" id="drop">Drop an image or video here, or <u>browse</u><input type="file" id="file" accept="image/*,video/*" hidden></div></div>
+        <div class="field"><label for="url">…or embed a URL (iframe)</label><input type="text" id="url" placeholder="https://example.com"></div>
+        <div class="field"><span class="lbl">Fit</span>
+          <div class="seg" data-name="fit"><button data-v="auto" aria-pressed="true">auto</button><button data-v="cover">cover</button><button data-v="top">top</button><button data-v="contain">contain</button><button data-v="scroll">scroll</button><button data-v="fill">fill</button></div>
+        </div>
+        <div class="field"><span class="lbl">Orientation</span><div class="seg" data-name="orientation"><button data-v="portrait" aria-pressed="true">Portrait</button><button data-v="landscape">Landscape</button></div></div>
+        <div class="field"><span class="lbl">Status bar &amp; home indicator</span><div class="seg" data-name="chrome"><button data-v="auto" aria-pressed="true">auto</button><button data-v="on">on</button><button data-v="off">off</button></div></div>
+        <div class="field"><span class="lbl">Theme · Glare</span><div class="seg" data-name="theme" style="margin-bottom:6px"><button data-v="light" aria-pressed="true">Light</button><button data-v="dark">Dark</button></div><div class="seg" data-name="glare"><button data-v="off" aria-pressed="true">No glare</button><button data-v="on">Glare</button></div></div>
+      </div>
+      <div>
+        <div class="stagebox"><bezel-device id="pg"></bezel-device></div>
+        <div class="report" id="report"></div>
+        <div class="code"><pre id="snippet"></pre><button id="copySnippet">Copy</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="devices">
+    <h2>Devices</h2>
+    <p class="sub">Every frame is drawn in CSS at the device's real CSS-pixel viewport, so it stays sharp at any size. Click any device to open it in the playground.</p>
+    <div id="gallery"></div>
+  </section>
+
+  <section id="docs">
+    <h2>API</h2>
+    <p class="sub">A single element works in plain HTML, React 19, Vue, Svelte, Astro, MDX and Webflow embeds. It scales to the width you give it (or fits inside both width and height if you set both).</p>
+    <table>
+      <thead><tr><th>Attribute</th><th>Values</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>device</code></td><td><code>iphone-17-pro</code> … see gallery</td><td>Which frame to render. Short aliases work too: <code>iphone</code>, <code>android</code>, <code>ipad</code>, <code>macbook</code>, <code>watch</code>, <code>browser</code>.</td></tr>
+        <tr><td><code>src</code></td><td>image · video · URL</td><td>Content type is detected from the extension. URLs are embedded as a live iframe at the device's true viewport. Leave it out to slot your own HTML.</td></tr>
+        <tr><td><code>fit</code></td><td><code>auto</code> <code>cover</code> <code>top</code> <code>contain</code> <code>scroll</code> <code>fill</code> <code>none</code></td><td><code>auto</code> compares the image's shape with the screen: if they match (±4%) it covers, if the image is much taller it scrolls, if it's a bit taller it pins to the top, and if it's wider it letterboxes with sampled edge colours.</td></tr>
+        <tr><td><code>color</code></td><td>name or CSS colour</td><td>Official finish names (<code>deep-blue</code>, <code>cosmic orange</code>) or any CSS colour.</td></tr>
+        <tr><td><code>orientation</code></td><td><code>portrait</code> <code>landscape</code></td><td>Phones and tablets. Content rotates with the device, so it stays upright.</td></tr>
+        <tr><td><code>chrome</code></td><td><code>auto</code> <code>on</code> <code>off</code></td><td>Draws a status bar and home indicator. With <code>auto</code> they're on for HTML and iframes and off for screenshots, which already have their own.</td></tr>
+        <tr><td><code>safe-area</code></td><td><code>auto</code> <code>pad</code> <code>none</code></td><td><code>pad</code> keeps content clear of the notch and home indicator. Slotted HTML also gets <code>--bezel-safe-top</code>/<code>-bottom</code> CSS variables.</td></tr>
+        <tr><td><code>theme</code></td><td><code>light</code> <code>dark</code></td><td>Status bar ink and browser toolbar colours.</td></tr>
+        <tr><td><code>url</code> · <code>viewport</code></td><td><code>acme.dev</code> · <code>1440x900</code></td><td>For browser frames: the address-bar text and the window size.</td></tr>
+        <tr><td><code>glare</code> · <code>shadow</code></td><td>boolean · <code>none</code></td><td>Adds a subtle screen reflection; <code>shadow="none"</code> turns off the drop shadow.</td></tr>
+      </tbody>
+    </table>
+    <p class="sub" style="margin-top:22px">Events: <code>bezel-fit</code> fires with <code>{ fit, mediaRatio, screenRatio, mismatch }</code> once media loads, so you can warn authors about screenshots from the wrong device. Styling hooks: <code>::part(screen)</code>, <code>::part(frame)</code>, <code>--bezel-screen-bg</code>. Custom devices: <code>defineDevice({ id, screen: { w, h, radius }, … })</code>.</p>
+  </section>
+
+  <footer>bezelkit is MIT-licensed and open source. Device names are trademarks of their owners; frames are original CSS drawings, not traced artwork.</footer>
+</div>
+
+<script type="module">
+import { listDevices, getDevice } from '../../src/bezel.js';
+
+// ─── sample screenshots (drawn on canvas so the demo has no binary assets) ───
+const PALETTE = { bg: '#f6efe6', card: '#fffaf3', ink: '#231d17', muted: '#8a7f72', accent: '#d2522b', chip: '#e9e0d3', line: '#eadfce' };
+const cache = new Map();
+
+function shot(w, h, { scale = w > 1200 ? 1 : 2, variant = 'app' } = {}) {
+  const key = `${w}x${h}@${scale}:${variant}`;
+  if (cache.has(key)) return cache.get(key);
+  const c = document.createElement('canvas');
+  c.width = Math.round(w * scale); c.height = Math.round(h * scale);
+  const g = c.getContext('2d');
+  g.scale(scale, scale);
+  const ratio = w / h;
+  if (variant === 'watch' || (ratio > 0.7 && ratio < 0.9 && w < 260)) drawWatch(g, w, h);
+  else if (ratio >= 1.15 || (variant === 'long' && w >= 900)) drawDesktop(g, w, h);
+  else drawPhone(g, w, h, ratio > 0.6);
+  const url = c.toDataURL('image/webp', 0.9);
+  cache.set(key, url);
+  return url;
+}
+
+function rr(g, x, y, w, h, r, fill) { g.beginPath(); g.roundRect(x, y, w, h, r); g.fillStyle = fill; g.fill(); }
+function text(g, s, x, y, size, color, weight = 400, font = 'Inter, system-ui, sans-serif') { g.font = `${weight} ${size}px ${font}`; g.fillStyle = color; g.fillText(s, x, y); }
+
+function drawPhone(g, w, h, tablet) {
+  const u = tablet ? w / 700 : w / 390;
+  g.fillStyle = PALETTE.bg; g.fillRect(0, 0, w, h);
+  // status bar baked in, like a real screenshot
+  text(g, '9:41', 28 * u, 32 * u, 16 * u, PALETTE.ink, 600);
+  rr(g, w - 52 * u, 21 * u, 24 * u, 12 * u, 3.5 * u, PALETTE.ink);
+  const pad = 20 * u;
+  text(g, 'Week', pad, 96 * u, 34 * u, PALETTE.ink, 400, '"Instrument Serif", Georgia, serif');
+  rr(g, pad, 112 * u, w - pad * 2, 38 * u, 19 * u, PALETTE.card);
+  text(g, 'This week', w / 2 - 38 * u, 137 * u, 16 * u, PALETTE.ink, 600);
+  const meals = [['Berry Overnight Oats', 'Breakfast'], ['Grilled Cheese & Soup', 'Lunch'], ['Spaghetti & Meatballs', 'Dinner'], ['Veggie Omelette', 'Breakfast'], ['Chicken Tacos', 'Lunch'], ['Butter Chicken & Rice', 'Dinner'], ['Yogurt Bowl', 'Breakfast'], ['Falafel Wrap', 'Lunch'], ['Salmon & Greens', 'Dinner']];
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Monday', 'Tuesday'];
+  let y = 178 * u, i = 0, d = 0;
+  const bottomBar = 84 * u;
+  while (y < h - bottomBar - 40 * u) {
+    if (i % 3 === 0) {
+      if (d === 0) text(g, 'TODAY', pad, y, 11 * u, PALETTE.accent, 700);
+      text(g, days[d % days.length], pad, y + 28 * u, 24 * u, PALETTE.ink, 600, 'Georgia, serif');
+      rr(g, pad, y + 40 * u, 110 * u, 24 * u, 12 * u, PALETTE.chip); text(g, 'Balanced day', pad + 12 * u, y + 56 * u, 11.5 * u, PALETTE.ink, 500);
+      rr(g, pad + 118 * u, y + 40 * u, 108 * u, 24 * u, 12 * u, PALETTE.chip); text(g, 'Protein strong', pad + 130 * u, y + 56 * u, 11.5 * u, PALETTE.ink, 500);
+      y += 76 * u; d++;
+    }
+    const [name, meal] = meals[i % meals.length];
+    rr(g, pad, y, w - pad * 2, 58 * u, 12 * u, PALETTE.card);
+    text(g, name, pad + 14 * u, y + 26 * u, 15 * u, PALETTE.ink, 600, 'Georgia, serif');
+    text(g, meal, pad + 14 * u, y + 44 * u, 12 * u, PALETTE.muted);
+    rr(g, w - pad - 84 * u, y + 15 * u, 30 * u, 28 * u, 8 * u, PALETTE.bg); rr(g, w - pad - 46 * u, y + 15 * u, 30 * u, 28 * u, 8 * u, PALETTE.bg);
+    y += 66 * u; i++;
+  }
+  // tab bar pinned to the bottom edge — makes cropping obvious
+  g.fillStyle = PALETTE.card; g.fillRect(0, h - bottomBar, w, bottomBar);
+  g.fillStyle = PALETTE.line; g.fillRect(0, h - bottomBar, w, 1);
+  ['Today', 'Week', 'Shop', 'Trending', 'Household'].forEach((t, k) => {
+    const cx = (w / 5) * (k + 0.5);
+    rr(g, cx - 10 * u, h - bottomBar + 14 * u, 20 * u, 20 * u, 6 * u, k === 1 ? PALETTE.accent : '#cbbfae');
+    g.font = `500 ${11 * u}px Inter, system-ui`; g.fillStyle = k === 1 ? PALETTE.accent : PALETTE.muted;
+    g.fillText(t, cx - g.measureText(t).width / 2, h - bottomBar + 50 * u);
+  });
+  rr(g, w / 2 - 67 * u, h - 13 * u, 134 * u, 5 * u, 3 * u, PALETTE.ink);
+}
+
+function drawDesktop(g, w, h) {
+  const u = w / 1440;
+  g.fillStyle = PALETTE.bg; g.fillRect(0, 0, w, h);
+  g.fillStyle = PALETTE.card; g.fillRect(0, 0, 240 * u, h);
+  text(g, 'Mealwise', 28 * u, 58 * u, 30 * u, PALETTE.ink, 400, '"Instrument Serif", Georgia, serif');
+  ['Overview', 'Week plan', 'Shopping', 'Recipes', 'Household', 'Settings'].forEach((t, k) => {
+    if (k === 1) rr(g, 16 * u, (100 + k * 44) * u, 208 * u, 36 * u, 9 * u, PALETTE.chip);
+    text(g, t, 32 * u, (124 + k * 44) * u, 15 * u, k === 1 ? PALETTE.ink : PALETTE.muted, k === 1 ? 600 : 400);
+  });
+  const x0 = 280 * u;
+  text(g, 'Good morning, Sam', x0, 88 * u, 44 * u, PALETTE.ink, 400, '"Instrument Serif", Georgia, serif');
+  text(g, 'Here is how your week is shaping up.', x0, 120 * u, 16 * u, PALETTE.muted);
+  const cw = (w - x0 - 40 * u - 3 * 20 * u) / 4;
+  [['Meals planned', '19/21'], ['Protein avg', '112 g'], ['Grocery est.', '$86'], ['Cook time', '4.2 h']].forEach(([k, v], i) => {
+    const x = x0 + i * (cw + 20 * u);
+    rr(g, x, 150 * u, cw, 110 * u, 14 * u, PALETTE.card);
+    text(g, k, x + 20 * u, 184 * u, 14 * u, PALETTE.muted);
+    text(g, v, x + 20 * u, 232 * u, 36 * u, PALETTE.ink, 600);
+  });
+  const chartH = Math.max(h - 300 * u - 60 * u, 120 * u);
+  rr(g, x0, 290 * u, w - x0 - 40 * u, chartH, 14 * u, PALETTE.card);
+  text(g, 'Calories by day', x0 + 24 * u, 330 * u, 16 * u, PALETTE.ink, 600);
+  const bars = [0.62, 0.8, 0.7, 0.92, 0.55, 0.74, 0.86];
+  const bw = (w - x0 - 40 * u - 100 * u) / bars.length;
+  bars.forEach((b, i) => {
+    const bh = (chartH - 100 * u) * b;
+    rr(g, x0 + 40 * u + i * bw + bw * 0.2, 290 * u + chartH - 30 * u - bh, bw * 0.6, bh, 8 * u, i === 3 ? PALETTE.accent : '#e6c9b5');
+  });
+}
+
+function drawWatch(g, w, h) {
+  g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
+  const cx = w / 2, cy = h / 2 + 10, rings = [['#fa114f', 0.78], ['#a6ff00', 0.6], ['#00d8ff', 0.9]];
+  rings.forEach(([col, p], i) => {
+    const r = 72 - i * 20;
+    g.lineWidth = 16; g.lineCap = 'round';
+    g.strokeStyle = col + '33'; g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.stroke();
+    g.strokeStyle = col; g.beginPath(); g.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p); g.stroke();
+  });
+  text(g, '10:09', w - 62, 30, 17, '#fff', 600);
+}
+
+const sampleFor = (d, variant, orientation) => {
+  let { w, h } = d.screen;
+  if (orientation === 'landscape') [w, h] = [h, w];
+  if (variant === 'long') return shot(w, h * 2.8, { variant: 'long' });
+  if (variant === 'mismatch') return d.kind === 'phone' || d.kind === 'tablet' ? shot(w, w * 16 / 9) : shot(w, w * 3 / 4);
+  return shot(w, h, { variant: d.kind === 'watch' ? 'watch' : 'app' });
+};
+
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+const once = (el, type, ms) => new Promise((r) => {
+  const t = setTimeout(r, ms);
+  el.addEventListener(type, () => { clearTimeout(t); r(); }, { once: true });
+});
+
+// ─── hero: one tag, every device ───
+const HERO = [
+  { device: 'iphone-17-pro', color: 'cosmic-orange' },
+  { device: 'macbook-pro-14', color: 'silver' },
+  { device: 'pixel-10-pro', color: 'porcelain' },
+  { device: 'ipad-pro-11', orientation: 'landscape' },
+  { device: 'apple-watch-ultra' },
+  { device: 'browser-safari', url: 'bezelkit.dev' },
+  { device: 'galaxy-s25-ultra', color: 'titanium-silverblue' },
+  { device: 'imac-24', color: 'blue' },
+];
+const HOLD = 3400;
+const morph = { layers: [...document.querySelectorAll('.morph-float bezel-device')], front: 0, i: 0, busy: false, paused: false, visible: true, timer: 0 };
+const typedEl = document.getElementById('typedDevice');
+const dotsEl = document.getElementById('morphDots');
+
+function configure(el, item) {
+  for (const a of ['color', 'orientation', 'url']) item[a] ? el.setAttribute(a, item[a]) : el.removeAttribute(a);
+  el.setAttribute('device', item.device);
+  el.setAttribute('src', sampleFor(getDevice(item.device), 'app', item.orientation));
+}
+function describe(item) {
+  const d = getDevice(item.device);
+  const [w, h] = item.orientation === 'landscape' ? [d.screen.h, d.screen.w] : [d.screen.w, d.screen.h];
+  document.getElementById('morphChip').innerHTML = `<b>${d.name}</b> · ${w}×${h} CSS px${d.dpr ? ` · @${d.dpr}x` : ''}`;
+  dotsEl.style.setProperty('--hold', `${HOLD}ms`);
+  dotsEl.replaceChildren(...HERO.map((it, k) => {
+    const b = document.createElement('button');
+    b.setAttribute('aria-label', getDevice(it.device).name);
+    b.setAttribute('aria-current', String(k === morph.i));
+    b.onclick = () => go(k);
+    return b;
+  }));
+}
+async function typeDevice(text) {
+  if (reduceMotion) { typedEl.textContent = text; return; }
+  while (typedEl.textContent.length) { typedEl.textContent = typedEl.textContent.slice(0, -1); await sleep(14); }
+  for (const ch of text) { typedEl.textContent += ch; await sleep(34); }
+}
+async function show(i) {
+  if (morph.busy || i === morph.i) return;
+  morph.busy = true;
+  const cur = morph.layers[morph.front], next = morph.layers[1 - morph.front];
+  const ready = once(next, 'bezel-fit', 700);
+  configure(next, HERO[i]);
+  await Promise.all([typeDevice(HERO[i].device), ready]);
+  await frame();
+  morph.i = i;
+  describe(HERO[i]);
+  next.style.zIndex = 2; cur.style.zIndex = 1;
+  const out = cur.animate(
+    [{ opacity: 1, transform: 'none', filter: 'blur(0)' }, { opacity: 0, transform: 'scale(.9) translateY(14px)', filter: 'blur(8px)' }],
+    { duration: reduceMotion ? 1 : 420, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+  const inn = next.animate(
+    [{ opacity: 0, transform: 'scale(1.07) translateY(-14px)', filter: 'blur(8px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }],
+    { duration: reduceMotion ? 1 : 680, delay: reduceMotion ? 0 : 110, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
+  await Promise.all([out.finished, inn.finished]);
+  for (const a of [out, inn]) { a.commitStyles(); a.cancel(); }
+  morph.front = 1 - morph.front;
+  morph.busy = false;
+}
+function schedule() {
+  clearTimeout(morph.timer);
+  if (reduceMotion || morph.paused) return;
+  morph.timer = setTimeout(async () => {
+    if (morph.visible && !document.hidden) await show((morph.i + 1) % HERO.length);
+    schedule();
+  }, HOLD);
+}
+async function go(k) { clearTimeout(morph.timer); await show(k); if (!morph.paused) schedule(); }
+
+configure(morph.layers[0], HERO[0]);
+describe(HERO[0]);
+schedule();
+
+const morphEl = document.getElementById('morph'), tilt = document.getElementById('morphTilt');
+morphEl.addEventListener('pointerenter', () => { morph.paused = true; clearTimeout(morph.timer); dotsEl.classList.add('paused'); });
+morphEl.addEventListener('pointerleave', () => {
+  morph.paused = false;
+  tilt.style.setProperty('--rx', '0deg'); tilt.style.setProperty('--ry', '0deg');
+  dotsEl.classList.remove('paused');
+  describe(HERO[morph.i]);
+  schedule();
+});
+if (!reduceMotion) morphEl.addEventListener('pointermove', (e) => {
+  const r = morphEl.getBoundingClientRect();
+  tilt.style.setProperty('--ry', `${((e.clientX - r.left) / r.width - 0.5) * 14}deg`);
+  tilt.style.setProperty('--rx', `${-((e.clientY - r.top) / r.height - 0.5) * 10}deg`);
+});
+new IntersectionObserver(([en]) => { morph.visible = en.isIntersecting; }).observe(morphEl);
+
+// ─── marquee ───
+const chips = listDevices().map((d) => `<span>${d.name}<b>${d.screen.w}×${d.screen.h}</b></span>`).join('');
+document.getElementById('marquee').innerHTML = chips + chips;
+
+// ─── story: how fit=auto thinks ───
+const story = {
+  el: document.getElementById('storyDevice'), wrap: document.getElementById('stageWrap'), ghost: document.getElementById('ghost'),
+  label: document.getElementById('ghostLabel'), note: document.getElementById('ghostNote'),
+  top: document.getElementById('bandTop'), bottom: document.getElementById('bandBottom'), verdict: document.getElementById('verdict'),
+  step: null, detail: null, loop: 0, wait: 0,
+};
+const STEPS = {
+  match: () => shot(402, 874),
+  long: () => shot(402, 874 * 2.8, { variant: 'long' }),
+  tall: () => shot(402, 402 / 0.4),
+  wide: () => shot(402, 402 * 16 / 9),
+};
+const VERDICT_BG = { cover: '#2e7d4f', scroll: '#2f5fa7', top: '#b5471f', contain: '#6b4fa0', pad: '#1d1a16' };
+const SAFE_HTML = `<div style="min-height:100%;box-sizing:border-box;padding:14px 18px;background:#fffaf3;font:15px/1.45 system-ui,sans-serif;color:#231d17">
+  <div style="display:flex;justify-content:space-between;align-items:center"><b style="font:400 32px Georgia,serif">Inbox</b><span style="padding:2px 10px;border-radius:999px;background:#d2522b;color:#fff;font-weight:600">3</span></div>
+  ${['Your order shipped', 'Sam shared “Week plan”', 'Receipt from Mealwise', 'Weekly digest', 'Security alert', 'New comment', 'Invoice #2291']
+    .map((t, i) => `<div style="margin-top:10px;padding:12px 14px;background:#fff;border:1px solid #eadfce;border-radius:12px"><b>${t}</b><div style="color:#8a7f72;font-size:13px">${i + 1}h ago</div></div>`).join('')}
+</div>`;
+
+function cell(i, label, value, digits = 2, suffix = '') {
+  document.getElementById(`l${i}`).textContent = label;
+  const el = document.getElementById(`v${i}`);
+  if (typeof value !== 'number') { el.textContent = value; return; }
+  const from = parseFloat(el.textContent) || 0, t0 = performance.now();
+  const tick = (t) => {
+    const k = reduceMotion ? 1 : Math.min(1, (t - t0) / 600), e = 1 - (1 - k) ** 3;
+    el.textContent = (from + (value - from) * e).toFixed(digits) + suffix;
+    if (k < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+function setVerdict(text, key) { story.verdict.textContent = text; story.verdict.style.background = VERDICT_BG[key]; }
+function screenBox() {
+  const scr = story.el.shadowRoot.querySelector('.screen').getBoundingClientRect(), w = story.wrap.getBoundingClientRect();
+  return { x: scr.left - w.left, y: scr.top - w.top, W: scr.width, H: scr.height };
+}
+function band(el, g, top, h, html, cls = '') {
+  el.className = `band on ${cls}`;
+  Object.assign(el.style, { left: `${g.x}px`, width: `${g.W}px`, top: `${top}px`, height: `${Math.max(h, 0)}px` });
+  el.firstElementChild.innerHTML = html;
+}
+function stopLoop() { cancelAnimationFrame(story.loop); clearTimeout(story.wait); story.ghost.classList.remove('live'); }
+
+function renderStory() {
+  stopLoop();
+  const { ghost } = story;
+  story.top.className = story.bottom.className = 'band';
+  if (story.step === 'safe') {
+    ghost.style.opacity = 0;
+    const g = screenBox(), spec = story.el.spec, s = g.W / spec.screen.w;
+    band(story.top, g, g.y, spec.safe.top * s, `--bezel-safe-top · ${spec.safe.top}px`);
+    band(story.bottom, g, g.y + g.H - spec.safe.bottom * s, spec.safe.bottom * s, `${spec.safe.bottom}px`);
+    document.getElementById('op0').textContent = '·';
+    document.getElementById('op1').textContent = '→';
+    cell(0, 'safe top', spec.safe.top, 0, 'px');
+    cell(1, 'safe bottom', spec.safe.bottom, 0, 'px');
+    cell(2, 'content box', `${spec.screen.w}×${spec.screen.h - spec.safe.top - spec.safe.bottom}`);
+    setVerdict('safe-area: pad', 'pad');
+    return;
+  }
+  const d = story.detail;
+  if (!d) return;
+  const g = screenBox(), s = g.W / d.screen.w, imgH = g.W / d.mediaRatio;
+  const top = d.fit === 'cover' || d.fit === 'contain' ? g.y + (g.H - imgH) / 2 : g.y;
+  Object.assign(ghost.style, { left: `${g.x}px`, width: `${g.W}px`, top: `${top}px`, height: `${imgH}px`, opacity: 1 });
+  ghost.style.setProperty('--sy', `${g.y - top}px`);
+  ghost.style.setProperty('--sh', `${g.H}px`);
+  ghost.style.setProperty('--hatch', d.fit === 'scroll' ? 'rgba(47,95,167,.35)' : 'rgba(210,82,43,.4)');
+  story.label.textContent = `your image · ${d.media.w}×${d.media.h}`;
+  story.note.textContent = d.fit === 'top' ? `bottom ${Math.round((1 - g.H / imgH) * 100)}% trimmed` : d.fit === 'scroll' ? '↕ scrolls inside the screen' : '';
+  document.getElementById('op0').textContent = '÷';
+  document.getElementById('op1').textContent = '=';
+  cell(0, 'image', d.mediaRatio, 3);
+  cell(1, 'screen', d.screenRatio, 3);
+  cell(2, 'mismatch', d.mismatch, 2);
+  setVerdict(`fit: ${d.fit}`, d.fit);
+
+  if (d.fit === 'contain') {
+    const cs = getComputedStyle(story.el.shadowRoot.querySelector('.media'));
+    const ct = cs.getPropertyValue('--_lb-top').trim() || '#000', cb = cs.getPropertyValue('--_lb-bottom').trim() || '#000';
+    band(story.top, g, g.y, top - g.y, `<i style="background:${ct}"></i>sampled top`, 'lb');
+    band(story.bottom, g, top + imgH, g.y + g.H - top - imgH, `<i style="background:${cb}"></i>sampled bottom`, 'lb');
+  }
+  if (d.fit === 'scroll' && !reduceMotion) {
+    // Let the ghost finish its transition, then drive the real scroll and the outline together.
+    story.wait = setTimeout(() => {
+      const media = story.el.shadowRoot.querySelector('.media');
+      ghost.classList.add('live');
+      const t0 = performance.now();
+      const tick = (t) => {
+        const max = media.scrollHeight - media.clientHeight;
+        const st = ((1 - Math.cos(((t - t0) / 8000) * Math.PI * 2)) / 2) * max;
+        media.scrollTop = st;
+        ghost.style.top = `${top - st * s}px`;
+        ghost.style.setProperty('--sy', `${g.y - top + st * s}px`);
+        story.loop = requestAnimationFrame(tick);
+      };
+      story.loop = requestAnimationFrame(tick);
+    }, 850);
+  }
+}
+
+function activate(step) {
+  if (step === story.step) return;
+  story.step = step;
+  story.detail = null;
+  stopLoop();
+  document.querySelectorAll('.step').forEach((el) => el.classList.toggle('active', el.dataset.step === step));
+  const el = story.el;
+  const media = el.shadowRoot.querySelector('.media');
+  if (media) media.scrollTop = 0;
+  if (step === 'safe') {
+    el.removeAttribute('src');
+    el.setAttribute('safe-area', 'pad');
+    el.setAttribute('chrome', 'on');
+    el.innerHTML = SAFE_HTML;
+    frame().then(() => story.step === 'safe' && renderStory());
+  } else {
+    el.replaceChildren();
+    el.removeAttribute('safe-area');
+    el.removeAttribute('chrome');
+    el.setAttribute('src', STEPS[step]());
+  }
+}
+story.el.addEventListener('bezel-fit', (e) => {
+  const prev = story.detail;
+  const same = prev && prev.fit === e.detail.fit && prev.media.w === e.detail.media.w && prev.media.h === e.detail.media.h;
+  if (story.step === 'safe' || same) return;
+  story.detail = e.detail;
+  renderStory();
+});
+const stepObserver = new IntersectionObserver((entries) => {
+  for (const en of entries) if (en.isIntersecting) activate(en.target.dataset.step);
+}, { rootMargin: '-48% 0px -48% 0px' });
+document.querySelectorAll('.step').forEach((el) => stepObserver.observe(el));
+new ResizeObserver(() => story.step && requestAnimationFrame(renderStory)).observe(story.wrap);
+new IntersectionObserver(([en]) => { if (!en.isIntersecting) stopLoop(); else if (story.step) renderStory(); }).observe(document.getElementById('storyStage'));
+activate('match');
+
+// ─── hero: before/after ───
+const ba = {
+  stage: document.getElementById('baStage'), good: document.getElementById('baGood'), bad: document.getElementById('baBad'),
+  handle: document.getElementById('baHandle'), explain: document.getElementById('baExplain'),
+  device: 'iphone-17-pro', custom: null, split: 50, touched: false,
+};
+const BA_DEVICES = [['iphone-17-pro', 'iPhone 17 Pro'], ['pixel-10-pro', 'Pixel 10 Pro'], ['galaxy-s25-ultra', 'Galaxy S25 Ultra'], ['ipad-mini', 'iPad mini'], ['macbook-air-13', 'MacBook Air']];
+function baSplit(pct) {
+  ba.split = Math.max(0, Math.min(100, pct));
+  ba.stage.style.setProperty('--split', `${ba.split}%`);
+  ba.handle.setAttribute('aria-valuenow', String(Math.round(ba.split)));
+}
+function baRender() {
+  const d = getDevice(ba.device);
+  const src = ba.custom?.url ?? sampleFor(d, 'mismatch');
+  for (const el of [ba.good, ba.bad]) {
+    el.setAttribute('device', ba.device);
+    el.setAttribute('src', src);
+    ba.custom?.type === 'video' ? el.setAttribute('type', 'video') : el.removeAttribute('type');
+  }
+  document.getElementById('baDevices').replaceChildren(...BA_DEVICES.map(([id, name]) => {
+    const b = document.createElement('button');
+    b.textContent = name; b.setAttribute('aria-pressed', String(id === ba.device));
+    b.onclick = () => { ba.device = id; baRender(); };
+    return b;
+  }));
+}
+ba.good.addEventListener('bezel-fit', (e) => {
+  const { fit, media, mismatch } = e.detail;
+  const pct = Math.abs(mismatch - 1) * 100;
+  const shape = pct <= 4 ? 'matches the screen' : mismatch < 1 ? `is ${pct.toFixed(0)}% taller than the screen` : `is ${pct.toFixed(0)}% wider than the screen`;
+  const action = { cover: 'fills it', scroll: 'scrolls it', top: 'pins it to the top', contain: 'letterboxes it with sampled colours', fill: 'stretches it', none: 'shows it 1:1' }[fit];
+  ba.explain.innerHTML = `${ba.custom ? 'Your image' : 'This screenshot'} (<b>${media.w}×${media.h}</b>) ${shape}, so bezelkit <b>${action}</b>.`;
+});
+function baPointer(e) {
+  const r = ba.stage.getBoundingClientRect();
+  baSplit(((e.clientX - r.left) / r.width) * 100);
+}
+ba.stage.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('.ba-tag')) return;
+  ba.touched = true;
+  ba.stage.setPointerCapture(e.pointerId);
+  baPointer(e);
+  const move = (ev) => baPointer(ev);
+  const up = () => { ba.stage.removeEventListener('pointermove', move); ba.stage.removeEventListener('pointerup', up); };
+  ba.stage.addEventListener('pointermove', move);
+  ba.stage.addEventListener('pointerup', up);
+});
+ba.handle.addEventListener('keydown', (e) => {
+  const step = e.shiftKey ? 10 : 2;
+  if (e.key === 'ArrowLeft') baSplit(ba.split - step);
+  else if (e.key === 'ArrowRight') baSplit(ba.split + step);
+  else return;
+  ba.touched = true; e.preventDefault();
+});
+function baUse(file) {
+  if (!file) return;
+  if (ba.custom) URL.revokeObjectURL(ba.custom.url);
+  ba.custom = { url: URL.createObjectURL(file), type: file.type.startsWith('video') ? 'video' : 'image' };
+  baRender();
+}
+document.getElementById('heroFile').addEventListener('change', (e) => baUse(e.target.files[0]));
+ba.stage.addEventListener('dragover', (e) => { e.preventDefault(); ba.stage.classList.add('over'); });
+ba.stage.addEventListener('dragleave', (e) => { if (!ba.stage.contains(e.relatedTarget)) ba.stage.classList.remove('over'); });
+ba.stage.addEventListener('drop', (e) => { e.preventDefault(); ba.stage.classList.remove('over'); baUse(e.dataTransfer.files[0]); });
+baRender();
+baSplit(50);
+// One sweep on load so it's obvious the divider moves; stops as soon as the user touches it.
+if (!reduceMotion) {
+  const t0 = performance.now() + 900;
+  const sweep = (t) => {
+    if (ba.touched) return;
+    const k = (t - t0) / 2600;
+    if (k < 0) return requestAnimationFrame(sweep);
+    if (k > 1) return baSplit(50);
+    baSplit(50 - Math.sin(k * Math.PI * 2) * 28);
+    requestAnimationFrame(sweep);
+  };
+  requestAnimationFrame(sweep);
+}
+
+// ─── problem demo ───
+const bad = shot(402, 402 * 16 / 9);
+document.getElementById('naiveImg').src = bad;
+document.getElementById('coverDemo').src = bad;
+document.getElementById('autoDemo').src = bad;
+
+// ─── playground ───
+const pg = document.getElementById('pg');
+const state = { device: 'iphone-17-pro', color: null, source: 'sample', fit: 'auto', orientation: 'portrait', chrome: 'auto', theme: 'light', glare: 'off', custom: null, customName: null, url: '' };
+const KIND_LABEL = { phone: 'Phones', tablet: 'Tablets', watch: 'Watches', laptop: 'Laptops', desktop: 'Desktops', browser: 'Browser windows' };
+const devices = listDevices();
+
+const sel = document.getElementById('device');
+for (const [kind, label] of Object.entries(KIND_LABEL)) {
+  const og = document.createElement('optgroup'); og.label = label;
+  for (const d of devices.filter((x) => x.kind === kind)) og.append(new Option(`${d.name} — ${d.screen.w}×${d.screen.h}`, d.id));
+  sel.append(og);
+}
+sel.value = state.device;
+sel.onchange = () => { state.device = sel.value; state.color = null; renderColors(); apply(); };
+
+function renderColors() {
+  const box = document.getElementById('colors');
+  box.replaceChildren();
+  const d = getDevice(state.device);
+  d.colors.forEach(([name, hex], i) => {
+    const b = document.createElement('button');
+    b.title = name; b.style.background = hex;
+    b.setAttribute('aria-pressed', String(state.color ? state.color === name : i === 0));
+    b.onclick = () => { state.color = name; renderColors(); apply(); };
+    box.append(b);
+  });
+}
+
+document.querySelectorAll('.seg').forEach((seg) => {
+  seg.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    const name = seg.dataset.name;
+    state[name] = b.dataset.v;
+    if (name === 'source') { state.custom = null; state.url = ''; document.getElementById('url').value = ''; }
+    seg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    apply();
+  });
+});
+
+const drop = document.getElementById('drop'), file = document.getElementById('file');
+drop.onclick = () => file.click();
+drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove('over'); useFile(e.dataTransfer.files[0]); };
+file.onchange = () => useFile(file.files[0]);
+function useFile(f) {
+  if (!f) return;
+  if (state.custom) URL.revokeObjectURL(state.custom);
+  state.custom = URL.createObjectURL(f); state.customName = f.name; state.customType = f.type.startsWith('video') ? 'video' : 'image';
+  state.url = ''; drop.textContent = f.name;
+  apply();
+}
+document.getElementById('url').onchange = (e) => { state.url = e.target.value.trim(); apply(); };
+
+const HTML_DEMO = `<div style="font:15px/1.5 system-ui;padding:calc(var(--bezel-safe-top) + 16px) 20px 20px;background:#fffaf3;min-height:100%;box-sizing:border-box">
+  <h2 style="font:400 32px Georgia,serif;margin:8px 0">Hello from HTML</h2>
+  <p style="color:#6f675d">This is live, slotted markup. It scrolls, clicks and uses <code>--bezel-safe-top</code> to stay clear of the island.</p>
+  <button onclick="this.textContent='Clicked ✓'" style="font:600 15px system-ui;border:0;background:#d2522b;color:#fff;padding:12px 18px;border-radius:12px">Tap me</button>
+  ${Array.from({ length: 8 }, (_, i) => `<div style="background:#fff;border:1px solid #eadfce;border-radius:12px;padding:14px;margin-top:12px">Card ${i + 1}</div>`).join('')}
+</div>`;
+
+function apply() {
+  const d = getDevice(state.device);
+  const attrs = { device: state.device };
+  if (state.color && state.color !== d.colors[0][0]) attrs.color = state.color.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  let src = null, srcLabel = null;
+  pg.replaceChildren();
+  if (state.url) { src = state.url; srcLabel = state.url; }
+  else if (state.custom) { src = state.custom; srcLabel = state.customName; if (state.customType === 'video') attrs.type = 'video'; }
+  else if (state.source === 'html') { pg.innerHTML = HTML_DEMO; attrs['safe-area'] = 'none'; }
+  else { src = sampleFor(d, state.source, state.orientation); srcLabel = state.source === 'long' ? 'long-screenshot.png' : state.source === 'mismatch' ? 'old-16x9-screenshot.png' : 'screenshot.png'; }
+  if (src) attrs.src = src;
+  if (state.fit !== 'auto') attrs.fit = state.fit;
+  if (state.orientation === 'landscape') attrs.orientation = 'landscape';
+  if (state.chrome !== 'auto') attrs.chrome = state.chrome;
+  if (state.theme === 'dark') attrs.theme = 'dark';
+  if (state.glare === 'on') attrs.glare = '';
+
+  for (const a of [...pg.attributes]) if (a.name !== 'id' && !(a.name in attrs)) pg.removeAttribute(a.name);
+  for (const [k, v] of Object.entries(attrs)) pg.setAttribute(k, v);
+  if (!src) document.getElementById('report').innerHTML = `Screen <b>${pg.screenSize?.w ?? d.screen.w}×${pg.screenSize?.h ?? d.screen.h}</b> CSS px · slotted HTML`;
+
+  const shown = { ...attrs };
+  if (srcLabel) shown.src = srcLabel;
+  const attrStr = Object.entries(shown).map(([k, v]) => v === '' ? ` <span class="tok-attr">${k}</span>` : ` <span class="tok-attr">${k}</span>=<span class="tok-str">"${escapeHtml(v)}"</span>`).join('');
+  const inner = state.source === 'html' && !src ? '\n  <span style="opacity:.6">&lt;!-- your HTML --&gt;</span>\n' : '';
+  document.getElementById('snippet').innerHTML =
+    `<span style="opacity:.55">&lt;!-- once, anywhere on the page --&gt;</span>\n<span class="tok-tag">&lt;script</span> <span class="tok-attr">type</span>=<span class="tok-str">"module"</span> <span class="tok-attr">src</span>=<span class="tok-str">"https://cdn.jsdelivr.net/npm/bezelkit@0/dist/bezelkit.js"</span><span class="tok-tag">&gt;&lt;/script&gt;</span>\n\n<span class="tok-tag">&lt;bezel-device</span>${attrStr}<span class="tok-tag">&gt;</span>${inner}<span class="tok-tag">&lt;/bezel-device&gt;</span>`;
+}
+const escapeHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+pg.addEventListener('bezel-fit', (e) => {
+  const { fit, media, screen, mismatch, requested } = e.detail;
+  const pct = Math.abs(mismatch - 1) * 100;
+  const verdict = pct <= 4 ? 'shapes match' : mismatch < 1 ? `media is ${pct.toFixed(0)}% taller` : `media is ${pct.toFixed(0)}% wider`;
+  document.getElementById('report').innerHTML =
+    `Media <b>${media.w}×${media.h}</b> → screen <b>${Math.round(screen.w)}×${Math.round(screen.h)}</b> · ${verdict} · fit <b>${fit}</b>${requested === 'auto' ? ' (auto)' : ''}`;
+});
+
+document.getElementById('copySnippet').onclick = (e) => {
+  navigator.clipboard.writeText(document.getElementById('snippet').textContent);
+  e.target.textContent = 'Copied'; setTimeout(() => (e.target.textContent = 'Copy'), 1200);
+};
+document.querySelectorAll('[data-copy]').forEach((b) => (b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy); b.textContent = 'copied'; setTimeout(() => (b.textContent = 'copy'), 1200); }));
+
+renderColors();
+apply();
+
+// ─── gallery ───
+const gallery = document.getElementById('gallery');
+const groups = [['phone', 'Phones', 'phone'], ['tablet', 'Tablets', 'tablet'], ['watch', 'Watches', 'watch'], [['laptop', 'desktop'], 'Laptops & desktops', 'wide'], ['browser', 'Browser windows', 'wide']];
+const io = new IntersectionObserver((entries) => {
+  for (const en of entries) {
+    if (!en.isIntersecting) continue;
+    const el = en.target; io.unobserve(el);
+    el.setAttribute('src', sampleFor(getDevice(el.getAttribute('device'))));
+  }
+}, { rootMargin: '400px' });
+for (const [kinds, label, cls] of groups) {
+  const list = devices.filter((d) => [].concat(kinds).includes(d.kind));
+  const h = document.createElement('h3'); h.className = 'kind'; h.textContent = label;
+  const grid = document.createElement('div'); grid.className = `grid ${cls}`;
+  for (const d of list) {
+    const tile = document.createElement('button'); tile.className = 'tile';
+    tile.innerHTML = `<div class="shot"><bezel-device device="${d.id}" ${d.kind === 'browser' ? 'url="mealwise.app"' : ''}></bezel-device></div><div class="name">${d.name}</div><div class="meta">${d.id} · ${d.screen.w}×${d.screen.h}${d.dpr ? ` @${d.dpr}x` : ''}</div>`;
+    tile.onclick = () => { state.device = d.id; state.color = null; sel.value = d.id; renderColors(); apply(); document.getElementById('play').scrollIntoView(); };
+    io.observe(tile.querySelector('bezel-device'));
+    grid.append(tile);
+  }
+  gallery.append(h, grid);
+}
+</script>
+</body>
+</html>
