@@ -486,7 +486,7 @@ function build(gsap) {
     if (!title || !col) return;
     title.style.fontSize = '100px';
     const w = Math.max(...[...title.children].map((l) => l.getBoundingClientRect().width));
-    const max = innerWidth < 760 ? 88 : 150;
+    const max = innerWidth < 760 ? 92 : 170;
     title.style.fontSize = `${Math.min(max, Math.floor((col.clientWidth / w) * 100 * 0.98))}px`;
   };
   fit();
