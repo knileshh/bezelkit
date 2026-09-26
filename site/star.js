@@ -70,4 +70,4 @@ let lastCheer = 0;
 const cheer = () => { if (Date.now() - lastCheer > 4000) { lastCheer = Date.now(); play('cheer'); } };
 document.addEventListener('change', (e) => { if (e.target.matches?.('input[type="file"]') && e.target.files?.length) setTimeout(cheer, 1800); });
 document.addEventListener('drop', (e) => { if (e.dataTransfer?.files?.length) setTimeout(cheer, 1800); });
-document.addEventListener('click', (e) => { if (e.target.closest('#copySnippet, #copyAiPrompt, .hx-npm, [data-copy], .cta .btn')) setTimeout(cheer, 700); });
+document.addEventListener('click', (e) => { if (e.target.closest('#copySnippet, #copyAiPrompt, .hx-ai, [data-copy], .cta .btn')) setTimeout(cheer, 700); });

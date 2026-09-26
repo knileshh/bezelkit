@@ -21,13 +21,12 @@
 .hx-primary:hover { background: #000; transform: translateY(-1px); }
 .hx-primary:hover svg { transform: translateY(1px); }
 .hx-primary svg { transition: transform .25s var(--ease, ease); }
-.hx-npm { background: #fff; color: var(--ink); border-color: rgba(0, 0, 0, .16); font: 500 14.5px var(--mono); padding: 0 16px 0 18px; }
-.hx-npm b { font-weight: 500; color: var(--faint); margin-right: 3px; }
-.hx-npm svg { color: var(--faint); transition: color .2s; }
-.hx-npm:hover { border-color: rgba(0, 0, 0, .34); }
-.hx-npm:hover svg { color: var(--ink); }
-.hx-npm.done { border-color: var(--hx-ok); color: var(--hx-ok); }
-.hx-npm.done svg { color: var(--hx-ok); }
+.hx-ai { gap: 9px; background: #fff; color: var(--ink); border-color: rgba(0, 0, 0, .16); font: 650 15px var(--display); padding: 0 20px 0 17px; }
+.hx-ai svg { width: 17px; height: 17px; color: #7c5cff; transition: transform .4s cubic-bezier(.3,1.5,.5,1); }
+.hx-ai:hover { border-color: rgba(0, 0, 0, .34); }
+.hx-ai:hover svg { transform: rotate(90deg) scale(1.12); }
+.hx-ai.done { border-color: var(--hx-ok); color: var(--hx-ok); }
+.hx-ai.done svg { color: var(--hx-ok); }
 
 /* ─── stage ─── */
 .hx-stage { position: relative; height: 100%; min-height: 0; max-height: 880px; }
@@ -154,7 +153,7 @@
 .hx-star a:hover { border-color: var(--ink); }
 
 /* headline: two lines, two colours; ?h=a|b|c|d previews font pairings */
-.hx-title { font-size: clamp(56px, 7.4vw, 124px); line-height: .9; letter-spacing: -.045em; margin-bottom: 28px; }
+.hx-title { font-size: clamp(44px, 5vw, 96px); line-height: .9; letter-spacing: -.045em; margin-bottom: 28px; }
 .hx-title .l1, .hx-title .l2 { display: block; width: max-content; white-space: nowrap; }
 .hx-title .l2 { color: rgb(var(--warm)); }
 .hx-title[data-v="a"] .l1 { font-family: "Archivo", sans-serif; font-weight: 900; font-stretch: 118%; }

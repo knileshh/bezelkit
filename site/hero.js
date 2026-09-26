@@ -206,9 +206,9 @@ hero.innerHTML = `
     <p class="hx-sub">Drop a screenshot into any phone, tablet, laptop or watch. It fits perfectly. One HTML tag, ${count} devices, free.</p>
     <div class="hx-actions">
       <a class="hx-btn hx-primary" href="#play">Try it with your screenshot<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3.5 8.5 8 13l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-      <button class="hx-btn hx-npm" type="button" aria-label="Copy the install command: npm i bezelkit"><span class="hx-npm-t"><b>$</b> npm i bezelkit</span><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.25" y="5.25" width="8" height="8" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 3.2V3a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 3v5A1.5 1.5 0 0 0 4 9.5h.3" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
+      <button class="hx-btn hx-ai" type="button" aria-label="Copy a prompt for your AI assistant"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5c.4 2.9 1.6 4.1 4.5 4.5-2.9.4-4.1 1.6-4.5 4.5-.4-2.9-1.6-4.1-4.5-4.5 2.9-.4 4.1-1.6 4.5-4.5zM12.6 10.2c.2 1.3.7 1.8 2 2-1.3.2-1.8.7-2 2-.2-1.3-.7-1.8-2-2 1.3-.2 1.8-.7 2-2z" fill="currentColor"/></svg><span class="hx-ai-t">Copy prompt for your AI</span></button>
     </div>
-    <p class="hx-star">Free and open source · <a href="https://github.com/knileshh/bezelkit">★ Star on GitHub</a></p>
+    <p class="hx-star">Paste it into Claude, ChatGPT or Cursor · <a href="https://github.com/knileshh/bezelkit">★ Star on GitHub</a></p>
   </div>
   <div class="hx-stage" role="img" aria-label="A running-app screenshot is squashed and covered by a generic mockup's notch, then fitted correctly into a real iPhone 17 Pro frame, then shown in a Pixel 10 Pro, an iPad Pro in landscape, a MacBook Pro and an Apple Watch Ultra.">
     <div class="hx-glow" aria-hidden="true"><i class="g-bad"></i><i class="g-ok"></i></div>
@@ -226,6 +226,21 @@ hero.innerHTML = `
           <div class="hx-tag bad" data-t="squash"><b><em>✕</em>Squashed</b><span>forced into a 9:16 screen</span></div><i class="hx-lead bad" data-t="squash"></i>
           <div class="hx-tag bad" data-t="notch"><b><em>✕</em>Notch over the header</b><span>cropped, then covered</span></div><i class="hx-lead bad" data-t="notch"></i>
           <div class="hx-tag ok" data-t="ok"><b><em>✓</em><code>fit="auto" → <span class="hx-okfit">cover</span></code></b><span>same shape, header clear</span></div><i class="hx-lead ok" data-t="ok"></i>` : ''}</div>`;
+// ─── headline: size it so "Screenshot in." fills the text column on one line ───
+{
+  const title = document.getElementById('heroTitle'), col = title?.parentElement;
+  const fit = () => {
+    if (!title || !col) return;
+    title.style.fontSize = '100px';
+    const w = Math.max(...[...title.children].map((l) => l.getBoundingClientRect().width));
+    const max = innerWidth < 760 ? 92 : 170;
+    title.style.fontSize = `${Math.min(max, Math.floor((col.clientWidth / w) * 100 * 0.98))}px`;
+  };
+  fit();
+  document.fonts?.ready.then(fit);
+  new ResizeObserver(fit).observe(col);
+}
+
       }).join('')}
     </div>
     <div class="hx-foot" aria-hidden="true">
@@ -247,14 +262,19 @@ const devEl = (k) => $(`.hx-shot[data-k="${k}"] bezel-device`);
 const cap = (k) => $(`.hx-cap[data-c="${k}"]`);
 const tag = (t) => $$(`[data-t="${t}"]`);
 
-// copy button
-const npm = $('.hx-npm'), npmT = $('.hx-npm-t');
-npm.addEventListener('click', async () => {
-  const ok = await navigator.clipboard?.writeText('npm i bezelkit').then(() => true, () => false);
-  npm.classList.add('done');
-  npmT.innerHTML = ok ? 'Copied' : '<b>$</b> npm i bezelkit';
-  if (!ok) { const r = document.createRange(); r.selectNodeContents(npmT); getSelection().removeAllRanges(); getSelection().addRange(r); }
-  clearTimeout(npm.t); npm.t = setTimeout(() => { npm.classList.remove('done'); npmT.innerHTML = '<b>$</b> npm i bezelkit'; }, 1600);
+// copy a ready-made prompt for AI assistants
+const AI_PROMPT = `Add device mockups to my project with bezelkit (https://bezelkit.dev).
+First read https://bezelkit.dev/llms-full.txt and follow its "Rules for assistants".
+For each screenshot, pick the device whose native pixel size matches, keep fit="auto", set alt text, and load the component once (the CDN script for plain HTML, or npm i bezelkit if the project uses a bundler).
+
+My screenshots / page: `;
+const ai = $('.hx-ai'), aiT = $('.hx-ai-t');
+ai.addEventListener('click', async () => {
+  const ok = await navigator.clipboard?.writeText(AI_PROMPT).then(() => true, () => false);
+  ai.classList.add('done');
+  if (!ok) window.prompt('Copy this prompt for your AI assistant:', AI_PROMPT);
+  aiT.textContent = ok ? 'Copied. Paste it into your AI' : 'Copy prompt for your AI';
+  clearTimeout(ai.t); ai.t = setTimeout(() => { ai.classList.remove('done'); aiT.textContent = 'Copy prompt for your AI'; }, 2200);
 });
 
 // real fit results, straight from the component
@@ -479,17 +499,3 @@ function build(gsap) {
   document.addEventListener('visibilitychange', sync);
 }
 
-// ─── headline: size it so "Screenshot in." fills the text column on one line ───
-{
-  const title = document.getElementById('heroTitle'), col = title?.parentElement;
-  const fit = () => {
-    if (!title || !col) return;
-    title.style.fontSize = '100px';
-    const w = Math.max(...[...title.children].map((l) => l.getBoundingClientRect().width));
-    const max = innerWidth < 760 ? 92 : 170;
-    title.style.fontSize = `${Math.min(max, Math.floor((col.clientWidth / w) * 100 * 0.98))}px`;
-  };
-  fit();
-  document.fonts?.ready.then(fit);
-  new ResizeObserver(fit).observe(col);
-}
