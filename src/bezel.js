@@ -4,7 +4,7 @@ import { getDevice, listDevices, defineDevice } from './devices.js';
 
 export { getDevice, listDevices, defineDevice };
 
-const ATTRS = ['device', 'color', 'orientation', 'src', 'type', 'fit', 'chrome', 'safe-area', 'theme', 'url', 'viewport', 'glare', 'shadow', 'alt'];
+const ATTRS = ['device', 'color', 'orientation', 'src', 'type', 'fit', 'chrome', 'safe-area', 'theme', 'url', 'viewport', 'glare', 'shadow', 'alt', 'side', 'stack', 'logo'];
 const FITS = ['auto', 'cover', 'top', 'contain', 'scroll', 'fill', 'none'];
 const IMG_RE = /(^data:image\/)|\.(png|jpe?g|webp|gif|avif|svg|bmp)([?#]|$)/i;
 const VID_RE = /(^data:video\/)|\.(mp4|webm|mov|m4v|ogv)([?#]|$)/i;
@@ -38,6 +38,9 @@ const STYLES = `
 :host([glare]:not([glare="false"])) .glare { display: block; background: linear-gradient(115deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.05) 26%, transparent 40%); }
 .icons { display: flex; align-items: center; justify-content: center; gap: 6px; }
 .icons svg { display: block; fill: currentColor; }
+.back { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.back > * { position: absolute; box-sizing: border-box; }
+.device, .back { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 `;
 
 const ICON = {
@@ -203,6 +206,147 @@ function buildBrowser(d, _color, screen, { theme, url }) {
 
 const BUILDERS = { phone: buildHandheld, tablet: buildHandheld, watch: buildHandheld, laptop: buildLaptop, desktop: buildDesktop, browser: buildBrowser };
 
+// ─── back panels ───────────────────────────────────────────────────────────
+// Drawn as seen from behind, in the same W×H box as the front: padding and side buttons are
+// mirrored, so a rotateY(180deg) turn lands the outline exactly on the front's. Camera geometry
+// lives in each device's `back` entry (see devices.js); coordinates are px from the body's
+// top-left corner as seen from behind.
+
+const SIDES = ['front', 'back', 'both'];
+const FINISH = {
+  glass: (c) => `linear-gradient(160deg, ${lighten(c, 9)} 0%, ${c} 42%, ${darken(c, 7)} 100%)`,
+  gloss: (c) => `linear-gradient(160deg, ${lighten(c, 22)} 0%, ${c} 30%, ${darken(c, 12)} 72%, ${lighten(c, 6)} 100%)`,
+  aluminium: (c) => `linear-gradient(135deg, ${lighten(c, 16)} 0%, ${c} 35%, ${darken(c, 9)} 75%, ${lighten(c, 4)} 100%)`,
+  titanium: (c) => `linear-gradient(135deg, ${lighten(c, 14)} 0%, ${darken(c, 5)} 45%, ${lighten(c, 7)} 100%)`,
+  polished: metal,
+  dark: () => 'radial-gradient(120% 90% at 30% 20%, #34353b 0%, #111114 55%, #050506 100%)',
+};
+const SHEEN = { glass: 0.1, gloss: 0.24, aluminium: 0.08, titanium: 0.1, polished: 0.14, dark: 0.12 };
+const RAISED = '0 1px 1.5px rgba(0,0,0,.3), 0 6px 14px -6px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.3), inset 0 -1px 1px rgba(0,0,0,.18)';
+const finish = (f, c) => (FINISH[f] ?? FINISH.glass)(c);
+const sheen = (f) => { const a = SHEEN[f] ?? 0.1; return `linear-gradient(115deg, rgba(255,255,255,${a}) 0%, rgba(255,255,255,${a * 0.3}) 28%, transparent 46%, rgba(255,255,255,${a * 0.35}) 74%, transparent 90%)`; };
+const backTint = (d, color) => d.colors.find(([n]) => n === color.name)?.[3] ?? color.frame;
+
+// Raised module (plateau, bar, bump) or flush window; { x, y, w, h, r, tone?, fill?, flat? }.
+function plate(p, c, x0, y0, fallback) {
+  const fill = p.fill ?? finish(p.tone ?? fallback, c);
+  const r = typeof p.r === 'number' ? `${p.r}px` : p.r ?? '0';
+  return div('plate', `left:${x0 + p.x}px;top:${y0 + p.y}px;width:${p.w}px;height:${p.h}px;border-radius:${r};background:${fill};box-shadow:${p.flat ? 'inset 0 0 0 1px rgba(0,0,0,.07), inset 0 1px 2px rgba(0,0,0,.1)' : RAISED}`);
+}
+
+// One element of a camera module, centred on (x, y); { x, y, d, kind: lens|flash|lidar|sensor|mic }.
+function part({ x, y, d = 16, kind = 'lens' }, x0, y0, c) {
+  const at = `left:${x0 + x - d / 2}px;top:${y0 + y - d / 2}px;width:${d}px;height:${d}px;border-radius:50%`;
+  switch (kind) {
+    case 'flash': return div('flash', `${at};background:radial-gradient(circle, #fbf8ef 0 34%, #e6dfcc 56%, #c2baa5 74%, ${darken(c, 22)} 80%, ${darken(c, 40)} 100%)`);
+    case 'lidar': return div('lidar', `${at};background:radial-gradient(circle at 42% 38%, #34353c 0 16%, #0d0d10 60%, ${darken(c, 25)} 68%, ${darken(c, 45)} 100%)`);
+    case 'sensor': return div('sensor', `${at};background:radial-gradient(circle at 44% 40%, #2c2d34 0 34%, #131317 56%, #3a3b42 68%, #101013 100%)`);
+    case 'mic': return div('mic', `${at};background:#060607;box-shadow:inset 0 1px 1px rgba(0,0,0,.8), 0 1px 0 rgba(255,255,255,.18)`);
+    default: {
+      const g = d * 0.5;
+      return div('lens', `${at};background:radial-gradient(circle, #0a0b0e 0 69%, #2a2b30 71%, ${lighten(c, 30)} 75%, ${c} 86%, ${darken(c, 30)} 97%);box-shadow:0 2px 5px rgba(0,0,0,.35), 0 0 0 .5px ${darken(c, 40)}`,
+        `<div style="position:absolute;left:${(d - g) / 2}px;top:${(d - g) / 2}px;width:${g}px;height:${g}px;border-radius:50%;background:radial-gradient(circle at 36% 32%, rgba(170,195,255,.55) 0 7%, transparent 16%), radial-gradient(circle at 64% 68%, rgba(150,95,230,.32) 0 9%, transparent 24%), radial-gradient(circle, #1b2030 0 16%, #07080c 46%, #000 72%, #1a1b20 100%)"></div>`);
+    }
+  }
+}
+
+function camera(cam, c, ring, x0, y0, fallback) {
+  return (cam.plates ?? []).map((p) => plate(p, c, x0, y0, fallback)).join('') + (cam.parts ?? []).map((p) => part(p, x0, y0, ring)).join('');
+}
+
+// Neutral placeholder only: brand logos are trademarks and are never drawn.
+const logoMark = (logo, cx, cy, s, c) => logo !== 'dot' ? '' :
+  div('logo', `left:${cx - s / 2}px;top:${cy - s / 2}px;width:${s}px;height:${s}px;border-radius:50%;background:radial-gradient(circle at 40% 35%, ${lighten(c, 16)}, ${darken(c, 6)});box-shadow:inset 0 1px 1px rgba(255,255,255,.25), inset 0 -1px 1px rgba(0,0,0,.14)`);
+
+// Used when a device has no back.camera entry (e.g. defineDevice() without one).
+function defaultCamera(kind, bw, bh) {
+  const m = Math.min(bw, bh);
+  if (kind === 'watch') {
+    const D = m * 0.74, cx = bw / 2, cy = bh / 2;
+    return { plates: [{ x: cx - D / 2, y: cy - D / 2, w: D, h: D, r: '50%', tone: 'dark' }], parts: [{ x: cx, y: cy, d: D * 0.2, kind: 'sensor' }] };
+  }
+  const d = Math.max(m * (kind === 'tablet' ? 0.055 : 0.16), 18);
+  return { parts: [{ x: d, y: d, d }, { x: d * 2.1, y: d * 0.8, d: d * 0.28, kind: 'flash' }] };
+}
+
+function backHandheld(d, color, screen, logo) {
+  const { w, h } = screen;
+  const bz = box(d.bezel ?? 8), rim = d.rim ?? 4, p = box(d.pad ?? 4);
+  const bw = w + bz.l + bz.r + rim * 2, bh = h + bz.t + bz.b + rim * 2;
+  const br = d.bodyRadius ?? (d.screen.radius ?? 0) + Math.max(bz.l, bz.t) + rim;
+  const x0 = p.r, y0 = p.t; // from behind, the front's right padding is on the left
+  const spec = d.back ?? {}, fin = spec.finish ?? 'glass', c = backTint(d, color);
+  const swap = { left: 'right', right: 'left' };
+  const inner = `left:${x0 + rim}px;top:${y0 + rim}px;width:${bw - rim * 2}px;height:${bh - rim * 2}px;border-radius:${Math.max(br - rim, 0)}px`;
+
+  let f = (d.buttons ?? []).map((b) => button(swap[b.side] ? { ...b, side: swap[b.side] } : { ...b, at: bw - b.at - b.len }, x0, y0, bw, bh, color.frame)).join('');
+  f += div('body', `left:${x0}px;top:${y0}px;width:${bw}px;height:${bh}px;border-radius:${br}px;background:${metal(color.frame)}`);
+  f += div('panel', `${inner};background:${finish(fin, c)}`);
+  if (spec.window) f += plate({ flat: true, ...spec.window }, c, x0, y0, 'glass');
+  f += div('sheen', `${inner};background:${sheen(fin)}`);
+  f += camera(spec.camera ?? defaultCamera(d.kind, bw, bh), c, color.frame, x0, y0, fin);
+  return f + logoMark(logo, x0 + bw / 2, y0 + (spec.logo?.y ?? bh / 2), Math.min(bw, bh) * 0.11, c);
+}
+
+function backLaptop(d, color, screen, logo) {
+  const { w, h } = screen;
+  const bz = box(d.bezel ?? 14), rim = d.rim ?? 2, lr = d.lidRadius ?? 18;
+  const lw = w + bz.l + bz.r + rim * 2, lh = h + bz.t + bz.b + rim * 2;
+  const ov = d.base?.overhang ?? Math.round(lw * 0.07), bh = d.base?.h ?? 18, W = lw + ov * 2;
+  const fin = d.back?.finish ?? 'aluminium', c = backTint(d, color);
+  const lid = `left:${ov}px;top:0;width:${lw}px;height:${lh}px;border-radius:${lr}px ${lr}px 6px 6px`;
+
+  // From behind the lid is nearest, so the base's rear edge sits under it.
+  let f = div('body', `left:0;top:${lh - 1}px;width:${W}px;height:${bh + 1}px;border-radius:3px 3px ${W * 0.045}px ${W * 0.045}px / 3px 3px ${bh * 0.9}px ${bh * 0.9}px;background:linear-gradient(to bottom, ${darken(c, 14)}, ${darken(c, 34)})`);
+  f += div('body', `${lid};background:${finish(fin, c)}`);
+  f += div('sheen', `${lid};background:${sheen(fin)}`);
+  f += div('hinge', `left:${ov + lw * 0.1}px;top:${lh - 9}px;width:${lw * 0.8}px;height:9px;border-radius:0 0 5px 5px;background:linear-gradient(${darken(c, 40)}, ${darken(c, 58)})`);
+  return f + logoMark(logo, ov + lw / 2, d.back?.logo?.y ?? lh / 2, lh * 0.1, c);
+}
+
+function backDesktop(d, color, screen, logo) {
+  const { w, h } = screen;
+  const bz = box(d.bezel ?? 34), rim = d.rim ?? 0, chin = d.chin ?? 0;
+  const sw = d.stand?.w ?? 440, sh = d.stand?.h ?? 360, foot = 16, br = 26;
+  const bw = w + bz.l + bz.r + rim * 2, bh = h + bz.t + bz.b + chin + rim * 2;
+  const fin = d.back?.finish ?? 'aluminium', c = backTint(d, color);
+  const top = d.back?.stand ?? bh * 0.45; // where the stand meets the back
+
+  let f = div('body', `left:0;top:0;width:${bw}px;height:${bh}px;border-radius:${br}px;background:${finish(fin, c)}`);
+  f += div('sheen', `left:0;top:0;width:${bw}px;height:${bh}px;border-radius:${br}px;background:${sheen(fin)}`);
+  f += div('neck', `left:${(bw - sw) / 2}px;top:${top}px;width:${sw}px;height:${bh + sh - top}px;border-radius:${sw * 0.04}px ${sw * 0.04}px 0 0;background:linear-gradient(to bottom, rgba(0,0,0,.18), transparent 8%), linear-gradient(to right, ${darken(c, 14)}, ${c} 6%, ${lighten(c, 8)} 50%, ${c} 94%, ${darken(c, 14)});box-shadow:0 6px 18px -6px rgba(0,0,0,.35)`);
+  f += div('body', `left:${(bw - sw * 1.12) / 2}px;top:${bh + sh}px;width:${sw * 1.12}px;height:${foot}px;border-radius:3px 3px 10px 10px;background:linear-gradient(${lighten(c, 16)}, ${darken(c, 22)})`);
+  return f + logoMark(logo, bw / 2, d.back?.logo?.y ?? bh * 0.27, bh * 0.09, c);
+}
+
+const BACKS = { phone: backHandheld, tablet: backHandheld, watch: backHandheld, laptop: backLaptop, desktop: backDesktop };
+
+// Transforms for each face. `turn(a, back)` is the flip keyframe at angle a (deg), pivoting on the
+// centre and scaled so the near edge never pokes out of the box under perspective.
+function placeSides(side, stack, kind, L, TW, TH, landscape) {
+  const land = landscape ? `translateY(${L.W}px) rotate(-90deg)` : '';
+  const flat = `translateX(${TW}px) scaleX(-1) ${land} translateX(${L.W}px) scaleX(-1)`; // back, seen from behind
+  const cx = TW / 2, cy = TH / 2, per = TW * 3;
+  const turn = (a, back) => {
+    const s = per / (per + cx * Math.abs(Math.sin((a * Math.PI) / 180)));
+    return `translate(${cx}px, ${cy}px) perspective(${per}px) rotateY(${a}deg) scale(${s}) translate(${-cx}px, ${-cy}px) ${land} ${back ? `translateX(${L.W}px) rotateY(180deg)` : ''}`;
+  };
+  if (side !== 'both') return { side, W: TW, H: TH, front: land, back: flat, turn };
+
+  // Stacked hero shot: the back peeks out from one side, tilted, with the front overlapping it.
+  const dir = stack === 'right' ? 1 : -1;
+  const [kx, ky, deg] = kind === 'desktop' ? [0.36, -0.07, 0] : TW > TH ? [0.34, -0.12, 3] : [0.5, -0.05, 7]; // desktops stand level
+  const rad = (deg * Math.PI) / 180;
+  const bw = TW * Math.cos(rad) + TH * Math.sin(rad), bh = TW * Math.sin(rad) + TH * Math.cos(rad);
+  const ox = dir * kx * TW, oy = ky * TH; // back centre relative to the front's
+  const x0 = Math.min(-cx, ox - bw / 2), y0 = Math.min(-cy, oy - bh / 2);
+  return {
+    side, turn, W: Math.max(cx, ox + bw / 2) - x0, H: Math.max(cy, oy + bh / 2) - y0,
+    front: `translate(${-cx - x0}px, ${-cy - y0}px) ${land}`,
+    back: `translate(${ox - x0}px, ${oy - y0}px) rotate(${dir * deg}deg) translate(${-cx}px, ${-cy}px) ${flat}`,
+  };
+}
+
 // ─── status bar & home indicator (logical, upright coordinates) ────────────
 
 function statusBar(d, lw, safe, theme) {
@@ -294,12 +438,13 @@ export class BezelDevice extends HTMLElement {
   #fit = 'cover';
   #queued = false;
   #ro = null;
+  #back; #side = null; #hasBack = false; #turns = []; #waiters = [];
 
   constructor() {
     super();
     const root = this.attachShadow({ mode: 'open' });
     root.innerHTML = `<style>${STYLES}</style><style></style>
-      <div class="stage" part="stage"><div class="device" part="device">
+      <div class="stage" part="stage"><div class="back" part="back" aria-hidden="true"></div><div class="device" part="device">
         <div class="frame" part="frame" aria-hidden="true"></div>
         <div class="screen" part="screen">
           <div class="content" part="content"><div class="media" part="media"></div><div class="chrome" aria-hidden="true"></div></div>
@@ -310,6 +455,7 @@ export class BezelDevice extends HTMLElement {
     this.#dyn = root.querySelectorAll('style')[1];
     this.#stage = q('.stage'); this.#device = q('.device'); this.#frame = q('.frame'); this.#screen = q('.screen');
     this.#content = q('.content'); this.#media = q('.media'); this.#chrome = q('.chrome'); this.#cutout = q('.cutout');
+    this.#back = q('.back');
   }
 
   connectedCallback() {
@@ -333,6 +479,13 @@ export class BezelDevice extends HTMLElement {
   /** Screen size in CSS px, in the current orientation (the space your content gets). */
   get screenSize() { return { ...this.#box }; }
 
+  /** Turn the device over (or to `side`). Resolves with the new side once the turn has finished. */
+  flip(side) {
+    const next = side ?? (this.getAttribute('side') === 'back' ? 'front' : 'back');
+    if (!this.isConnected) { this.setAttribute('side', next); return Promise.resolve(next); }
+    return new Promise((res) => { this.#waiters.push(res); this.setAttribute('side', next); });
+  }
+
   #render() {
     const d = this.spec;
     const attr = (n) => this.getAttribute(n);
@@ -348,7 +501,8 @@ export class BezelDevice extends HTMLElement {
     const L = BUILDERS[d.kind](d, color, screen, { theme, url: attr('url') });
     const [lw, lh] = landscape ? [screen.h, screen.w] : [screen.w, screen.h];
     const [TW, TH] = landscape ? [L.H, L.W] : [L.W, L.H];
-    this.#size = { W: TW, H: TH };
+    const S = this.#sides(d, color, screen, L, TW, TH, landscape); // back panel; S.W × S.H includes a stacked back
+    this.#size = { W: S.W, H: S.H };
 
     // media kind
     const src = attr('src');
@@ -367,9 +521,9 @@ export class BezelDevice extends HTMLElement {
     this.#box = { w: lw - inset.l - inset.r, h: lh - inset.t - inset.b };
 
     // geometry
-    this.#dyn.textContent = `:host { aspect-ratio: ${TW} / ${TH}; }`;
-    Object.assign(this.#stage.style, { width: `${TW}px`, height: `${TH}px` });
-    Object.assign(this.#device.style, { width: `${L.W}px`, height: `${L.H}px`, transform: landscape ? `translateY(${L.W}px) rotate(-90deg)` : '' });
+    this.#dyn.textContent = `:host { aspect-ratio: ${S.W} / ${S.H}; }`;
+    Object.assign(this.#stage.style, { width: `${S.W}px`, height: `${S.H}px` });
+    Object.assign(this.#device.style, { width: `${L.W}px`, height: `${L.H}px`, transform: S.front, visibility: S.side === 'back' ? 'hidden' : '' });
     this.#frame.innerHTML = L.frame;
     Object.assign(this.#screen.style, { left: `${L.screen.x}px`, top: `${L.screen.y}px`, width: `${screen.w}px`, height: `${screen.h}px`, borderRadius: L.screen.radius });
     Object.assign(this.#content.style, { width: `${lw}px`, height: `${lh}px`, transform: landscape ? `translateX(${screen.w}px) rotate(90deg)` : '' });
@@ -387,6 +541,40 @@ export class BezelDevice extends HTMLElement {
     this.#renderMedia(src);
     this.#applyFit();
     this.#scale();
+    this.#turn(S);
+  }
+
+  // Back panel + placement of both faces. The back is only built once a side other than front is asked for.
+  #sides(d, color, screen, L, TW, TH, landscape) {
+    const build = BACKS[d.kind];
+    const want = build ? SIDES.find((s) => s === this.getAttribute('side')) ?? 'front' : 'front';
+    this.#hasBack ||= want !== 'front';
+    const S = placeSides(want, this.getAttribute('stack'), d.kind, L, TW, TH, landscape);
+    this.#back.innerHTML = build && this.#hasBack ? build(d, color, screen, this.getAttribute('logo')) : '';
+    Object.assign(this.#back.style, { width: `${L.W}px`, height: `${L.H}px`, transform: S.back, visibility: want === 'front' ? 'hidden' : '' });
+    return S;
+  }
+
+  // Animate front ↔ back with a rotateY turn; any other change applies instantly.
+  #turn(S) {
+    const prev = this.#side;
+    this.#side = S.side;
+    const flip = prev !== S.side && [prev, S.side].every((s) => s === 'front' || s === 'back');
+    const live = this.#turns.filter((a) => a.playState === 'running');
+    if (flip && live.length) { live.forEach((a) => a.reverse()); return; } // turned back mid-flip
+    this.#turns.forEach((a) => a.cancel());
+    this.#turns = [];
+    if (!flip || !this.#device.animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return this.#settle(flip);
+    const from = prev === 'front' ? 0 : 180, n = 12;
+    const frames = (back) => Array.from({ length: n + 1 }, (_, i) => ({ transform: S.turn(from + (180 * i) / n, back), visibility: 'visible' }));
+    const opts = { duration: 800, easing: 'cubic-bezier(.62,0,.28,1)' };
+    this.#turns = [this.#device.animate(frames(false), opts), this.#back.animate(frames(true), opts)];
+    Promise.all(this.#turns.map((a) => a.finished)).then(() => this.#settle(true), () => {});
+  }
+
+  #settle(flipped) {
+    this.#waiters.splice(0).forEach((res) => res(this.#side));
+    if (flipped) this.dispatchEvent(new CustomEvent('bezel-flip', { bubbles: true, detail: { side: this.#side } }));
   }
 
   #renderMedia(src) {

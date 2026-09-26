@@ -17,7 +17,19 @@
 //   statusBar 'ios'|'android'|'ipados'|'macos'|'watch'|null
 //   home     'indicator'|'pill'|'button'|null
 //   buttons  [{ side: 'left'|'right'|'top', at, len, w?, flush?, crown?, color? }]
-//   colors   [[name, frameColor, frontColor?], ...]  first entry is the default
+//   colors   [[name, frameColor, frontColor?, backColor?], ...]  first entry is the default
+//   back     { finish, camera, window?, logo?, stand? }   the rear, for side="back" / "both"
+//     finish  'glass' (matte) | 'gloss' | 'aluminium' | 'titanium' | 'polished'
+//     camera  { plates: [{ x, y, w, h, r, tone?, fill? }], parts: [{ x, y, d, kind? }] }
+//             plates are raised modules (plateau, bar, bump) drawn in order; tone is a finish
+//             name or 'dark'. parts are centred circles: kind 'lens' (default) | 'flash' |
+//             'lidar' | 'sensor' | 'mic'.
+//     window  { x, y, w, h, r, tone? }  a flush inset panel of another finish
+//     logo    { y }  centre of the neutral logo="dot" placeholder (brand logos are never drawn)
+//     stand   y where a desktop's stand meets the back
+//   Back coordinates are px from the body's top-left corner as seen from BEHIND, so a phone's
+//   camera sits top-left. Body = screen + bezels + 2 × rim, about 6 px per mm on phones
+//   (body width in px ÷ real width in mm gives the scale for other devices).
 
 const registry = new Map();
 
@@ -58,6 +70,18 @@ defineDevice({
     { side: 'right', at: 280, len: 100 }, { side: 'right', at: 560, len: 60, flush: true },
   ],
   colors: [['Cosmic Orange', '#c8652f'], ['Deep Blue', '#353f55'], ['Silver', '#dcdcda']],
+  // Full-width aluminium plateau: triple camera left, flash + LiDAR right; Ceramic Shield window below.
+  back: {
+    finish: 'aluminium', logo: { y: 610 },
+    window: { x: 26, y: 322, w: 414, h: 590, r: 18 },
+    camera: {
+      plates: [{ x: 0, y: 0, w: 466, h: 284, r: '75px 75px 12px 12px' }],
+      parts: [
+        { x: 92, y: 86, d: 104 }, { x: 92, y: 198, d: 104 }, { x: 196, y: 142, d: 104 },
+        { x: 392, y: 92, d: 32, kind: 'flash' }, { x: 392, y: 142, d: 7, kind: 'mic' }, { x: 392, y: 192, d: 34, kind: 'lidar' },
+      ],
+    },
+  },
 });
 
 defineDevice({
@@ -69,6 +93,17 @@ defineDevice({
     { side: 'right', at: 255, len: 95 }, { side: 'right', at: 515, len: 55, flush: true },
   ],
   colors: [['Deep Blue', '#353f55'], ['Cosmic Orange', '#c8652f'], ['Silver', '#dcdcda']],
+  back: {
+    finish: 'aluminium', logo: { y: 560 },
+    window: { x: 24, y: 296, w: 380, h: 540, r: 16 },
+    camera: {
+      plates: [{ x: 0, y: 0, w: 428, h: 262, r: '75px 75px 12px 12px' }],
+      parts: [
+        { x: 84, y: 78, d: 96 }, { x: 84, y: 182, d: 96 }, { x: 180, y: 130, d: 96 },
+        { x: 360, y: 84, d: 30, kind: 'flash' }, { x: 360, y: 130, d: 7, kind: 'mic' }, { x: 360, y: 176, d: 32, kind: 'lidar' },
+      ],
+    },
+  },
 });
 
 defineDevice({
@@ -80,6 +115,14 @@ defineDevice({
     { side: 'right', at: 265, len: 95 }, { side: 'right', at: 530, len: 55, flush: true },
   ],
   colors: [['Sky Blue', '#c9d8e6'], ['Light Gold', '#e6d8bd'], ['Cloud White', '#efeee9'], ['Space Black', '#232326']],
+  // Stadium-shaped plateau across the top holding the single 48MP Fusion camera and flash.
+  back: {
+    finish: 'glass', logo: { y: 500 },
+    camera: {
+      plates: [{ x: 20, y: 22, w: 404, h: 120, r: 60 }],
+      parts: [{ x: 82, y: 82, d: 86 }, { x: 166, y: 82, d: 24, kind: 'flash' }, { x: 200, y: 82, d: 6, kind: 'mic' }],
+    },
+  },
 });
 
 defineDevice({
@@ -91,6 +134,14 @@ defineDevice({
     { side: 'right', at: 255, len: 95 }, { side: 'right', at: 515, len: 55, flush: true },
   ],
   colors: [['Lavender', '#c9bddb'], ['Sage', '#b6c4a6'], ['Mist Blue', '#a8bbcf'], ['White', '#f1f1ef'], ['Black', '#28282b']],
+  // Vertical pill bump with two lenses; flash and mic outside it.
+  back: {
+    finish: 'glass', logo: { y: 451 },
+    camera: {
+      plates: [{ x: 26, y: 26, w: 106, h: 212, r: 53 }],
+      parts: [{ x: 79, y: 79, d: 84 }, { x: 79, y: 185, d: 84 }, { x: 160, y: 68, d: 24, kind: 'flash' }, { x: 160, y: 104, d: 6, kind: 'mic' }],
+    },
+  },
 });
 
 defineDevice({
@@ -102,6 +153,10 @@ defineDevice({
     { side: 'right', at: 245, len: 90 },
   ],
   colors: [['Black', '#2a2a2c'], ['White', '#f1f1ef']],
+  back: {
+    finish: 'glass', logo: { y: 438 },
+    camera: { parts: [{ x: 72, y: 72, d: 78 }, { x: 142, y: 60, d: 22, kind: 'flash' }, { x: 142, y: 92, d: 5, kind: 'mic' }] },
+  },
 });
 
 defineDevice({
@@ -113,6 +168,10 @@ defineDevice({
     { side: 'right', at: 170, len: 60 },
   ],
   colors: [['Midnight', '#262b31'], ['Starlight', '#ece6db', '#f6f5f2'], ['(PRODUCT)RED', '#b1121d']],
+  back: {
+    finish: 'gloss', logo: { y: 400 },
+    camera: { parts: [{ x: 62, y: 60, d: 50 }, { x: 96, y: 60, d: 5, kind: 'mic' }, { x: 126, y: 60, d: 24, kind: 'flash' }] },
+  },
 });
 
 // ─── Android phones ────────────────────────────────────────────────────────
@@ -123,6 +182,17 @@ defineDevice({
   cutout: { type: 'hole', d: 14, top: 14 }, statusBar: 'android', home: 'pill', safe: { top: 40, bottom: 24 },
   buttons: [{ side: 'right', at: 200, len: 62 }, { side: 'right', at: 300, len: 120 }],
   colors: [['Obsidian', '#2b2d31'], ['Porcelain', '#e8e3da'], ['Moonstone', '#6e7a89'], ['Jade', '#c7d9c8']],
+  // Polished camera bar ("visor") with a black glass window: three cameras, flash and sensor.
+  back: {
+    finish: 'glass', logo: { y: 640 },
+    camera: {
+      plates: [{ x: 22, y: 52, w: 396, h: 106, r: 53, tone: 'polished' }, { x: 32, y: 62, w: 376, h: 86, r: 43, tone: 'dark' }],
+      parts: [
+        { x: 84, y: 105, d: 68 }, { x: 164, y: 105, d: 68 }, { x: 244, y: 105, d: 62 },
+        { x: 318, y: 105, d: 22, kind: 'flash' }, { x: 356, y: 105, d: 14, kind: 'sensor' },
+      ],
+    },
+  },
 });
 
 defineDevice({
@@ -131,6 +201,16 @@ defineDevice({
   cutout: { type: 'hole', d: 11, top: 12 }, statusBar: 'android', home: 'pill', safe: { top: 34, bottom: 24 },
   buttons: [{ side: 'right', at: 180, len: 100 }, { side: 'right', at: 305, len: 55 }],
   colors: [['Titanium Silverblue', '#9eb0c3'], ['Titanium Black', '#2c2d2f'], ['Titanium Gray', '#8b8a86'], ['Titanium Whitesilver', '#e4e4e1']],
+  // Floating rings: ultra-wide, wide and 3x in a column; 5x periscope and laser AF beside, then the flash.
+  back: {
+    finish: 'glass', logo: { y: 820 },
+    camera: {
+      parts: [
+        { x: 66, y: 72, d: 78 }, { x: 66, y: 160, d: 78 }, { x: 66, y: 248, d: 78 },
+        { x: 146, y: 112, d: 60 }, { x: 146, y: 180, d: 30, kind: 'sensor' }, { x: 146, y: 226, d: 20, kind: 'flash' },
+      ],
+    },
+  },
 });
 
 defineDevice({
@@ -139,6 +219,10 @@ defineDevice({
   cutout: { type: 'hole', d: 10, top: 10 }, statusBar: 'android', home: 'pill', safe: { top: 30, bottom: 24 },
   buttons: [{ side: 'right', at: 175, len: 85 }, { side: 'right', at: 280, len: 50 }],
   colors: [['Icyblue', '#c9d8e6'], ['Navy', '#2b3346'], ['Mint', '#cfe5d8'], ['Silver Shadow', '#c9c9c9']],
+  back: {
+    finish: 'glass', logo: { y: 720 },
+    camera: { parts: [{ x: 58, y: 62, d: 64 }, { x: 58, y: 136, d: 64 }, { x: 58, y: 210, d: 64 }, { x: 118, y: 62, d: 16, kind: 'flash' }] },
+  },
 });
 
 defineDevice({
@@ -147,6 +231,13 @@ defineDevice({
   cutout: { type: 'hole', d: 12, top: 12 }, statusBar: 'android', home: 'pill', safe: { top: 32, bottom: 24 },
   buttons: [{ side: 'right', at: 130, len: 80 }, { side: 'right', at: 230, len: 50 }],
   colors: [['Graphite', '#3a3d42'], ['Blue', '#3c5a86'], ['White', '#e9e9e9']],
+  back: {
+    finish: 'glass',
+    camera: {
+      plates: [{ x: 28, y: 28, w: 84, h: 150, r: 26, tone: 'dark' }],
+      parts: [{ x: 70, y: 68, d: 56 }, { x: 70, y: 132, d: 50 }, { x: 138, y: 58, d: 18, kind: 'flash' }],
+    },
+  },
 });
 
 // ─── Tablets ───────────────────────────────────────────────────────────────
@@ -157,6 +248,14 @@ defineDevice({
   cutout: { type: 'camera', side: 'left', d: 8 }, statusBar: 'ipados', home: 'indicator', safe: { top: 24, bottom: 20 },
   buttons: [{ side: 'top', at: 940, len: 58 }, { side: 'right', at: 70, len: 48 }, { side: 'right', at: 128, len: 48 }],
   colors: [['Space Black', '#2f2f31'], ['Silver', '#dfe0e2']],
+  // Camera bump: wide lens, Adaptive True Tone flash, LiDAR, ambient light sensor, mic.
+  back: {
+    finish: 'aluminium',
+    camera: {
+      plates: [{ x: 32, y: 32, w: 132, h: 132, r: 38 }],
+      parts: [{ x: 72, y: 72, d: 64 }, { x: 128, y: 70, d: 22, kind: 'flash' }, { x: 126, y: 124, d: 38, kind: 'lidar' }, { x: 72, y: 128, d: 10, kind: 'sensor' }, { x: 100, y: 100, d: 5, kind: 'mic' }],
+    },
+  },
 });
 
 defineDevice({
@@ -165,6 +264,13 @@ defineDevice({
   cutout: { type: 'camera', side: 'left', d: 8 }, statusBar: 'ipados', home: 'indicator', safe: { top: 24, bottom: 20 },
   buttons: [{ side: 'top', at: 750, len: 55 }, { side: 'right', at: 65, len: 45 }, { side: 'right', at: 120, len: 45 }],
   colors: [['Space Black', '#2f2f31'], ['Silver', '#dfe0e2']],
+  back: {
+    finish: 'aluminium',
+    camera: {
+      plates: [{ x: 32, y: 32, w: 132, h: 132, r: 38 }],
+      parts: [{ x: 72, y: 72, d: 64 }, { x: 128, y: 70, d: 22, kind: 'flash' }, { x: 126, y: 124, d: 38, kind: 'lidar' }, { x: 72, y: 128, d: 10, kind: 'sensor' }, { x: 100, y: 100, d: 5, kind: 'mic' }],
+    },
+  },
 });
 
 defineDevice({
@@ -173,6 +279,7 @@ defineDevice({
   cutout: { type: 'camera', side: 'left', d: 8 }, statusBar: 'ipados', home: 'indicator', safe: { top: 24, bottom: 20 },
   buttons: [{ side: 'top', at: 740, len: 55 }, { side: 'right', at: 65, len: 45 }, { side: 'right', at: 120, len: 45 }],
   colors: [['Space Gray', '#5b5d62'], ['Blue', '#a8bcd0'], ['Purple', '#bdb3cf'], ['Starlight', '#e9e2d6']],
+  back: { finish: 'aluminium', camera: { parts: [{ x: 56, y: 56, d: 50 }, { x: 56, y: 96, d: 5, kind: 'mic' }] } }, // no flash on iPad Air
 });
 
 defineDevice({
@@ -181,6 +288,7 @@ defineDevice({
   cutout: { type: 'camera', side: 'top', d: 8 }, statusBar: 'ipados', home: 'indicator', safe: { top: 24, bottom: 20 },
   buttons: [{ side: 'top', at: 640, len: 50 }, { side: 'right', at: 60, len: 45 }, { side: 'right', at: 115, len: 45 }],
   colors: [['Space Gray', '#5b5d62'], ['Blue', '#a9b8cb'], ['Purple', '#b9b0c9'], ['Starlight', '#e9e2d6']],
+  back: { finish: 'aluminium', camera: { parts: [{ x: 56, y: 56, d: 52 }, { x: 104, y: 56, d: 20, kind: 'flash' }, { x: 104, y: 84, d: 5, kind: 'mic' }] } },
 });
 
 defineDevice({
@@ -189,6 +297,7 @@ defineDevice({
   cutout: { type: 'camera', side: 'left', d: 7 }, statusBar: 'android', home: 'pill', safe: { top: 28, bottom: 20 },
   buttons: [{ side: 'top', at: 620, len: 60 }, { side: 'top', at: 700, len: 40 }],
   colors: [['Moonstone Gray', '#6d7078'], ['Platinum Silver', '#d8d8d6']],
+  back: { finish: 'aluminium', camera: { parts: [{ x: 52, y: 54, d: 46 }, { x: 52, y: 110, d: 40 }, { x: 98, y: 54, d: 14, kind: 'flash' }] } },
 });
 
 // ─── Watches ───────────────────────────────────────────────────────────────
@@ -202,6 +311,14 @@ defineDevice({
     { side: 'left', at: 80, len: 45, w: 5, color: '#f26b1d' },
   ],
   colors: [['Natural Titanium', '#c9c3b7'], ['Black Titanium', '#2a2a2b']],
+  // Sensor dome: dark crystal with a ring and photodiode windows.
+  back: {
+    finish: 'titanium',
+    camera: {
+      plates: [{ x: 30, y: 53, w: 191, h: 191, r: '50%', tone: 'dark' }, { x: 73, y: 96, w: 105, h: 105, r: '50%', tone: 'dark' }],
+      parts: [{ x: 125, y: 148, d: 26, kind: 'sensor' }, { x: 125, y: 115, d: 12, kind: 'sensor' }, { x: 125, y: 181, d: 12, kind: 'sensor' }, { x: 92, y: 148, d: 12, kind: 'sensor' }, { x: 158, y: 148, d: 12, kind: 'sensor' }],
+    },
+  },
 });
 
 defineDevice({
@@ -210,6 +327,13 @@ defineDevice({
   statusBar: 'watch', safe: { top: 0, bottom: 0 },
   buttons: [{ side: 'right', at: 70, len: 45, w: 10, crown: true }, { side: 'right', at: 140, len: 42, w: 4 }],
   colors: [['Jet Black', '#1f1f21'], ['Rose Gold', '#e7c8b8'], ['Silver', '#d9dadc'], ['Space Gray', '#55575b']],
+  back: {
+    finish: 'aluminium',
+    camera: {
+      plates: [{ x: 26, y: 46, w: 190, h: 190, r: '50%', tone: 'dark' }, { x: 68, y: 88, w: 106, h: 106, r: '50%', tone: 'dark' }],
+      parts: [{ x: 121, y: 141, d: 26, kind: 'sensor' }, { x: 121, y: 108, d: 12, kind: 'sensor' }, { x: 121, y: 174, d: 12, kind: 'sensor' }, { x: 88, y: 141, d: 12, kind: 'sensor' }, { x: 154, y: 141, d: 12, kind: 'sensor' }],
+    },
+  },
 });
 
 // ─── Laptops & desktops ────────────────────────────────────────────────────
@@ -220,6 +344,7 @@ defineDevice({
   cutout: { type: 'mac-notch', w: 186, h: 32 }, statusBar: 'macos', safe: { top: 37, bottom: 0 },
   base: { overhang: 110, h: 22 },
   colors: [['Space Black', '#2e2f32'], ['Silver', '#d4d6d8']],
+  back: { finish: 'aluminium' },
 });
 
 defineDevice({
@@ -228,6 +353,7 @@ defineDevice({
   cutout: { type: 'mac-notch', w: 190, h: 32 }, statusBar: 'macos', safe: { top: 37, bottom: 0 },
   base: { overhang: 120, h: 24 },
   colors: [['Space Black', '#2e2f32'], ['Silver', '#d4d6d8']],
+  back: { finish: 'aluminium' },
 });
 
 defineDevice({
@@ -236,6 +362,7 @@ defineDevice({
   cutout: { type: 'mac-notch', w: 186, h: 32 }, statusBar: 'macos', safe: { top: 37, bottom: 0 },
   base: { overhang: 100, h: 18 },
   colors: [['Sky Blue', '#c5d3df'], ['Midnight', '#2e3440'], ['Starlight', '#e3dccf'], ['Silver', '#d6d7d9']],
+  back: { finish: 'aluminium' },
 });
 
 defineDevice({
@@ -244,6 +371,7 @@ defineDevice({
   cutout: { type: 'mac-notch', w: 190, h: 32 }, statusBar: 'macos', safe: { top: 37, bottom: 0 },
   base: { overhang: 115, h: 19 },
   colors: [['Sky Blue', '#c5d3df'], ['Midnight', '#2e3440'], ['Starlight', '#e3dccf'], ['Silver', '#d6d7d9']],
+  back: { finish: 'aluminium' },
 });
 
 defineDevice({
@@ -252,6 +380,7 @@ defineDevice({
   cutout: { type: 'camera', side: 'top', d: 6 }, statusBar: null, safe: { top: 0, bottom: 0 },
   base: { overhang: 90, h: 18 },
   colors: [['Graphite', '#44474d'], ['Silver', '#c9ccd1']],
+  back: { finish: 'aluminium' },
 });
 
 defineDevice({
@@ -259,9 +388,10 @@ defineDevice({
   screen: { w: 2240, h: 1260, radius: 0 }, bezel: 34, rim: 0, chin: 180, stand: { w: 460, h: 360 },
   cutout: { type: 'camera', side: 'top', d: 8 }, statusBar: 'macos', safe: { top: 24, bottom: 0 },
   colors: [
-    ['Blue', '#a9c3db', '#f3f3f1'], ['Green', '#b6cdb3', '#f3f3f1'], ['Pink', '#ecc0bd', '#f3f3f1'],
-    ['Silver', '#dcdcdc', '#f3f3f1'], ['Yellow', '#f1d9a0', '#f3f3f1'], ['Orange', '#f1b996', '#f3f3f1'], ['Purple', '#c6bdd9', '#f3f3f1'],
+    ['Blue', '#a9c3db', '#f3f3f1', '#5d8fc0'], ['Green', '#b6cdb3', '#f3f3f1', '#5f9670'], ['Pink', '#ecc0bd', '#f3f3f1', '#df8a8a'],
+    ['Silver', '#dcdcdc', '#f3f3f1', '#c9cacc'], ['Yellow', '#f1d9a0', '#f3f3f1', '#eab94c'], ['Orange', '#f1b996', '#f3f3f1', '#ec8a55'], ['Purple', '#c6bdd9', '#f3f3f1', '#8f7fbf'],
   ],
+  back: { finish: 'aluminium', stand: 640 }, // the back is a deeper shade than the pastel front (4th colour)
 });
 
 defineDevice({
@@ -269,6 +399,7 @@ defineDevice({
   screen: { w: 2560, h: 1440, radius: 0 }, bezel: 36, rim: 6, chin: 0, stand: { w: 520, h: 420 },
   cutout: { type: 'camera', side: 'top', d: 8 }, statusBar: 'macos', safe: { top: 24, bottom: 0 },
   colors: [['Silver', '#cfd1d3']],
+  back: { finish: 'aluminium', stand: 700 },
 });
 
 // ─── Browser windows ───────────────────────────────────────────────────────

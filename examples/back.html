@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bezelkit — backs, flip and stack</title>
+<script type="module" src="../src/bezel.js"></script>
+<style>
+  body { margin: 0; padding: 32px; background: #f4efe7; font: 13px/1.4 system-ui, sans-serif; color: #1d1a16; }
+  h1 { font: 400 32px Georgia, serif; margin: 0 0 8px; }
+  h2 { font: 400 22px Georgia, serif; margin: 36px 0 14px; }
+  p.lede { margin: 0 0 20px; color: #6f675d; max-width: 70ch; }
+  .bar { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+  .stacks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  figure { margin: 0; background: #fbf8f3; border: 1px solid #e3dbcf; border-radius: 12px; padding: 16px; }
+  figcaption { margin-top: 10px; font-family: ui-monospace, monospace; font-size: 12px; color: #6f675d; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .h { height: 300px; }
+  .h bezel-device { height: 100%; }
+  .wide { grid-column: span 2; }
+  button { font: 12px ui-monospace, monospace; padding: 5px 10px; border-radius: 7px; border: 1px solid #d6cbbb; background: #fff; color: #1d1a16; cursor: pointer; }
+  button:hover { background: #f1ebe2; }
+  label { font-family: ui-monospace, monospace; font-size: 12px; color: #6f675d; }
+  .scr { height: 100%; display: grid; place-items: center; font: 600 22px system-ui; color: #fff; text-align: center; }
+</style>
+</head>
+<body>
+<h1>Backs, flip and stack</h1>
+<p class="lede">Every non-browser device with <code>side="back"</code>. Each <b>flip</b> button calls <code>el.flip()</code>. Camera layouts come from each device's <code>back</code> entry in the registry. No brand logos are drawn; <code>logo="dot"</code> adds a neutral placeholder.</p>
+<div class="bar">
+  <button id="flip-all">flip all</button>
+  <label><input type="checkbox" id="dots"> logo="dot"</label>
+</div>
+<div class="grid" id="backs"></div>
+
+<h2>Colours</h2>
+<div class="grid" id="colours"></div>
+
+<h2>Stacked (side="both")</h2>
+<div class="stacks">
+  <figure><div class="h"><bezel-device device="iphone-17-pro" color="cosmic-orange" side="both"><div class="scr" style="background:linear-gradient(160deg,#ff9a5a,#c8452f)">Front<br>+ back</div></bezel-device></div><figcaption>iphone-17-pro · both · stack=left</figcaption></figure>
+  <figure><div class="h"><bezel-device device="iphone-air" color="sky-blue" side="both" stack="right"><div class="scr" style="background:linear-gradient(160deg,#7fb2e5,#2b5a8c)">Air</div></bezel-device></div><figcaption>iphone-air · both · stack=right</figcaption></figure>
+  <figure><div class="h"><bezel-device device="pixel-10-pro" color="moonstone" side="both" theme="dark"><div class="scr" style="background:linear-gradient(160deg,#5b6b80,#1b2330)">Pixel</div></bezel-device></div><figcaption>pixel-10-pro · both</figcaption></figure>
+  <figure><div class="h"><bezel-device device="galaxy-s25-ultra" color="titanium-silverblue" side="both" stack="right"><div class="scr" style="background:linear-gradient(160deg,#9ab6d8,#34506e)">Ultra</div></bezel-device></div><figcaption>galaxy-s25-ultra · both · stack=right</figcaption></figure>
+  <figure><div class="h"><bezel-device device="iphone-17" color="sage" side="both"><div class="scr" style="background:linear-gradient(160deg,#c9d8b4,#6d8a5a)">iPhone 17</div></bezel-device></div><figcaption>iphone-17 · sage · both</figcaption></figure>
+  <figure><div class="h"><bezel-device device="apple-watch-series-11" color="rose-gold" side="both" chrome="on"><div class="scr" style="background:#000;color:#ff9f6e;font-size:30px">10:09</div></bezel-device></div><figcaption>apple-watch-series-11 · both</figcaption></figure>
+  <figure class="wide"><div class="h"><bezel-device device="macbook-air-13" color="midnight" side="both" src="embed-demo.html"></bezel-device></div><figcaption>macbook-air-13 · both</figcaption></figure>
+  <figure><div class="h"><bezel-device device="ipad-pro-11" side="both" color="silver" src="embed-demo.html"></bezel-device></div><figcaption>ipad-pro-11 · both</figcaption></figure>
+</div>
+<script type="module">
+  import { listDevices } from '../src/bezel.js';
+  const front = (d) => `<div class="scr" style="background:linear-gradient(160deg,hsl(${(d.id.length * 37) % 360} 60% 62%),hsl(${(d.id.length * 37 + 50) % 360} 55% 30%))">${d.name}</div>`;
+  const figure = (d, extra = '', caption = d.id) => `<figure${d.kind === 'laptop' || d.kind === 'desktop' ? ' class="wide"' : ''}>
+    <div class="h"><bezel-device device="${d.id}" side="back" ${extra}>${front(d)}</bezel-device></div>
+    <figcaption><span>${caption}</span><button data-flip>flip</button></figcaption></figure>`;
+
+  document.getElementById('backs').innerHTML = listDevices().filter((d) => d.kind !== 'browser').map((d) => figure(d)).join('');
+  document.getElementById('colours').innerHTML = [
+    ...['deep-blue', 'cosmic-orange', 'silver'].map((c) => figure({ id: 'iphone-17-pro', name: 'iPhone 17 Pro', kind: 'phone' }, `color="${c}"`, `iphone-17-pro · ${c}`)),
+    figure({ id: 'iphone-air', name: 'iPhone Air', kind: 'phone' }, 'color="space-black"', 'iphone-air · space-black'),
+    ...['lavender', 'mist-blue'].map((c) => figure({ id: 'iphone-17', name: 'iPhone 17', kind: 'phone' }, `color="${c}"`, `iphone-17 · ${c}`)),
+    figure({ id: 'imac-24', name: 'iMac', kind: 'desktop' }, 'color="orange"', 'imac-24 · orange'),
+  ].join('');
+
+  document.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-flip]');
+    if (!b) return;
+    const el = b.closest('figure').querySelector('bezel-device');
+    b.disabled = true;
+    b.textContent = `→ ${await el.flip()}`;
+    b.disabled = false;
+  });
+  document.getElementById('flip-all').onclick = () => Promise.all([...document.querySelectorAll('#backs bezel-device, #colours bezel-device')].map((el) => el.flip()));
+  document.getElementById('dots').onchange = (e) => document.querySelectorAll('bezel-device').forEach((el) => { el.logo = e.target.checked ? 'dot' : null; });
+  document.addEventListener('bezel-flip', (e) => console.log('bezel-flip', e.target.getAttribute('device'), e.detail.side));
+  if (new URLSearchParams(location.search).has('dots')) document.getElementById('dots').click();
+</script>
+</body>
+</html>
