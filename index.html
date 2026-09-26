@@ -8,6 +8,13 @@
 <link rel="canonical" href="https://bezelkit.dev/">
 <meta property="og:title" content="bezelkit — device frames that actually fit">
 <meta property="og:url" content="https://bezelkit.dev/">
+<meta property="og:description" content="Mockups that stretch, crop and hide your screenshots, fixed. One zero-dependency web component for 26+ devices.">
+<meta property="og:image" content="https://bezelkit.dev/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#f4efe7">
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="./assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -29,6 +36,34 @@
 
   header.top { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
   .logo { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -.01em; text-decoration: none; }
+  .logo img { display: block; border-radius: 6px; }
+  .eyebrow { margin: 0 0 18px; font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .btn { display: inline-flex; align-items: center; padding: 13px 18px; border-radius: 10px; font: 600 14.5px var(--sans); cursor: pointer; text-decoration: none; }
+  .btn.primary { background: var(--accent); color: #fff; box-shadow: 0 8px 20px -10px rgba(210,82,43,.8); transition: transform .15s; }
+  .btn.primary:hover { transform: translateY(-1px); }
+  .hint { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
+  .split { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 48px; align-items: center; }
+
+  /* before/after */
+  .ba { display: flex; flex-direction: column; gap: 14px; }
+  .ba-stage { position: relative; height: 560px; touch-action: pan-y; user-select: none; --split: 50%; }
+  .ba-stage bezel-device { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  #baBad { clip-path: inset(0 calc(100% - var(--split)) 0 0); }
+  .ba-line { position: absolute; top: 0; bottom: 0; left: var(--split); width: 0; border-left: 2px solid var(--ink); z-index: 3; cursor: ew-resize; }
+  .ba-handle { position: absolute; top: 50%; left: 0; width: 42px; height: 42px; margin: -21px 0 0 -22px; border: 0; border-radius: 50%; background: var(--ink); color: #fff; font-size: 18px; cursor: ew-resize; box-shadow: 0 6px 16px -6px rgba(0,0,0,.5); }
+  .ba-handle:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .ba-tag { position: absolute; top: 6px; z-index: 3; padding: 5px 10px; font: 600 11.5px var(--mono); border-radius: 6px; pointer-events: none; }
+  .ba-tag.bad { left: 0; color: #fff; background: #b3261e; }
+  .ba-tag.good { right: 0; color: #fff; background: #2e7d4f; }
+  .ba-drop { position: absolute; inset: 0; z-index: 4; display: none; place-items: center; font: 600 16px var(--sans); color: var(--accent); background: rgba(255,245,240,.8); border: 2px dashed var(--accent); border-radius: 18px; }
+  .ba-stage.over .ba-drop { display: grid; }
+  .ba-meta { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+  .ba-devices { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .ba-devices button { padding: 6px 11px; font: 500 12.5px var(--sans); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; cursor: pointer; }
+  .ba-devices button[aria-pressed=true] { color: #fff; background: var(--ink); border-color: var(--ink); }
+  .ba-explain { min-height: 20px; font: 13px var(--mono); color: var(--muted); }
+  .ba-explain b { color: var(--ink); }
   .logo i { width: 22px; height: 30px; border: 2.5px solid var(--ink); border-radius: 7px; position: relative; }
   .logo i::after { content: ""; position: absolute; top: 3px; left: 50%; width: 7px; height: 3px; margin-left: -3.5px; border-radius: 2px; background: var(--ink); }
   nav a { margin-left: 22px; color: var(--muted); text-decoration: none; font-size: 14px; }
@@ -168,7 +203,8 @@
   footer { padding: 40px 0 60px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); }
 
   @media (max-width: 900px) {
-    .hero, .play, .compare { grid-template-columns: 1fr; }
+    .hero, .play, .compare, .split { grid-template-columns: 1fr; }
+    .ba-stage { height: 480px; }
     .morph { height: 460px; }
     .story { grid-template-columns: 1fr; gap: 0; }
     .story-stage { top: 0; z-index: 3; height: 64vh; padding-top: 8px; background: var(--bg); }
@@ -180,27 +216,40 @@
 <body>
 <div class="wrap">
   <header class="top">
-    <a class="logo" href="#"><i></i>bezelkit</a>
-    <nav><a href="#why">Why</a><a href="#how">How it works</a><a href="#play">Playground</a><a href="#devices">Devices</a><a href="#docs">API</a><a href="https://github.com/knileshh/bezelkit">GitHub</a></nav>
+    <a class="logo" href="#"><img src="./assets/favicon.svg" width="26" height="26" alt="">bezelkit</a>
+    <nav><a href="#how">How it works</a><a href="#every">Devices</a><a href="#play">Playground</a><a href="#devices">Gallery</a><a href="#docs">API</a><a href="https://github.com/knileshh/bezelkit">GitHub</a></nav>
   </header>
 
   <div class="hero">
     <div>
-      <h1>Device frames that <em>actually fit</em> your screenshots.</h1>
-      <p class="lede">One zero-dependency web component for iPhone, Android, iPad, MacBook, iMac, Apple Watch and browser windows. It uses real viewport sizes and scales to its container. <code>fit="auto"</code> picks cover, scroll or letterbox so your screenshot never gets stretched or hidden under the notch.</p>
-      <pre class="typed" aria-label="Example markup"><span class="tok-tag">&lt;bezel-device</span> <span class="tok-attr">device</span>=<span class="tok-str">"<span id="typedDevice">iphone-17-pro</span><i class="caret"></i>"</span> <span class="tok-attr">src</span>=<span class="tok-str">"shot.png"</span><span class="tok-tag">&gt;</span></pre><br>
-      <div class="install"><span id="installCmd">npm i bezelkit</span><button data-copy="npm i bezelkit">copy</button></div>
+      <div class="eyebrow">Open-source device mockups · MIT</div>
+      <h1>Most mockups <em>break</em> your screenshots.</h1>
+      <p class="lede">Text gets stretched, tab bars get cropped and headers disappear under the notch. bezelkit compares your image with the device's real screen and fits it properly on 26 devices. It's one HTML tag.</p>
+      <div class="cta">
+        <label class="btn primary" for="heroFile">Try it with your screenshot</label><input type="file" id="heroFile" accept="image/*,video/*" hidden>
+        <div class="install"><span>npm i bezelkit</span><button data-copy="npm i bezelkit">copy</button></div>
+      </div>
+      <p class="hint">Or drag an image onto the phone. It stays in your browser and nothing is uploaded.</p>
     </div>
-    <div class="morph" id="morph">
-      <div class="morph-tilt" id="morphTilt"><div class="morph-float"><bezel-device></bezel-device><bezel-device style="opacity:0"></bezel-device></div></div>
-      <div class="morph-meta"><div class="chip" id="morphChip"></div><div class="dots" id="morphDots"></div></div>
+    <div class="ba" id="ba">
+      <div class="ba-stage" id="baStage">
+        <bezel-device id="baGood" device="iphone-17-pro"></bezel-device>
+        <bezel-device id="baBad" device="iphone-17-pro" fit="fill" aria-hidden="true"></bezel-device>
+        <div class="ba-line" id="baLine"><button class="ba-handle" id="baHandle" role="slider" aria-label="Compare typical mockup and bezelkit" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">⟷</button></div>
+        <span class="ba-tag bad">Typical mockup: stretched</span><span class="ba-tag good">bezelkit: fit="auto"</span>
+        <div class="ba-drop" id="baDrop">Drop to frame it</div>
+      </div>
+      <div class="ba-meta">
+        <div class="ba-devices" id="baDevices"></div>
+        <div class="ba-explain" id="baExplain"></div>
+      </div>
     </div>
   </div>
 
   <div class="marquee" aria-hidden="true"><div class="marquee-track" id="marquee"></div></div>
 
   <section id="why">
-    <h2>The problem</h2>
+    <h2>Three frames, one screenshot</h2>
     <p class="sub">Most mockups are a rounded box with <code>width:100%; height:100%</code> on the image. When the screenshot's shape doesn't match the frame, it gets stretched or cropped, and the notch covers the top of it. Below is the same 16:9 screenshot (from an older phone) in three frames.</p>
     <div class="compare">
       <div class="card"><div class="bad">Typical mockup</div><h3>Stretched to fill</h3><p>Text gets squashed and the fake notch covers the header.</p><div class="shot"><div class="naive"><img id="naiveImg" alt=""></div></div></div>
@@ -233,6 +282,20 @@
         <article class="step" data-step="tall"><span class="num">03 · A LITTLE TALLER</span><h3>Up to 15% taller: pin to top</h3><p>Headers usually matter more than footers, so the image is anchored at the top and the bottom is trimmed. If the tab bar matters, set <code>fit="contain"</code>.</p></article>
         <article class="step" data-step="wide"><span class="num">04 · WIDER</span><h3>From an older phone: letterbox</h3><p>A 16:9 screenshot on a 19.5:9 screen. It is centred instead of stretched, and the empty bands are painted with colours sampled from the image's own top and bottom rows.</p></article>
         <article class="step" data-step="safe"><span class="num">05 · LIVE HTML</span><h3>Your markup: safe areas</h3><p>Slotted HTML and iframes are padded clear of the Dynamic Island and home indicator, with a status bar drawn in. For full-bleed layouts, use <code>safe-area="none"</code> and read <code>--bezel-safe-top</code> yourself.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="every">
+    <div class="split">
+      <div>
+        <h2>One tag. Every device.</h2>
+        <p class="sub">Change one attribute to switch between phones, tablets, laptops, desktops, watches and browser windows. Every frame uses the device's real screen size in CSS pixels, so screenshots map 1:1 and embedded sites hit their real breakpoints. Hover over the device to tilt it.</p>
+        <pre class="typed" aria-label="Example markup"><span class="tok-tag">&lt;bezel-device</span> <span class="tok-attr">device</span>=<span class="tok-str">"<span id="typedDevice">iphone-17-pro</span><i class="caret"></i>"</span> <span class="tok-attr">src</span>=<span class="tok-str">"shot.png"</span><span class="tok-tag">&gt;</span></pre>
+      </div>
+      <div class="morph" id="morph">
+        <div class="morph-tilt" id="morphTilt"><div class="morph-float"><bezel-device></bezel-device><bezel-device style="opacity:0"></bezel-device></div></div>
+        <div class="morph-meta"><div class="chip" id="morphChip"></div><div class="dots" id="morphDots"></div></div>
       </div>
     </div>
   </section>
@@ -655,6 +718,87 @@ document.querySelectorAll('.step').forEach((el) => stepObserver.observe(el));
 new ResizeObserver(() => story.step && requestAnimationFrame(renderStory)).observe(story.wrap);
 new IntersectionObserver(([en]) => { if (!en.isIntersecting) stopLoop(); else if (story.step) renderStory(); }).observe(document.getElementById('storyStage'));
 activate('match');
+
+// ─── hero: before/after ───
+const ba = {
+  stage: document.getElementById('baStage'), good: document.getElementById('baGood'), bad: document.getElementById('baBad'),
+  handle: document.getElementById('baHandle'), explain: document.getElementById('baExplain'),
+  device: 'iphone-17-pro', custom: null, split: 50, touched: false,
+};
+const BA_DEVICES = [['iphone-17-pro', 'iPhone 17 Pro'], ['pixel-10-pro', 'Pixel 10 Pro'], ['galaxy-s25-ultra', 'Galaxy S25 Ultra'], ['ipad-mini', 'iPad mini'], ['macbook-air-13', 'MacBook Air']];
+function baSplit(pct) {
+  ba.split = Math.max(0, Math.min(100, pct));
+  ba.stage.style.setProperty('--split', `${ba.split}%`);
+  ba.handle.setAttribute('aria-valuenow', String(Math.round(ba.split)));
+}
+function baRender() {
+  const d = getDevice(ba.device);
+  const src = ba.custom?.url ?? sampleFor(d, 'mismatch');
+  for (const el of [ba.good, ba.bad]) {
+    el.setAttribute('device', ba.device);
+    el.setAttribute('src', src);
+    ba.custom?.type === 'video' ? el.setAttribute('type', 'video') : el.removeAttribute('type');
+  }
+  document.getElementById('baDevices').replaceChildren(...BA_DEVICES.map(([id, name]) => {
+    const b = document.createElement('button');
+    b.textContent = name; b.setAttribute('aria-pressed', String(id === ba.device));
+    b.onclick = () => { ba.device = id; baRender(); };
+    return b;
+  }));
+}
+ba.good.addEventListener('bezel-fit', (e) => {
+  const { fit, media, mismatch } = e.detail;
+  const pct = Math.abs(mismatch - 1) * 100;
+  const shape = pct <= 4 ? 'matches the screen' : mismatch < 1 ? `is ${pct.toFixed(0)}% taller than the screen` : `is ${pct.toFixed(0)}% wider than the screen`;
+  const action = { cover: 'fills it', scroll: 'scrolls it', top: 'pins it to the top', contain: 'letterboxes it with sampled colours', fill: 'stretches it', none: 'shows it 1:1' }[fit];
+  ba.explain.innerHTML = `${ba.custom ? 'Your image' : 'This screenshot'} (<b>${media.w}×${media.h}</b>) ${shape}, so bezelkit <b>${action}</b>.`;
+});
+function baPointer(e) {
+  const r = ba.stage.getBoundingClientRect();
+  baSplit(((e.clientX - r.left) / r.width) * 100);
+}
+ba.stage.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('.ba-tag')) return;
+  ba.touched = true;
+  ba.stage.setPointerCapture(e.pointerId);
+  baPointer(e);
+  const move = (ev) => baPointer(ev);
+  const up = () => { ba.stage.removeEventListener('pointermove', move); ba.stage.removeEventListener('pointerup', up); };
+  ba.stage.addEventListener('pointermove', move);
+  ba.stage.addEventListener('pointerup', up);
+});
+ba.handle.addEventListener('keydown', (e) => {
+  const step = e.shiftKey ? 10 : 2;
+  if (e.key === 'ArrowLeft') baSplit(ba.split - step);
+  else if (e.key === 'ArrowRight') baSplit(ba.split + step);
+  else return;
+  ba.touched = true; e.preventDefault();
+});
+function baUse(file) {
+  if (!file) return;
+  if (ba.custom) URL.revokeObjectURL(ba.custom.url);
+  ba.custom = { url: URL.createObjectURL(file), type: file.type.startsWith('video') ? 'video' : 'image' };
+  baRender();
+}
+document.getElementById('heroFile').addEventListener('change', (e) => baUse(e.target.files[0]));
+ba.stage.addEventListener('dragover', (e) => { e.preventDefault(); ba.stage.classList.add('over'); });
+ba.stage.addEventListener('dragleave', (e) => { if (!ba.stage.contains(e.relatedTarget)) ba.stage.classList.remove('over'); });
+ba.stage.addEventListener('drop', (e) => { e.preventDefault(); ba.stage.classList.remove('over'); baUse(e.dataTransfer.files[0]); });
+baRender();
+baSplit(50);
+// One sweep on load so it's obvious the divider moves; stops as soon as the user touches it.
+if (!reduceMotion) {
+  const t0 = performance.now() + 900;
+  const sweep = (t) => {
+    if (ba.touched) return;
+    const k = (t - t0) / 2600;
+    if (k < 0) return requestAnimationFrame(sweep);
+    if (k > 1) return baSplit(50);
+    baSplit(50 - Math.sin(k * Math.PI * 2) * 28);
+    requestAnimationFrame(sweep);
+  };
+  requestAnimationFrame(sweep);
+}
 
 // ─── problem demo ───
 const bad = shot(402, 402 * 16 / 9);

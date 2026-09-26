@@ -1,6 +1,10 @@
 # bezelkit
 
-**Device frames that actually fit your screenshots.** · [bezelkit.dev](https://bezelkit.dev) One zero-dependency web component covering iPhone, Android, iPad, Galaxy Tab, Apple Watch, MacBook, iMac, Studio Display and browser windows.
+**Most mockups break your screenshots. bezelkit fixes that.** · [bezelkit.dev](https://bezelkit.dev)
+
+Text gets stretched, tab bars get cropped and headers disappear under the notch. bezelkit compares your image with the device's real screen and fits it properly.
+
+![bezelkit: typical mockup vs fit="auto"](assets/og-image.png) One zero-dependency web component covering iPhone, Android, iPad, Galaxy Tab, Apple Watch, MacBook, iMac, Studio Display and browser windows.
 
 ```html
 <script type="module" src="https://cdn.jsdelivr.net/npm/bezelkit"></script>
