@@ -404,7 +404,8 @@ export class BezelDevice extends HTMLElement {
         img.decoding = 'async';
         img.setAttribute('part', 'image');
         if (!src.startsWith('data:') && !src.startsWith('blob:')) img.crossOrigin = 'anonymous';
-        img.onload = () => this.#onNatural(img.naturalWidth, img.naturalHeight, img);
+        // Ignore late loads from an element that has since been replaced by a newer src.
+        img.onload = () => m.firstElementChild === img && this.#onNatural(img.naturalWidth, img.naturalHeight, img);
         img.onerror = () => {
           // Retry once without CORS — the image still shows, we just can't sample edge colours.
           if (img.crossOrigin) { img.removeAttribute('crossorigin'); img.src = src; }
@@ -415,7 +416,7 @@ export class BezelDevice extends HTMLElement {
         const v = document.createElement('video');
         Object.assign(v, { src, autoplay: true, muted: true, loop: true, playsInline: true });
         v.setAttribute('part', 'video');
-        v.onloadedmetadata = () => this.#onNatural(v.videoWidth, v.videoHeight);
+        v.onloadedmetadata = () => m.firstElementChild === v && this.#onNatural(v.videoWidth, v.videoHeight);
         m.replaceChildren(v);
       } else {
         const f = document.createElement('iframe');
