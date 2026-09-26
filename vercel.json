@@ -1,4 +1,8 @@
 {
+  "framework": null,
+  "installCommand": "npm install",
+  "buildCommand": "npm run build && node scripts/site.mjs",
+  "outputDirectory": "public",
   "headers": [
     { "source": "/index.d.ts", "headers": [{ "key": "Content-Type", "value": "text/plain; charset=utf-8" }] },
     { "source": "/llms.txt", "headers": [{ "key": "Content-Type", "value": "text/plain; charset=utf-8" }, { "key": "Access-Control-Allow-Origin", "value": "*" }] },
