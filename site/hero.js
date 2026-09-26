@@ -180,6 +180,17 @@ const CAST = [
   { key: 'watch', id: 'apple-watch-ultra', color: null, attrs: {}, box: [0.2, 0.2, 0.2, 0.2], shot: (d) => render(d.screen.w, d.screen.h, 2, drawWatch) },
 ];
 for (const c of CAST) c.d = getDevice(c.id);
+// Reaction emoji for each beat: Noto Emoji animations (Google, CC BY 4.0), played with lottie-web.
+const EMO = [
+  { k: 'think', cp: '1f914', ch: '🤔', say: 'hmm…', tone: '' },
+  { k: 'yikes', cp: '1f62c', ch: '😬', say: 'yikes!', tone: 'bad' },
+  { k: 'oops', cp: '1f648', ch: '🙈', say: 'oops!', tone: 'bad' },
+  { k: 'love', cp: '1f60d', ch: '😍', say: 'perfect!', tone: 'ok' },
+  { k: 'wow', cp: '1f929', ch: '🤩', say: 'wow!', tone: 'ok' },
+  { k: 'party', cp: '1f389', ch: '🎉', say: 'everywhere!', tone: 'ok' },
+];
+const emoAnims = [];
+const LOTTIE_URL = 'https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js';
 // The headline's last word follows the device on stage.
 const WORD = { iphone: 'iPhone', pixel: 'Pixel', ipad: 'iPad', mac: 'MacBook', watch: 'Watch' };
 
@@ -213,6 +224,10 @@ hero.innerHTML = `
   </div>
   <div class="hx-stage" role="img" aria-label="A running-app screenshot is squashed and covered by a generic mockup's notch, then fitted correctly into a real iPhone 17 Pro frame, then shown in a Pixel 10 Pro, an iPad Pro in landscape, a MacBook Pro and an Apple Watch Ultra.">
     <div class="hx-glow" aria-hidden="true"><i class="g-bad"></i><i class="g-ok"></i></div>
+    <div class="hx-emo" aria-hidden="true">
+      <div class="hx-emo-b">${EMO.map((e) => `<div class="hx-e" data-e="${e.k}"><span class="hx-e-fb">${e.ch}</span></div>`).join('')}</div>
+      <div class="hx-emo-l">${EMO.map((e) => `<span class="${e.tone}" data-e="${e.k}">${e.say}</span>`).join('')}</div>
+    </div>
     <div class="hx-area" aria-hidden="true">
       ${CAST.map((c) => {
         const [w, h] = dims(c.d, c.attrs.orientation === 'landscape');
@@ -463,6 +478,22 @@ function build(gsap) {
     wi = i;
   };
 
+  // reaction emoji: pop one in per beat
+  const emoEls = EMO.map((e) => [$(`.hx-e[data-e="${e.k}"]`), $(`.hx-emo-l [data-e="${e.k}"]`)]);
+  tl.set(emoEls.flat(), { autoAlpha: 0 }, 0);
+  let ei = -1;
+  const emo = (k, at) => {
+    const i = EMO.findIndex((e) => e.k === k);
+    if (ei >= 0) tl.to(emoEls[ei], { autoAlpha: 0, scale: 0.4, duration: 0.18, ease: 'power2.in' }, at);
+    tl.fromTo(emoEls[i][0], { autoAlpha: 0, scale: 0.2, rotation: -18 }, { autoAlpha: 1, scale: 1, rotation: 0, duration: 0.55, ease: 'back.out(2.6)', immediateRender: false, onStart: () => playEmo(i) }, at + 0.1);
+    tl.fromTo(emoEls[i][1], { autoAlpha: 0, y: 6, scale: 0.8 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.35, ease: 'back.out(2)', immediateRender: false }, at + 0.25);
+    ei = i;
+  };
+  emo('think', 0.45);
+  emo('yikes', M + 0.5);
+  emo('oops', N + 0.45);
+  emo('love', S + 0.4);
+
   // 4 · the same app, through other real frames
   let t = S + 2.1;
   for (let i = 1; i < CAST.length; i++) {
@@ -475,6 +506,8 @@ function build(gsap) {
     show(cap(c.key), t + 0.35);
     type(c, t + 0.1);
     word(i, t + 0.2);
+    if (i === 1) emo('wow', t + 0.2);
+    if (i === CAST.length - 1) emo('party', t + 0.2);
     t += c.key === 'mac' ? 1.45 : 1.3;
   }
   // out, and loop
@@ -483,6 +516,7 @@ function build(gsap) {
   hide([cap(last), chip], t, 0.3);
   tl.to(glowOk, { autoAlpha: 0, duration: 0.4 }, t);
   word(0, t + 0.15);
+  tl.to(emoEls[ei], { autoAlpha: 0, scale: 0.4, duration: 0.25, ease: 'power2.in' }, t);
   tl.set({}, {}, t + 0.6);
 
   // play only while the hero is on screen and the tab is visible
@@ -490,4 +524,19 @@ function build(gsap) {
   const sync = () => (inView && !document.hidden ? tl.resume() : tl.pause());
   new IntersectionObserver(([e]) => { inView = e.isIntersecting; hero.classList.toggle('hx-off', !inView); sync(); }, { threshold: 0.05 }).observe(hero);
   document.addEventListener('visibilitychange', sync);
+}
+
+// ─── reaction emoji: swap the text glyphs for Lottie animations once the player loads ───
+function playEmo(i) {
+  emoAnims.forEach((a, j) => a && (j === i ? a.goToAndPlay(0, true) : a.pause()));
+}
+if (!RM) {
+  const loadScript = (src) => new Promise((res, rej) => { const el = Object.assign(document.createElement('script'), { src, async: true, onload: res, onerror: rej }); document.head.append(el); });
+  (window.lottie ? Promise.resolve() : loadScript(LOTTIE_URL)).then(() => {
+    EMO.forEach((e, i) => {
+      const box = hero.querySelector(`.hx-e[data-e="${e.k}"]`);
+      const a = window.lottie.loadAnimation({ container: box, renderer: 'svg', loop: true, autoplay: false, path: `https://fonts.gstatic.com/s/e/notoemoji/latest/${e.cp}/lottie.json` });
+      a.addEventListener('DOMLoaded', () => { box.classList.add('lottie'); emoAnims[i] = a; });
+    });
+  }).catch(() => { /* keep the text emoji */ });
 }
