@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>bezelkit · your screenshots, framed properly</title>
 <meta name="description" content="bezelkit is one zero-dependency web component that draws accurate device frames and fits your screenshots into them correctly. No stretching, no cropped tab bars, no notch over your header.">
-<meta name="theme-color" content="#060708">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,14 +16,14 @@
 </script>
 <style>
   :root {
-    --void: #060708;
-    --ink: #ecebe7;
-    --dim: #8d9098;
-    --faint: #4c4f57;
-    --hair: rgba(255, 255, 255, .09);
-    --fault: #ff4263;
-    --warm: 255 212 168;
-    --cool: 138 158 255;
+    --void: #ffffff;
+    --ink: #15161a;
+    --dim: #5d6068;
+    --faint: #9a9da5;
+    --hair: rgba(0, 0, 0, .09);
+    --fault: #e11d48;
+    --warm: 190 104 34;
+    --cool: 70 92 214;
     --display: "Archivo", ui-sans-serif, system-ui, sans-serif;
     --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
     --ease: cubic-bezier(.2, .75, .2, 1);
@@ -294,6 +294,29 @@
   .rm .tk { opacity: 1; }
   .rm .after { opacity: 1; transform: none; }
   .rm .h-fix span { opacity: 1; transform: none; }
+  /* ── white theme overrides (the rules above were written for a dark stage) ── */
+  .nav { background: linear-gradient(rgba(255,255,255,.94), rgba(255,255,255,.7) 60%, rgba(255,255,255,0)); }
+  .kick::before { box-shadow: none; }
+  .kick.ok::before { box-shadow: none; }
+  .w-cover::after { box-shadow: none; }
+  .l-cold { background: radial-gradient(closest-side, rgb(var(--cool) / .07), transparent); }
+  .l-fault { background: radial-gradient(40% 36% at 50% 56%, rgba(225, 29, 72, .06), transparent); }
+  .l-warm { background: radial-gradient(34% 44% at 50% 40%, rgb(255 196 140 / .28), transparent 70%), radial-gradient(60% 20% at 50% 88%, rgb(255 196 140 / .12), transparent 70%); }
+  .floor { background: radial-gradient(closest-side, rgba(0,0,0,.22), transparent); }
+  .m-body { box-shadow: inset 0 0 0 1.5px #2b2c31, 0 40px 70px -34px rgba(0,0,0,.45); }
+  .line-floor { background: linear-gradient(rgba(0,0,0,.025), transparent 70%); }
+  .line-light { background: radial-gradient(closest-side, rgb(255 196 140 / .16), transparent); }
+  .dev::after { background: radial-gradient(closest-side, rgba(0,0,0,.28), transparent); }
+  .flip-rig bezel-device { -webkit-box-reflect: below 6px linear-gradient(transparent 82%, rgba(0,0,0,.08)); }
+  .finishes button { background: #fff; }
+  .finishes button i { box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
+  .finishes button[aria-pressed="true"] { border-color: rgba(0,0,0,.35); background: rgba(0,0,0,.04); }
+  .cdn { background: rgba(0,0,0,.025); }
+  .btn { border-color: rgba(0,0,0,.18); }
+  .btn:hover { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.3); }
+  .btn.primary { color: #fff; }
+  .btn.primary:hover { background: #000; }
+  .drop.over { background: rgba(0,0,0,.03); outline-color: rgba(0,0,0,.3); }
 </style>
 </head>
 <body>
