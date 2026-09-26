@@ -24,11 +24,14 @@
 //            desktop { t, lift, foot: { w, d, t } }  display thickness, floor-to-display gap, foot plate
 //   back     { finish, camera, window?, logo?, stand? }   the rear, for side="back" / "both"
 //     finish  'glass' (matte) | 'gloss' | 'aluminium' | 'titanium' | 'polished'
-//     camera  { plates: [{ x, y, w, h, r, tone?, fill? }], parts: [{ x, y, d, kind? }] }
+//     camera  { plates: [{ x, y, w, h, r, tone?, fill?, z?, edge?, dome?, rings? }], parts: [{ x, y, d, kind? }] }
 //             plates are raised modules (plateau, bar, bump) drawn in order; tone is a finish
-//             name or 'dark'. parts are centred circles: kind 'lens' (default) | 'flash' |
-//             'lidar' | 'sensor' | 'mic'.
+//             name or 'dark'. z = how far it stands proud, in px (sets chamfer and cast shadow;
+//             default 5, 2 for 'dark'); edge: 'polished' adds a bright polished rim; dome: true draws
+//             a glossy convex crystal (watch sensors), rings = Fresnel ring pitch in px.
+//             parts are centred circles: kind 'lens' (default) | 'flash' | 'lidar' | 'sensor' | 'mic'.
 //     window  { x, y, w, h, r, tone? }  a flush inset panel of another finish
+//     slots   { w?, h?, y?, button? }  watches only: band slots and release buttons (defaults from the case)
 //     logo    { y }  centre of the neutral logo="dot" placeholder (brand logos are never drawn)
 //     stand   y where a desktop's stand meets the back
 //   Back coordinates are px from the body's top-left corner as seen from BEHIND, so a phone's
@@ -96,7 +99,7 @@ defineDevice({
     finish: 'aluminium', logo: { y: 613 },
     window: { x: 26.5, y: 323.5, w: 418, h: 593, r: 18 },
     camera: {
-      plates: [{ x: 0, y: 0, w: 471, h: 285.5, r: '75px 75px 12px 12px' }],
+      plates: [{ x: 0, y: 0, w: 471, h: 285.5, r: '75px 75px 12px 12px', z: 8 }],
       parts: [
         { x: 93, y: 86.5, d: 104.5 }, { x: 93, y: 199, d: 104.5 }, { x: 198, y: 142.5, d: 104.5 },
         { x: 396, y: 92.5, d: 32, kind: 'flash' }, { x: 396, y: 142.5, d: 7, kind: 'mic' }, { x: 396, y: 193, d: 34, kind: 'lidar' },
@@ -118,7 +121,7 @@ defineDevice({
     finish: 'aluminium', logo: { y: 563.5 },
     window: { x: 24.5, y: 298, w: 385, h: 543.5, r: 16 },
     camera: {
-      plates: [{ x: 0, y: 0, w: 434, h: 263.5, r: '75px 75px 12px 12px' }],
+      plates: [{ x: 0, y: 0, w: 434, h: 263.5, r: '75px 75px 12px 12px', z: 8 }],
       parts: [
         { x: 85, y: 78.5, d: 96.5 }, { x: 85, y: 183, d: 96.5 }, { x: 182.5, y: 131, d: 96.5 },
         { x: 365, y: 84.5, d: 30, kind: 'flash' }, { x: 365, y: 131, d: 7, kind: 'mic' }, { x: 365, y: 177, d: 32, kind: 'lidar' },
@@ -141,7 +144,7 @@ defineDevice({
     finish: 'aluminium', logo: { y: 613 },
     window: { x: 26.5, y: 323.5, w: 418, h: 593, r: 18 },
     camera: {
-      plates: [{ x: 0, y: 0, w: 471, h: 285.5, r: '75px 75px 12px 12px' }],
+      plates: [{ x: 0, y: 0, w: 471, h: 285.5, r: '75px 75px 12px 12px', z: 8 }],
       parts: [
         { x: 93, y: 86.5, d: 104.5 }, { x: 93, y: 199, d: 104.5 }, { x: 198, y: 142.5, d: 104.5 },
         { x: 396, y: 92.5, d: 32, kind: 'flash' }, { x: 396, y: 142.5, d: 7, kind: 'mic' }, { x: 396, y: 193, d: 34, kind: 'lidar' },
@@ -163,7 +166,7 @@ defineDevice({
     finish: 'aluminium', logo: { y: 563.5 },
     window: { x: 24.5, y: 298, w: 385, h: 543.5, r: 16 },
     camera: {
-      plates: [{ x: 0, y: 0, w: 434, h: 263.5, r: '75px 75px 12px 12px' }],
+      plates: [{ x: 0, y: 0, w: 434, h: 263.5, r: '75px 75px 12px 12px', z: 8 }],
       parts: [
         { x: 85, y: 78.5, d: 96.5 }, { x: 85, y: 183, d: 96.5 }, { x: 182.5, y: 131, d: 96.5 },
         { x: 365, y: 84.5, d: 30, kind: 'flash' }, { x: 365, y: 131, d: 7, kind: 'mic' }, { x: 365, y: 177, d: 32, kind: 'lidar' },
@@ -185,7 +188,7 @@ defineDevice({
   back: {
     finish: 'glass', logo: { y: 503.5 },
     camera: {
-      plates: [{ x: 20.5, y: 22, w: 410, h: 121, r: 60.5 }],
+      plates: [{ x: 20.5, y: 22, w: 410, h: 121, r: 60.5, z: 7, edge: 'polished' }],
       parts: [{ x: 83.5, y: 82.5, d: 86.5 }, { x: 168.5, y: 82.5, d: 24, kind: 'flash' }, { x: 203, y: 82.5, d: 6, kind: 'mic' }],
     },
   },
@@ -204,7 +207,7 @@ defineDevice({
   back: {
     finish: 'glass', logo: { y: 452 },
     camera: {
-      plates: [{ x: 26, y: 26, w: 106.5, h: 212.5, r: 53 }],
+      plates: [{ x: 26, y: 26, w: 106.5, h: 212.5, r: 53, tone: 'gloss', z: 6 }],
       parts: [{ x: 79.5, y: 79, d: 84 }, { x: 79.5, y: 185.5, d: 84 }, { x: 160.5, y: 68, d: 24, kind: 'flash' }, { x: 160.5, y: 104, d: 6, kind: 'mic' }],
     },
   },
@@ -448,7 +451,7 @@ defineDevice({
   back: {
     finish: 'aluminium',
     camera: {
-      plates: [{ x: 32, y: 32, w: 132, h: 132, r: 38 }],
+      plates: [{ x: 32, y: 32, w: 132, h: 132, r: 38, z: 5 }],
       parts: [{ x: 72, y: 72, d: 64 }, { x: 128, y: 70, d: 22, kind: 'flash' }, { x: 126, y: 124, d: 38, kind: 'lidar' }, { x: 72, y: 128, d: 10, kind: 'sensor' }, { x: 100, y: 100, d: 5, kind: 'mic' }],
     },
   },
@@ -463,7 +466,7 @@ defineDevice({
   back: {
     finish: 'aluminium',
     camera: {
-      plates: [{ x: 32, y: 32, w: 132, h: 132, r: 38 }],
+      plates: [{ x: 32, y: 32, w: 132, h: 132, r: 38, z: 5 }],
       parts: [{ x: 72, y: 72, d: 64 }, { x: 128, y: 70, d: 22, kind: 'flash' }, { x: 126, y: 124, d: 38, kind: 'lidar' }, { x: 72, y: 128, d: 10, kind: 'sensor' }, { x: 100, y: 100, d: 5, kind: 'mic' }],
     },
   },
@@ -535,7 +538,7 @@ defineDevice({
   back: {
     finish: 'titanium',
     camera: {
-      plates: [{ x: 32.5, y: 56, w: 202, h: 202, r: '50%', tone: 'dark' }, { x: 78, y: 101.5, w: 111, h: 111, r: '50%', tone: 'dark' }],
+      plates: [{ x: 32.5, y: 56, w: 202, h: 202, r: '50%', tone: 'dark', dome: true, z: 6 }, { x: 78, y: 101.5, w: 111, h: 111, r: '50%', tone: 'dark', dome: true, z: 3, rings: 3.5 }],
       parts: [{ x: 133.5, y: 157, d: 27.5, kind: 'sensor' }, { x: 133.5, y: 122, d: 12.5, kind: 'sensor' }, { x: 133.5, y: 192, d: 12.5, kind: 'sensor' }, { x: 98.5, y: 157, d: 12.5, kind: 'sensor' }, { x: 168.5, y: 157, d: 12.5, kind: 'sensor' }],
     },
   },
@@ -552,7 +555,7 @@ defineDevice({
   back: {
     finish: 'aluminium',
     camera: {
-      plates: [{ x: 28.5, y: 48.5, w: 200.5, h: 200.5, r: '50%', tone: 'dark' }, { x: 72.5, y: 92.5, w: 112.5, h: 112.5, r: '50%', tone: 'dark' }],
+      plates: [{ x: 28.5, y: 48.5, w: 200.5, h: 200.5, r: '50%', tone: 'dark', dome: true, z: 6 }, { x: 72.5, y: 92.5, w: 112.5, h: 112.5, r: '50%', tone: 'dark', dome: true, z: 3, rings: 3.5 }],
       parts: [{ x: 128.75, y: 148.75, d: 27, kind: 'sensor' }, { x: 128.75, y: 113.75, d: 12.5, kind: 'sensor' }, { x: 128.75, y: 183.75, d: 12.5, kind: 'sensor' }, { x: 93.75, y: 148.75, d: 12.5, kind: 'sensor' }, { x: 163.75, y: 148.75, d: 12.5, kind: 'sensor' }],
     },
   },
@@ -567,7 +570,7 @@ defineDevice({
   back: {
     finish: 'aluminium',
     camera: {
-      plates: [{ x: 28, y: 48, w: 199, h: 199, r: '50%', tone: 'dark' }, { x: 72, y: 92, w: 111, h: 111, r: '50%', tone: 'dark' }],
+      plates: [{ x: 28, y: 48, w: 199, h: 199, r: '50%', tone: 'dark', dome: true, z: 6 }, { x: 72, y: 92, w: 111, h: 111, r: '50%', tone: 'dark', dome: true, z: 3, rings: 3.5 }],
       parts: [{ x: 127.5, y: 147.5, d: 27, kind: 'sensor' }, { x: 127.5, y: 113, d: 12.5, kind: 'sensor' }, { x: 127.5, y: 182, d: 12.5, kind: 'sensor' }, { x: 92.5, y: 147.5, d: 12.5, kind: 'sensor' }, { x: 162.5, y: 147.5, d: 12.5, kind: 'sensor' }],
     },
   },
