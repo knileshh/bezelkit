@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Responsive page for iframe demos</title>
+<style>
+  body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: #fffaf3; color: #231d17; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #eadfce; }
+  header b { font: 400 24px Georgia, serif; }
+  main { padding: 20px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .card { background: #fff; border: 1px solid #eadfce; border-radius: 14px; padding: 16px; }
+  .vp { font: 600 13px ui-monospace, monospace; color: #d2522b; }
+</style>
+</head>
+<body>
+<header><b>Mealwise</b><span class="vp" id="vp"></span></header>
+<main>
+  <div class="card"><h3 style="margin:0">This is a real page</h3><p>It lays out at the device's true viewport, so its own media queries fire correctly.</p></div>
+  <div class="card">Berry Overnight Oats</div><div class="card">Grilled Cheese &amp; Soup</div><div class="card">Spaghetti &amp; Meatballs</div>
+  <div class="card">Veggie Omelette</div><div class="card">Chicken Tacos</div><div class="card">Butter Chicken &amp; Rice</div>
+</main>
+<script>
+  const vp = document.getElementById('vp');
+  const show = () => (vp.textContent = `${innerWidth}×${innerHeight}`);
+  addEventListener('resize', show); show();
+</script>
+</body>
+</html>

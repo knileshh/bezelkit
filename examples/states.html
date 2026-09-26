@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bezelkit — state matrix</title>
+<script type="module" src="../src/bezel.js"></script>
+<style>
+  body { margin: 0; padding: 32px; background: #f4efe7; font: 13px/1.4 system-ui, sans-serif; color: #1d1a16; }
+  h1 { font: 400 32px Georgia, serif; margin: 0 0 24px; }
+  .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+  figure { margin: 0; background: #fbf8f3; border: 1px solid #e3dbcf; border-radius: 12px; padding: 16px; }
+  figcaption { margin-top: 10px; font-family: ui-monospace, monospace; font-size: 12px; color: #6f675d; }
+  .h { height: 340px; }
+  .h bezel-device { height: 100%; }
+  .wide { grid-column: span 2; }
+</style>
+</head>
+<body>
+<h1>State matrix</h1>
+<div class="grid">
+  <figure><div class="h"><bezel-device device="iphone-17-pro" orientation="landscape" id="land"></bezel-device></div><figcaption>iphone-17-pro · landscape · image</figcaption></figure>
+  <figure><div class="h"><bezel-device device="iphone-17-pro-max" id="long"></bezel-device></div><figcaption>long screenshot → fit=auto (scroll)</figcaption></figure>
+  <figure><div class="h"><bezel-device device="pixel-10-pro" theme="dark" style="--bezel-safe-bg:#101418">
+    <div style="font:15px system-ui;color:#e8eaed;background:#101418;min-height:100%;padding:16px">
+      <h2 style="margin:0 0 8px;font-size:26px">Slotted HTML</h2><p>Status bar + gesture pill on, content padded below the hole-punch.</p>
+      <div style="height:900px;background:linear-gradient(#2a3342,#101418);border-radius:14px"></div>
+    </div></bezel-device></div><figcaption>pixel-10-pro · dark · slot</figcaption></figure>
+  <figure><div class="h"><bezel-device device="iphone-se" color="starlight" src="embed-demo.html"></bezel-device></div><figcaption>iphone-se · starlight · iframe</figcaption></figure>
+  <figure class="wide"><div class="h"><bezel-device device="macbook-air-13" color="midnight" src="embed-demo.html"></bezel-device></div><figcaption>macbook-air-13 · iframe at 1470×956 · menu bar</figcaption></figure>
+  <figure class="wide"><div class="h"><bezel-device device="browser-safari" url="mealwise.app/week" viewport="1024x640" src="embed-demo.html"></bezel-device></div><figcaption>browser-safari · viewport=1024x640</figcaption></figure>
+  <figure><div class="h"><bezel-device device="ipad-pro-11" orientation="landscape" src="embed-demo.html"></bezel-device></div><figcaption>ipad-pro-11 · landscape · iframe</figcaption></figure>
+  <figure><div class="h"><bezel-device device="galaxy-s25-ultra" orientation="landscape" src="embed-demo.html" theme="dark"></bezel-device></div><figcaption>galaxy-s25-ultra · landscape · iframe</figcaption></figure>
+  <figure><div class="h"><bezel-device device="apple-watch-ultra" chrome="on"><div style="background:#000;height:100%;display:grid;place-items:center;color:#a6ff00;font:600 34px system-ui">72♥</div></bezel-device></div><figcaption>apple-watch-ultra · slot · chrome=on</figcaption></figure>
+  <figure><div class="h"><bezel-device device="imac-24" color="orange" src="embed-demo.html"></bezel-device></div><figcaption>imac-24 · orange</figcaption></figure>
+</div>
+<script type="module">
+  // Generate a landscape and a very long screenshot on the fly.
+  function draw(w, h, bands) {
+    const c = Object.assign(document.createElement('canvas'), { width: w, height: h });
+    const g = c.getContext('2d');
+    for (let i = 0; i < bands; i++) { g.fillStyle = `hsl(${20 + i * 23} 60% ${i % 2 ? 88 : 80}%)`; g.fillRect(0, (h / bands) * i, w, h / bands); }
+    g.fillStyle = '#1d1a16'; g.font = `600 ${w / 14}px system-ui`;
+    for (let i = 0; i < bands; i++) g.fillText(`Section ${i + 1}`, w * 0.08, (h / bands) * i + w / 8);
+    return c.toDataURL('image/png');
+  }
+  document.getElementById('land').src = draw(874 * 2, 402 * 2, 3);
+  document.getElementById('long').src = draw(440 * 3, 956 * 3 * 3, 12);
+  document.addEventListener('bezel-fit', (e) => console.log('bezel-fit', e.target.id || e.target.getAttribute('device'), e.detail.fit, e.detail.mismatch.toFixed(3)));
+</script>
+</body>
+</html>
