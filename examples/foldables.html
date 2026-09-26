@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bezelkit — foldables</title>
+<script>
+  // Surface errors in the page itself (handy for headless screenshots).
+  const report = (m) => { const p = document.getElementById('errors'); if (p) { p.hidden = false; p.textContent += m + '\n'; } document.title = 'ERROR · ' + m; };
+  window.onerror = (m, s, l, c) => report(`${m} (${s}:${l}:${c})`);
+  window.onunhandledrejection = (e) => report(`unhandled: ${e.reason}`);
+  const ce = console.error; console.error = (...a) => { report(a.join(' ')); ce(...a); };
+  // ?pause=0.4: freeze fold animations at that fraction (headless Chrome doesn't tick rAF under virtual time).
+  if (new URLSearchParams(location.search).has('pause')) {
+    window.requestAnimationFrame = (cb) => setTimeout(() => cb(Math.min(performance.now(), window.freezeAt ?? Infinity)), 16);
+  }
+</script>
+<script type="module" src="../src/bezel.js"></script>
+<style>
+  body { margin: 0; padding: 32px; background: #f4efe7; font: 13px/1.4 system-ui, sans-serif; color: #1d1a16; }
+  h1 { font: 400 32px Georgia, serif; margin: 0 0 6px; }
+  h2 { font: 400 22px Georgia, serif; margin: 32px 0 14px; }
+  p.lede { margin: 0 0 22px; color: #6f675d; max-width: 70ch; }
+  .bar { display: flex; gap: 14px; align-items: center; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+  figure { margin: 0; background: #fbf8f3; border: 1px solid #e3dbcf; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; }
+  figcaption { margin-top: 10px; font-family: ui-monospace, monospace; font-size: 12px; color: #6f675d; }
+  .h { height: 380px; }
+  .h bezel-device { height: 100%; }
+  .auto { display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap; }
+  .auto figure { width: 220px; }
+  .btns { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  button { font: 12px ui-monospace, monospace; padding: 5px 9px; border: 1px solid #d6ccbd; border-radius: 7px; background: #fff; color: #1d1a16; cursor: pointer; }
+  button:hover { background: #f1eadf; }
+  label { font: 12px ui-monospace, monospace; display: flex; gap: 6px; align-items: center; }
+  .ev { min-height: 1.4em; }
+  #errors { background: #fee; color: #900; padding: 10px; border-radius: 8px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>Foldables</h1>
+<p class="lede">Inner display when open, cover display when closed. <code>el.fold()</code>, <code>el.unfold()</code> and <code>el.toggleFold()</code> return promises; <code>fold-angle</code> sets a half-open pose. Content below is drawn on a canvas at each display's real viewport.</p>
+<pre id="errors" hidden></pre>
+<div class="bar">
+  <button id="all-fold">fold all</button><button id="all-unfold">unfold all</button><button id="all-toggle">toggle all</button>
+  <label><input type="checkbox" id="auto"> auto-toggle every 2.4s</label>
+</div>
+
+<div class="grid" id="main">
+  <figure><div class="h"><bezel-device device="galaxy-z-fold7"></bezel-device></div><figcaption>galaxy-z-fold7 · book</figcaption></figure>
+  <figure><div class="h"><bezel-device device="galaxy-z-flip7" color="coralred"></bezel-device></div><figcaption>galaxy-z-flip7 · flip · coralred</figcaption></figure>
+  <figure><div class="h"><bezel-device device="pixel-10-pro-fold" color="jade"></bezel-device></div><figcaption>pixel-10-pro-fold · book · jade</figcaption></figure>
+  <figure><div class="h"><bezel-device device="iphone-duo"></bezel-device></div><figcaption>iphone-duo · book · night sky</figcaption></figure>
+</div>
+
+<h2>Live content, flex pose and fixed box</h2>
+<div class="grid" id="live">
+  <figure><div class="h"><bezel-device device="iphone-duo" color="star-white" src="embed-demo.html"></bezel-device></div><figcaption>iphone-duo · iframe on both displays</figcaption></figure>
+  <figure><div class="h"><bezel-device device="galaxy-z-fold7" theme="dark" color="silver-shadow" style="--bezel-safe-bg:#101418">
+    <div style="font:15px system-ui;color:#e8eaed;background:#101418;min-height:100%;padding:16px">
+      <h2 style="margin:0 0 8px;font:600 24px system-ui">Slotted HTML</h2><p>One default slot, moved to whichever display faces you.</p>
+      <div style="height:600px;background:linear-gradient(#2a3342,#101418);border-radius:14px"></div>
+    </div></bezel-device></div><figcaption>galaxy-z-fold7 · dark · slot</figcaption></figure>
+  <figure><div class="h"><bezel-device device="galaxy-z-flip7" color="mint" fold-angle="105" data-flex></bezel-device></div><figcaption>galaxy-z-flip7 · fold-angle=105</figcaption></figure>
+  <figure><div class="h"><bezel-device device="pixel-10-pro-fold" fold-box="fixed" fold-angle="120" data-flex></bezel-device></div><figcaption>pixel-10-pro-fold · fold-box=fixed · 120°</figcaption></figure>
+</div>
+
+<h2>Width-driven (host height follows the pose)</h2>
+<div class="auto" id="auto-row">
+  <figure><bezel-device device="galaxy-z-flip7" color="blue-shadow"></bezel-device><figcaption>flip · width 220px</figcaption></figure>
+  <figure><bezel-device device="galaxy-z-fold7" color="mint"></bezel-device><figcaption>fold · width 220px</figcaption></figure>
+  <figure><bezel-device device="galaxy-z-fold7" orientation="landscape" color="jetblack"></bezel-device><figcaption>fold · landscape</figcaption></figure>
+</div>
+
+<script type="module">
+  import { getDevice } from '../src/bezel.js';
+  const q = new URLSearchParams(location.search);
+  const els = [...document.querySelectorAll('bezel-device')];
+
+  // A plausible app screen at the display's own viewport, 2x.
+  function shot(w, h, { title, sub, hue, cover }) {
+    const s = 2, c = Object.assign(document.createElement('canvas'), { width: w * s, height: h * s });
+    const g = c.getContext('2d');
+    g.scale(s, s);
+    const bg = g.createLinearGradient(0, 0, w, h);
+    bg.addColorStop(0, `hsl(${hue} 55% ${cover ? 22 : 94}%)`); bg.addColorStop(1, `hsl(${hue + 40} 60% ${cover ? 12 : 86}%)`);
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    const ink = cover ? '#f4efe7' : '#1d1a16';
+    if (cover) {
+      g.fillStyle = ink; g.textAlign = 'center';
+      g.font = `200 ${Math.min(w, h) * 0.3}px system-ui`; g.fillText('9:41', w / 2, h * 0.36);
+      g.font = `500 ${Math.min(w, h) * 0.055}px system-ui`; g.fillText('Saturday, September 26', w / 2, h * 0.36 + Math.min(w, h) * 0.1);
+      const cw = w * 0.8, ch = Math.min(h * 0.16, 90);
+      for (let i = 0; i < 2; i++) {
+        g.fillStyle = `hsl(${hue + i * 50} 70% 60% / .9)`;
+        g.beginPath(); g.roundRect((w - cw) / 2, h * 0.5 + i * (ch + 12), cw, ch, 18); g.fill();
+      }
+      g.fillStyle = 'rgba(255,255,255,.75)'; g.font = `600 12px ui-monospace, monospace`;
+      g.fillText(`${sub}`, w / 2, h - 44);
+      return c.toDataURL('image/png');
+    }
+    const top = 56;
+    g.fillStyle = ink; g.font = '700 30px system-ui'; g.fillText(title, 24, top + 40);
+    g.font = '500 14px ui-monospace, monospace'; g.fillStyle = '#6f675d'; g.fillText(sub, 24, top + 64);
+    const cols = w > 600 ? 2 : 1, pad = 24, gap = 16, cw = (w - pad * 2 - gap * (cols - 1)) / cols;
+    let y = top + 90;
+    for (let i = 0; y < h - 60; i++) {
+      const col = i % cols, ch = 90 + ((i * 37) % 70);
+      g.fillStyle = `hsl(${hue + i * 23} 60% ${i % 2 ? 80 : 72}%)`;
+      g.beginPath(); g.roundRect(pad + col * (cw + gap), y, cw, ch, 16); g.fill();
+      g.fillStyle = 'rgba(29,26,22,.8)'; g.font = '600 16px system-ui'; g.fillText(`Card ${i + 1}`, pad + col * (cw + gap) + 16, y + 30);
+      if (col === cols - 1) y += ch + gap;
+    }
+    return c.toDataURL('image/png');
+  }
+
+  const hues = { 'galaxy-z-fold7': 210, 'galaxy-z-flip7': 10, 'pixel-10-pro-fold': 150, 'iphone-duo': 250 };
+  for (const el of els) {
+    if (el.hasAttribute('src') || el.children.length) continue;
+    const d = getDevice(el.getAttribute('device')), hue = hues[d.id] ?? 30;
+    el.src = shot(d.screen.w, d.screen.h, { title: d.name, sub: `inner ${d.screen.w}×${d.screen.h} @${d.dpr}x`, hue });
+    el.coverSrc = shot(d.cover.w, d.cover.h, { sub: `cover ${d.cover.w}×${d.cover.h}`, hue, cover: true });
+  }
+
+  // Per-card controls.
+  for (const el of els) {
+    const fig = el.closest('figure'), btns = document.createElement('div'), ev = document.createElement('div');
+    btns.className = 'btns'; ev.className = 'ev'; ev.style.cssText = 'font:11px ui-monospace,monospace;color:#9a9083;margin-top:6px';
+    const flex = el.getAttribute('fold-angle') ?? '110';
+    for (const [label, fn] of [['fold', () => el.fold()], ['unfold', () => el.unfold()], ['toggle', () => el.toggleFold()], [`${flex}°`, () => { el.folded = false; el.foldAngle = flex; }], ['180°', () => { el.folded = false; el.foldAngle = null; }]]) {
+      const b = document.createElement('button'); b.textContent = label; b.onclick = fn; btns.append(b);
+    }
+    fig.append(btns, ev);
+    el.addEventListener('bezel-fold', (e) => { ev.textContent = `bezel-fold ${e.detail.phase} → ${e.detail.to}° folded=${e.detail.folded}`; });
+  }
+
+  const all = (m) => Promise.all(els.map((el) => el[m]()));
+  document.getElementById('all-fold').onclick = () => all('fold');
+  document.getElementById('all-unfold').onclick = () => all('unfold');
+  document.getElementById('all-toggle').onclick = () => all('toggleFold');
+  let timer = null;
+  const auto = document.getElementById('auto');
+  auto.onchange = () => { clearInterval(timer); if (auto.checked) timer = setInterval(() => all('toggleFold'), 2400); };
+
+  // Screenshot hooks: ?folded=1, ?angle=100, ?pause=0.45[&dir=open] (a real fold, frozen part-way), ?auto=1.
+  if (q.has('angle')) els.forEach((el) => (el.foldAngle = q.get('angle')));
+  if (q.has('solo')) {
+    document.querySelectorAll('figure').forEach((f) => { if (!f.querySelector(`bezel-device[device="${q.get('solo')}"]`)) f.remove(); });
+    document.querySelectorAll('.h').forEach((h) => (h.style.height = '760px'));
+    document.querySelectorAll('.grid').forEach((g) => (g.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))'));
+    els.splice(0, els.length, ...document.querySelectorAll('bezel-device'));
+  }
+  if (q.get('folded') === '1') els.forEach((el) => el.fold({ duration: 0 }));
+  if (q.has('pause')) {
+    const open = q.get('dir') === 'open';
+    if (open) els.forEach((el) => el.fold({ duration: 0 }));
+    setTimeout(() => {
+      window.freezeAt = performance.now() + +q.get('pause') * 820;
+      els.forEach((el) => (open ? el.unfold() : el.fold()));
+    }, 300);
+  }
+  if (q.get('auto') === '1') { auto.checked = true; auto.onchange(); }
+  if (q.has('debug')) setInterval(() => { document.body.dataset.angles = `${performance.now() | 0}: ${els.map((el) => el.hingeAngle.toFixed(1)).join(' ')}`; }, 100);
+</script>
+</body>
+</html>

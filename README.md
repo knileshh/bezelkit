@@ -55,6 +55,10 @@ The gap bezelkit fills: **correct content fitting + real viewports + every devic
 | `side` | `front` (default) `back` `both` | `back` draws the rear: camera module, finish and mirrored buttons. `both` is a stacked hero shot with the back tilted behind the front. Not available for browser frames |
 | `stack` | `left` (default) `right` | With `side="both"`, the side the back peeks out from. The camera sits top-left on the back, so `left` shows it |
 | `logo` | `none` (default) `dot` | Brand logos are never drawn. `dot` adds a neutral placeholder mark on the back |
+| `folded` | boolean | Foldables: show the cover display. Toggling it animates the fold |
+| `cover-src` | image · video · URL | Foldables: what the cover display shows. Defaults to `src`; slotted HTML moves to whichever display faces you, or use `slot="cover"` children |
+| `fold-angle` | `0`–`180` | Foldables: hinge angle when not `folded` (180 = flat). `110` gives a half-open "flex mode" pose |
+| `fold-box` | `pose` (default) `fixed` | `pose`: the element's aspect ratio follows the device as it folds. `fixed`: it keeps the open size so nothing around it moves |
 
 Every attribute is also a property (`el.safeArea = 'pad'`).
 
@@ -65,6 +69,19 @@ Every attribute is also a property (`el.safeArea = 'pad'`).
 **Events:** `bezel-fit` fires with `{ requested, fit, media, screen, mediaRatio, screenRatio, mismatch }` once media loads. Use it to flag screenshots that came from the wrong device. `bezel-flip` fires with `{ side }` when a front/back turn settles.
 
 **Styling:** use `::part(frame | screen | content | media | image | video | iframe | back)`, `--bezel-screen-bg` and `--bezel-safe-bg`.
+
+### Foldables
+
+```html
+<bezel-device id="fold" device="galaxy-z-fold7" src="inner.png" cover-src="cover.png"></bezel-device>
+<script type="module">
+  await fold.fold();            // closes onto the cover display; resolves when the animation ends
+  await fold.unfold({ duration: 1200 });
+  fold.toggleFold();
+</script>
+```
+
+The two halves turn about the hinge in CSS 3D (about 820 ms, eased), the cover display comes into view on the back of the moving half, and the inner display gets a crease and the other half's shadow. `prefers-reduced-motion` jumps straight to the end. `bezel-fold` fires with `{ phase: 'start' | 'end', folded, from, to }`, and `el.hingeAngle` reads the angle mid-animation. Cover parts: `::part(cover-screen | cover-content | cover-media | fold-leaf)`; `--bezel-crease: 0` hides the crease. Screenshots and videos are cloned onto the moving half; iframes and slotted HTML can't be, so for those the inner display switches off while the device closes or opens.
 
 ### Sizing tips
 
@@ -88,9 +105,10 @@ See the schema at the top of [`src/devices.js`](src/devices.js). To give a devic
 
 ## Devices
 
-26 frames so far:
+30 frames so far:
 
 - **Phones:** iPhone 17 Pro Max, 17 Pro, Air, 17, 16e, SE · Pixel 10 Pro · Galaxy S25 Ultra, S25 · generic Android
+- **Foldables:** iPhone Duo · Galaxy Z Fold7, Z Flip7 · Pixel 10 Pro Fold (aliases `fold`, `flip`)
 - **Tablets:** iPad Pro 13″/11″, iPad Air 11″, iPad mini · Galaxy Tab S10+
 - **Watches:** Apple Watch Ultra, Series 11
 - **Laptops and desktops:** MacBook Pro 14″/16″, MacBook Air 13″/15″, generic 1080p laptop · iMac 24″, Studio Display
@@ -111,7 +129,7 @@ Then open `http://localhost:8766` for the playground or `/examples/states.html` 
 ## Roadmap
 
 - [ ] Verify every spec against official dimensions and add a `verified` flag to each device
-- [ ] Foldables (Galaxy Z Fold/Flip, Pixel Fold) with a `folded` attribute
+- [x] Foldables (Galaxy Z Fold/Flip, Pixel Fold, iPhone Duo) with a `folded` attribute
 - [ ] Framework wrappers for typed props (`@bezelkit/react`, `@bezelkit/vue`)
 - [ ] PNG/SVG export ("download this mockup") in the playground
 - [ ] Tests: `resolveFit` unit tests and Playwright visual snapshots of `examples/states.html`

@@ -5,6 +5,7 @@ import { getDevice, listDevices, defineDevice } from './devices.js';
 export { getDevice, listDevices, defineDevice };
 
 const ATTRS = ['device', 'color', 'orientation', 'src', 'type', 'fit', 'chrome', 'safe-area', 'theme', 'url', 'viewport', 'glare', 'shadow', 'alt', 'side', 'stack', 'logo'];
+const FOLD_ATTRS = ['folded', 'cover-src', 'fold-angle', 'fold-box'];
 const FITS = ['auto', 'cover', 'top', 'contain', 'scroll', 'fill', 'none'];
 const IMG_RE = /(^data:image\/)|\.(png|jpe?g|webp|gif|avif|svg|bmp)([?#]|$)/i;
 const VID_RE = /(^data:video\/)|\.(mp4|webm|mov|m4v|ogv)([?#]|$)/i;
@@ -56,6 +57,24 @@ const STYLES = `
 .back > * { position: absolute; box-sizing: border-box; }
 .device, .back { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 `;
+
+// Foldable layers, added only to foldable instances. Cover media reuses the .media fit rules.
+const FOLD_STYLES = `
+.fleaf { position: absolute; transform-style: preserve-3d; }
+.fface { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.fface > *, .fwrap > * { position: absolute; box-sizing: border-box; }
+.fwrap { left: 0; top: 0; }
+.fshade { inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 6; }
+.fedge { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.fcover { overflow: hidden; background: var(--bezel-screen-bg, #000); isolation: isolate; transform-origin: 0 0; }
+.fcontent { position: absolute; left: 0; top: 0; transform-origin: 0 0; overflow: hidden; background: var(--bezel-safe-bg, var(--_safe-bg)); }
+${STYLES.split('\n').filter((l) => l.startsWith('.media')).join('\n').replaceAll('.media', '.fmedia')}
+.fchrome, .fcut, .fsheen, .ffx { position: absolute; inset: 0; pointer-events: none; }
+.fchrome > *, .fcut > * { position: absolute; box-sizing: border-box; }
+.fchrome { z-index: 2; } .fcut { z-index: 3; } .fsheen { z-index: 4; } .ffx { z-index: 5; }
+`;
+const ease = (p) => (p < 0.5 ? 4 * p ** 3 : 1 - (-2 * p + 2) ** 3 / 2);
+const kindOf = (src) => (IMG_RE.test(src) || src.startsWith('blob:') ? 'image' : VID_RE.test(src) ? 'video' : 'iframe');
 
 const ICON = {
   signal: '<svg width="18" height="12" viewBox="0 0 18 12"><rect y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" width="3" height="12" rx="1"/></svg>',
@@ -113,8 +132,18 @@ function bezelCamera(cut, x, y, w, h, bz) {
 // Cut-outs that overlap the screen, in screen coordinates.
 function screenCutout(cut, w) {
   if (!cut) return '';
-  const cx = (w - (cut.w ?? cut.d ?? 0)) / 2;
+  const cx = cut.left ?? (w - (cut.w ?? cut.d ?? 0)) / 2;
   switch (cut.type) {
+    case 'island-v': { // vertical Dynamic Island in the top-right corner (iPhone Duo)
+      const x = w - cut.right - cut.w;
+      return div('island', `left:${x}px;top:${cut.top}px;width:${cut.w}px;height:${cut.h}px;border-radius:${cut.w / 2}px;background:#000`) +
+        div('lens', `left:${x + cut.w * 0.28}px;top:${cut.top + cut.w * 0.28}px;${lens(cut.w * 0.44)}`);
+    }
+    case 'flexcam': { // rear cameras the cover screen wraps around (Galaxy Z Flip)
+      const d = cut.d, g = cut.gap ?? 8, ring = `;box-shadow:0 0 0 3px #2b2d31, 0 0 0 4.5px #8a8d93`;
+      return div('cams', `left:${cut.left - 5}px;top:${cut.top - 5}px;width:${d * 2 + g + 10}px;height:${d + 10}px;border-radius:${d / 2 + 5}px;background:#000`) +
+        div('lens', `left:${cut.left}px;top:${cut.top}px;${lens(d)}${ring}`) + div('lens', `left:${cut.left + d + g}px;top:${cut.top}px;${lens(d)}${ring}`);
+    }
     case 'island':
       return div('island', `left:${cx}px;top:${cut.top}px;width:${cut.w}px;height:${cut.h}px;border-radius:${cut.h / 2}px;background:#000`) +
         div('lens', `left:${cx + cut.w - cut.h * 0.78}px;top:${cut.top + cut.h * 0.28}px;${lens(cut.h * 0.44)}`);
@@ -361,6 +390,61 @@ function placeSides(side, stack, kind, L, TW, TH, landscape) {
   };
 }
 
+// ─── foldables ─────────────────────────────────────────────────────────────
+// The body is sized from mm so the inner and cover displays share one physical scale.
+// `frame` is the half that stays put; `fold` carries the moving half (the "leaf"): its front (the other half
+// of the inner display) and its back (the cover display), both in leaf coordinates. The back is laid out as
+// seen when closed, with the hinge on its left (book) or top (flip) edge.
+function buildFoldable(d, color, screen) {
+  const { w, h } = screen, cv = d.cover, c = color.frame;
+  const book = d.fold !== 'flip', k = d.ppi / (d.dpr * 25.4), rim = d.rim ?? 3, pad = 4;
+  const [ow, oh, od] = d.body.open, BW = ow * k, BH = oh * k;
+  const r = d.screen.radius ?? 0, br = d.bodyRadius ?? r + Math.min(BW - w, BH - h) / 2, gr = Math.max(br - rim, 0);
+  const sx = pad + (BW - w) / 2, sy = pad + (BH - h) / 2;
+  const lw = book ? BW / 2 : BW, lh = book ? BH : BH / 2;
+  const st = book ? { x: pad + lw, y: pad } : { x: pad, y: pad + lh };
+  const skin = (x, y) => `background:${metal(c)} ${-x}px ${-y}px / ${BW}px ${BH}px`;
+  const hr = 'var(--_hr, 0px)';
+  const corners = (a, b, cc, dd) => `border-radius:${a} ${b} ${cc} ${dd}`;
+  const btns = (d.buttons ?? []).map((b) => button(b, book ? pad : 0, book ? pad : 0, BW, BH, c)).join('');
+  const R = `${br}px`, G = `${gr}px`;
+  const leafR = book ? corners(R, 0, 0, R) : corners(R, R, 0, 0);
+
+  let f = book ? btns : '';
+  f += div('body', `left:${pad}px;top:${pad}px;width:${lw}px;height:${lh}px;${leafR};background:transparent;opacity:var(--_lsh, 1)`);
+  f += div('body', `left:${st.x}px;top:${st.y}px;width:${lw}px;height:${lh}px;${skin(st.x - pad, st.y - pad)};${book ? corners(hr, R, R, hr) : corners(hr, hr, R, R)}`);
+  f += div('glass', book
+    ? `left:${st.x}px;top:${st.y + rim}px;width:${lw - rim}px;height:${lh - rim * 2}px;${corners(hr, G, G, hr)};background:${color.front}`
+    : `left:${st.x + rim}px;top:${st.y}px;width:${lw - rim * 2}px;height:${lh - rim}px;${corners(hr, hr, G, G)};background:${color.front}`);
+
+  let front = book ? '' : btns;
+  front += div('lbody', `left:0;top:0;width:${lw}px;height:${lh}px;${leafR};${skin(0, 0)}`);
+  front += div('glass', book
+    ? `left:${rim}px;top:${rim}px;width:${lw - rim}px;height:${lh - rim * 2}px;${corners(G, 0, 0, G)};background:${color.front}`
+    : `left:${rim}px;top:${rim}px;width:${lw - rim * 2}px;height:${lh - rim}px;${corners(G, G, 0, 0)};background:${color.front}`);
+
+  // Back: hinge-side corners are softer, like the spine of a closed device.
+  const sr = `${br * 0.55}px`, sg = `${Math.max(br * 0.55 - rim, 0)}px`;
+  const backR = book ? corners(sr, R, R, sr) : corners(sr, sr, R, R);
+  let back = div('lbody', `left:0;top:0;width:${lw}px;height:${lh}px;${backR};background:${metal(c)}`);
+  back += div('glass', `left:${rim}px;top:${rim}px;width:${lw - rim * 2}px;height:${lh - rim * 2}px;${book ? corners(sg, G, G, sg) : corners(sg, sg, G, G)};background:${color.front}`);
+  back += div('spine', book
+    ? `left:0;top:${br}px;width:${rim + 1}px;height:${lh - br * 2}px;background:linear-gradient(to right, ${darken(c, 35)}, ${lighten(c, 10)})`
+    : `left:${br}px;top:0;width:${lw - br * 2}px;height:${rim + 1}px;background:linear-gradient(${darken(c, 35)}, ${lighten(c, 10)})`);
+
+  const cs = k / (cv.ppi / ((cv.dpr ?? d.dpr) * 25.4));
+  return {
+    W: BW + pad * 2, H: BH + pad * 2, frame: f, screen: { x: sx, y: sy, w, h, radius: `${r}px` }, cutout: screenCutout(d.cutout, w),
+    fold: {
+      book, BW, BH, pad, br, front, back, leafR, backR, t: od * k, sx, sy, w, h,
+      leaf: { x: pad, y: pad, w: lw, h: lh }, hinge: book ? pad + lw : pad + lh,
+      cover: { x: (lw - cv.w * cs) / 2, y: (lh - cv.h * cs) / 2, s: cs },
+      edge: `background:linear-gradient(${book ? 'to right' : 'to bottom'}, ${darken(c, 30)}, ${lighten(c, 25)} 45%, ${darken(c, 10)})`,
+    },
+  };
+}
+BUILDERS.foldable = buildFoldable;
+
 // ─── status bar & home indicator (logical, upright coordinates) ────────────
 
 function statusBar(d, lw, safe, theme) {
@@ -377,8 +461,14 @@ function statusBar(d, lw, safe, theme) {
     }
     case 'android': {
       const cy = cut?.type === 'hole' ? cut.top + cut.d / 2 : 14;
+      const right = cut?.left > lw * 0.85 ? lw - cut.left + 12 : 20; // keep icons clear of a corner camera
       return div('sb', `left:24px;top:${cy}px;transform:translateY(-50%);font:500 14px/1 Roboto, ${FONT};color:${ink}`, '9:41') +
-        div('sb', `right:20px;top:${cy}px;transform:translateY(-50%) scale(.82);transform-origin:right center`, icons);
+        div('sb', `right:${right}px;top:${cy}px;transform:translateY(-50%) scale(.82);transform-origin:right center`, icons);
+    }
+    case 'ios-side': { // iPhone Duo: status bar runs down the trailing edge, below the vertical island
+      const cx = lw - safe.r / 2, top = cut?.type === 'island-v' ? cut.top + cut.h + 14 : 18;
+      return div('sb', `left:${cx}px;top:${top}px;transform:translateX(-50%);font:600 14px/1 ${FONT};color:${ink}`, '9:41') +
+        `<div class="icons" style="left:${cx}px;top:${top + 24}px;transform:translateX(-50%) scale(.78);transform-origin:50% 0;flex-direction:column;gap:9px;color:${ink}">${ICON.signal}${ICON.wifi}${ICON.battery}</div>`;
     }
     case 'ipados':
       return div('sb', `left:22px;top:12px;transform:translateY(-50%);font:600 13px/1 ${FONT};color:${ink}`, '9:41&nbsp;&nbsp;<span style="font-weight:500">Sat Sep 26</span>') +
@@ -441,7 +531,7 @@ function sampleEdges(img) {
 // ─── element ───────────────────────────────────────────────────────────────
 
 export class BezelDevice extends HTMLElement {
-  static observedAttributes = ATTRS;
+  static observedAttributes = [...ATTRS, ...FOLD_ATTRS];
 
   #stage; #device; #frame; #screen; #content; #media; #chrome; #cutout; #dyn;
   #size = { W: 0, H: 0 };
@@ -484,7 +574,8 @@ export class BezelDevice extends HTMLElement {
 
   disconnectedCallback() { this.#ro?.disconnect(); removeEventListener('bezelkit:define', this.#onDefine); }
 
-  attributeChangedCallback() {
+  attributeChangedCallback(name) {
+    if (this.#fold && (name === 'folded' || name === 'fold-angle')) return void this.#foldTo(this.#foldTarget(), this.#foldOpts);
     if (!this.isConnected || this.#queued) return;
     this.#queued = true;
     queueMicrotask(() => { this.#queued = false; this.#render(); });
@@ -496,6 +587,14 @@ export class BezelDevice extends HTMLElement {
   get resolvedFit() { return this.#fit; }
   /** Screen size in CSS px, in the current orientation (the space your content gets). */
   get screenSize() { return { ...this.#box }; }
+  /** Current hinge angle in degrees (180 = flat open, 0 = closed), mid-animation included. */
+  get hingeAngle() { return this.#fold ? this.#fold.angle : 180; }
+
+  /** Foldables: close onto the cover display. Resolves with `true` once the animation ends. */
+  fold(opts) { return this.#foldSet(true, opts); }
+  /** Foldables: open to the inner display (or to `fold-angle`). Resolves with `false` once the animation ends. */
+  unfold(opts) { return this.#foldSet(false, opts); }
+  toggleFold(opts) { return this.#foldSet(!this.hasAttribute('folded'), opts); }
 
   /** Turn the device over (or to `side`). Resolves with the new side once the turn has finished. */
   flip(side) {
@@ -509,8 +608,8 @@ export class BezelDevice extends HTMLElement {
     const attr = (n) => this.getAttribute(n);
     const theme = attr('theme') === 'dark' ? 'dark' : 'light';
     const color = resolveColor(d, attr('color'));
-    const landscape = attr('orientation') === 'landscape' && (d.kind === 'phone' || d.kind === 'tablet');
-    const rotatesChrome = landscape && d.kind === 'phone';
+    const landscape = attr('orientation') === 'landscape' && (d.kind === 'phone' || d.kind === 'tablet' || d.kind === 'foldable');
+    const rotatesChrome = landscape && (d.kind === 'phone' || d.fold === 'flip');
 
     let screen = { w: d.screen.w, h: d.screen.h };
     const vp = /^(\d+)\s*[x×]\s*(\d+)$/i.exec(attr('viewport') ?? '');
@@ -534,7 +633,7 @@ export class BezelDevice extends HTMLElement {
     const pad = safeAttr === 'pad' || (safeAttr === 'auto' && interactive);
 
     const st = d.safe?.top ?? 0, sb = d.safe?.bottom ?? 0;
-    const safe = rotatesChrome ? { t: 0, r: st, b: sb ? 21 : 0, l: st } : { t: st, r: 0, b: sb, l: 0 };
+    const safe = rotatesChrome ? { t: 0, r: st, b: sb ? 21 : 0, l: st } : { t: st, r: d.safe?.right ?? 0, b: sb, l: d.safe?.left ?? 0 };
     const inset = pad ? safe : { t: 0, r: 0, b: 0, l: 0 };
     this.#box = { w: lw - inset.l - inset.r, h: lh - inset.t - inset.b };
 
@@ -558,6 +657,7 @@ export class BezelDevice extends HTMLElement {
 
     this.#renderMedia(src);
     this.#applyFit();
+    this.#foldRender(d, L, landscape);
     this.#scale();
     this.#turn(S);
   }
@@ -675,6 +775,264 @@ export class BezelDevice extends HTMLElement {
     const x = (cw - W * s) / 2, y = ch ? (ch - H * s) / 2 : 0;
     this.#stage.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
   }
+
+  // ─── foldables ───────────────────────────────────────────────────────────
+  // The inner screen stays the persistent .screen, on the static half. The moving half (leaf) is a 3D slab
+  // whose front shows a clone of the inner screen clipped to its half, and whose back holds the cover screen.
+  // Everything is a pure function of the hinge angle (#foldPose), so fold-angle poses and animation frames match.
+
+  #fold = null;
+  #foldOpts = undefined;
+
+  #foldSet(on, opts) {
+    this.#foldOpts = opts;
+    this.toggleAttribute('folded', on); // runs #foldTo synchronously via attributeChangedCallback
+    this.#foldOpts = undefined;
+    return this.#fold ? this.#fold.done : Promise.resolve(on);
+  }
+
+  #foldTarget() {
+    if (this.hasAttribute('folded')) return 0;
+    const a = parseFloat(this.getAttribute('fold-angle'));
+    return Number.isFinite(a) ? Math.min(Math.max(a, 0), 180) : 180;
+  }
+
+  #foldRender(d, L, landscape) {
+    if (!L.fold) return this.#foldTeardown();
+    const g = { ...L.fold, W: L.W, H: L.H, land: landscape, rot: landscape ? `translateY(${L.W}px) rotate(-90deg)` : '', fixed: this.getAttribute('fold-box') === 'fixed' };
+    g.persp = Math.max(g.BW, g.BH) * 3.2;
+    let f = this.#fold;
+    if (!f) {
+      f = this.#fold = { angle: this.#foldTarget(), raf: 0, waiters: [], anim: null, key: null, natural: null };
+      f.done = Promise.resolve(f.angle === 0);
+      f.style = Object.assign(document.createElement('style'), { textContent: FOLD_STYLES });
+      f.aspect = document.createElement('style');
+      f.leaf = Object.assign(document.createElement('div'), { className: 'fleaf' });
+      f.leaf.setAttribute('part', 'fold-leaf');
+      f.leaf.innerHTML = `<div class="fface ffront"><div class="fwrap" aria-hidden="true"></div><div class="fshade"></div></div>
+        <div class="fface fback"><div class="fwrap" aria-hidden="true"></div>
+          <div class="fcover" part="cover-screen"><div class="fcontent" part="cover-content"><div class="fmedia" part="cover-media"></div><div class="fchrome" aria-hidden="true"></div></div>
+          <div class="fcut" aria-hidden="true"></div><div class="fsheen"></div></div><div class="fshade"></div></div>
+        <div class="fedge"></div>`;
+      const q = (s) => f.leaf.querySelector(s);
+      Object.assign(f, {
+        front: q('.ffront'), back: q('.fback'), fwrap: q('.ffront .fwrap'), bwrap: q('.fback .fwrap'), fshade: q('.ffront .fshade'), bshade: q('.fback .fshade'),
+        cover: q('.fcover'), ccontent: q('.fcontent'), cmedia: q('.fmedia'), cchrome: q('.fchrome'), ccut: q('.fcut'), sheen: q('.fsheen'), edge: q('.fedge'),
+        fx: Object.assign(document.createElement('div'), { className: 'ffx' }),
+      });
+      this.shadowRoot.append(f.style, f.aspect);
+      this.#device.insertBefore(f.leaf, this.#screen);
+    }
+    this.#screen.append(f.fx);
+    f.g = g;
+    Object.assign(f.leaf.style, { left: `${g.leaf.x}px`, top: `${g.leaf.y}px`, width: `${g.leaf.w}px`, height: `${g.leaf.h}px`, transformOrigin: g.book ? '100% 50%' : '50% 100%' });
+    f.fwrap.innerHTML = g.front;
+    f.bwrap.innerHTML = g.back;
+    f.fshade.setAttribute('style', g.leafR);
+    f.bshade.setAttribute('style', g.backR);
+    const ei = g.br * 0.7; // the straight part of the free edge, between its rounded corners
+    f.edge.setAttribute('style', `${g.edge};${g.book ? `top:${ei}px;height:${g.leaf.h - ei * 2}px;transform:rotateY(90deg)` : `left:${ei}px;width:${g.leaf.w - ei * 2}px;transform:rotateX(-90deg)`}`);
+    f.mirror?.remove();
+    f.mirror = null;
+    this.#foldCover(d, g);
+    this.#foldPose(f.anim ? f.angle : this.#foldTarget());
+  }
+
+  #foldCover(d, g) {
+    const f = this.#fold, cv = d.cover, attr = (n) => this.getAttribute(n);
+    const theme = attr('theme') === 'dark' ? 'dark' : 'light';
+    const csrc = safeSrc(attr('cover-src')), src = csrc ?? safeSrc(attr('src'));
+    const kind = csrc ? kindOf(csrc) : this.querySelector(':scope > [slot="cover"]') ? 'slot' : this.#kind === 'slot' ? 'share' : this.#kind;
+    const interactive = kind === 'slot' || kind === 'share' || kind === 'iframe';
+    const chromeAttr = attr('chrome') ?? 'auto', safeAttr = attr('safe-area') ?? 'auto';
+    const chromeOn = chromeAttr === 'on' || (chromeAttr === 'auto' && interactive);
+    const pad = safeAttr === 'pad' || (safeAttr === 'auto' && interactive);
+    const [lw, lh] = g.land ? [cv.h, cv.w] : [cv.w, cv.h];
+    const cs = cv.safe ?? {}, st = cs.top ?? 0, sb = cs.bottom ?? 0;
+    const safe = g.land ? { t: 0, r: st, b: sb ? 21 : 0, l: st } : { t: st, r: cs.right ?? 0, b: sb, l: cs.left ?? 0 };
+    const inset = pad ? safe : { t: 0, r: 0, b: 0, l: 0 };
+    f.cbox = { w: lw - inset.l - inset.r, h: lh - inset.t - inset.b };
+
+    Object.assign(f.cover.style, { left: `${g.cover.x}px`, top: `${g.cover.y}px`, width: `${cv.w}px`, height: `${cv.h}px`, borderRadius: `${cv.radius ?? 0}px`, transform: `scale(${g.cover.s})` });
+    Object.assign(f.ccontent.style, { width: `${lw}px`, height: `${lh}px`, transform: g.land ? `translateX(${cv.w}px) rotate(90deg)` : '' });
+    f.ccontent.style.setProperty('--_safe-bg', theme === 'dark' ? '#000' : '#fff');
+    const m = f.cmedia;
+    Object.assign(m.style, { top: `${inset.t}px`, right: `${inset.r}px`, bottom: `${inset.b}px`, left: `${inset.l}px` });
+    for (const [k, v] of Object.entries({ top: safe.t, right: safe.r, bottom: safe.b, left: safe.l })) m.style.setProperty(`--bezel-safe-${k}`, pad ? '0px' : `${v}px`);
+    m.style.setProperty('--bezel-screen-width', `${f.cbox.w}px`);
+    m.style.setProperty('--bezel-screen-height', `${f.cbox.h}px`);
+    const cd = { ...d, cutout: cv.cutout, statusBar: cv.statusBar ?? d.statusBar, home: 'home' in cv ? cv.home : d.home };
+    f.cchrome.innerHTML = chromeOn ? (g.land ? '' : statusBar(cd, lw, safe, theme)) + homeIndicator(cd, lw, lh, theme) : '';
+    f.ccut.innerHTML = screenCutout(cv.cutout, cv.w);
+
+    const key = `${kind}|${src}`;
+    if (key !== f.key) {
+      this.#foldSlotHome();
+      Object.assign(f, { key, kind, natural: null });
+      m.classList.toggle('slot', kind === 'slot' || kind === 'share');
+      m.style.removeProperty('--_lb-top'); m.style.removeProperty('--_lb-bottom');
+      if (kind === 'slot') m.innerHTML = '<slot name="cover"></slot>';
+      else if (kind === 'share') m.replaceChildren(); // the default <slot> moves here while closed
+      else {
+        const el = document.createElement(kind === 'image' ? 'img' : kind);
+        el.setAttribute('part', `cover-${kind}`);
+        if (kind === 'image') {
+          el.decoding = 'async';
+          if (!/^(data|blob):/.test(src)) el.crossOrigin = 'anonymous';
+          el.onload = () => m.firstElementChild === el && this.#foldNatural(el.naturalWidth, el.naturalHeight, el);
+          el.onerror = () => { if (el.crossOrigin) { el.removeAttribute('crossorigin'); el.src = src; } };
+        } else if (kind === 'video') {
+          Object.assign(el, { autoplay: true, muted: true, loop: true, playsInline: true });
+          el.onloadedmetadata = () => m.firstElementChild === el && this.#foldNatural(el.videoWidth, el.videoHeight);
+        }
+        el.src = src;
+        m.replaceChildren(el);
+      }
+    }
+    const el = m.firstElementChild, alt = attr('alt');
+    if (el instanceof HTMLImageElement) el.alt = alt ?? '';
+    else if (el instanceof HTMLIFrameElement) el.title = alt ?? 'Embedded page';
+    this.#foldFit();
+  }
+
+  #foldNatural(w, h, img) {
+    const f = this.#fold;
+    if (!f) return;
+    f.natural = { w, h };
+    const edges = img && sampleEdges(img);
+    if (edges) { f.cmedia.style.setProperty('--_lb-top', edges.top); f.cmedia.style.setProperty('--_lb-bottom', edges.bottom); }
+    this.#foldFit();
+  }
+
+  #foldFit() {
+    const f = this.#fold, req = FITS.includes(this.getAttribute('fit')) ? this.getAttribute('fit') : 'auto';
+    f.cmedia.dataset.fit = f.kind === 'image' || f.kind === 'video' ? resolveFit(req, f.kind, f.natural, f.cbox) : 'cover';
+  }
+
+  // Put a shared default <slot> back on the inner screen (or drop it if that screen has its own now).
+  #foldSlotHome() {
+    const s = this.#fold?.cmedia.querySelector('slot:not([name])');
+    if (s) this.#kind === 'slot' && !this.#media.querySelector('slot') ? this.#media.append(s) : s.remove();
+  }
+
+  #foldTeardown() {
+    const f = this.#fold;
+    if (!f) return;
+    cancelAnimationFrame(f.raf);
+    this.#foldSlotHome();
+    for (const n of [f.leaf, f.fx, f.style, f.aspect]) n.remove();
+    Object.assign(this.#screen.style, { clipPath: '', visibility: '' });
+    this.#screen.inert = false;
+    this.#frame.style.removeProperty('--_hr');
+    this.#frame.style.removeProperty('--_lsh');
+    this.#fold = null;
+    f.waiters.splice(0).forEach((r) => r(false));
+  }
+
+  #foldTo(target, opts) {
+    const f = this.#fold, from = f.angle, run = (f.run = {});
+    cancelAnimationFrame(f.raf);
+    clearTimeout(f.timer);
+    const done = (f.done = new Promise((r) => f.waiters.push(r)));
+    const settle = () => f.waiters.splice(0).forEach((r) => r(target === 0));
+    if (from === target && !f.anim) return settle(), done;
+    const fire = (phase) => this.dispatchEvent(new CustomEvent('bezel-fold', { bubbles: true, detail: { phase, folded: target === 0, from, to: target } }));
+    const end = () => { f.anim = null; this.#foldPose(target); fire('end'); settle(); };
+    fire('start');
+    const dur = opts?.duration ?? 820 * Math.max(Math.abs(target - from) / 180, 0.4);
+    if (!(dur > 0) || globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return end(), done;
+    let t0 = null, tick = performance.now();
+    const step = (now) => {
+      t0 ??= now;
+      tick = performance.now();
+      const p = Math.min((now - t0) / dur, 1);
+      f.anim = { from, to: target, p };
+      if (p >= 1) return end();
+      this.#foldPose(from + (target - from) * ease(p));
+      f.raf = requestAnimationFrame(step);
+    };
+    // rAF stalls in hidden tabs; finish anyway so the promise settles and the end state lands.
+    const guard = () => { if (f.run === run && f.anim) performance.now() - tick > 200 ? (cancelAnimationFrame(f.raf), end()) : (f.timer = setTimeout(guard, 250)); };
+    f.anim = { from, to: target, p: 0 };
+    f.raf = requestAnimationFrame(step);
+    f.timer = setTimeout(guard, dur + 250);
+    return done;
+  }
+
+  #foldPose(a) {
+    const f = this.#fold, g = f.g;
+    const th = 180 - a, rad = (th * Math.PI) / 180, cos = Math.cos(rad), sin = Math.sin(rad);
+    const e = (1 - cos) / 2, split = a < 180, closed = a <= 0, tz = g.t * sin;
+    f.angle = a;
+
+    // The leaf: perspective only while in motion, so rest poses stay pixel-exact.
+    const rot = g.book ? `rotateY(${th}deg)` : `rotateX(${-th}deg)`;
+    f.leaf.style.transform = !split ? '' : closed ? rot : `perspective(${g.persp}px) ${rot}`;
+    f.leaf.style.zIndex = split ? '1' : '';
+    f.back.style.transform = `${g.book ? 'rotateY' : 'rotateX'}(180deg) translateZ(${tz}px)`;
+    f.edge.style[g.book ? 'width' : 'height'] = `${tz}px`;
+    f.fshade.style.opacity = 0.7 * e;
+    f.bshade.style.opacity = 0.7 * (1 - e);
+    const sx = 130 - 160 * Math.max(0, (th - 90) / 90);
+    f.sheen.style.background = th > 90 && th < 180 ? `linear-gradient(105deg, transparent ${sx - 22}%, rgba(255,255,255,${0.22 * sin}) ${sx}%, transparent ${sx + 22}%)` : '';
+
+    // The static half: clip the inner screen to it, add the crease and the leaf's shadow.
+    const hx = g.hinge - (g.book ? g.sx : g.sy), dir = g.book ? 'to right' : 'to bottom';
+    Object.assign(this.#screen.style, { clipPath: split ? (g.book ? `inset(0 0 0 ${hx}px)` : `inset(${hx}px 0 0 0)`) : '', visibility: closed ? 'hidden' : '' });
+    this.#screen.inert = closed;
+    f.cover.inert = !closed;
+    this.#frame.style.setProperty('--_hr', `${g.br * 0.55 * Math.max(0, 1 - a / 60)}px`);
+    this.#frame.style.setProperty('--_lsh', `${Math.max(0, 1 - e * 6)}`);
+    const an = f.anim, live = this.#kind === 'image' || this.#kind === 'video';
+    // Iframes and slotted HTML can't be cloned onto the leaf, so the inner display switches off on the way.
+    const dim = live || !an || (an.from !== 0 && an.to !== 0) ? 0 : Math.min((an.to === 0 ? an.p : 1 - an.p) / 0.15, 1);
+    const ca = 0.06 + 0.22 * sin, k = 'var(--bezel-crease, 1)';
+    const crease = `linear-gradient(${dir}, transparent ${hx - 18}px, rgba(0,0,0,calc(${ca} * ${k})) ${hx - 1}px, rgba(255,255,255,calc(${ca * 0.45} * ${k})) ${hx + 2}px, transparent ${hx + 18}px)`;
+    const ws = ((g.book ? g.BW : g.BH) / 2) * (0.15 + 0.85 * e);
+    f.fx.style.background = split ? `${crease}, linear-gradient(${dir}, rgba(0,0,0,${0.5 * e}) ${hx}px, transparent ${hx + ws}px)` : crease;
+    f.fx.style.backgroundColor = `rgba(0,0,0,${dim})`;
+
+    if (split && !closed && !f.mirror) this.#foldMirror();
+    else if ((!split || closed) && f.mirror) { f.mirror.remove(); f.mirror = null; }
+    if (f.mirror) { f.mfx.style.background = crease; f.mfx.style.backgroundColor = `rgba(0,0,0,${dim})`; }
+
+    if (f.kind === 'share') { // one default slot, on whichever display faces the viewer
+      const slots = [...this.shadowRoot.querySelectorAll('slot:not([name])')], s = slots.pop();
+      slots.forEach((x) => x.remove());
+      const home = a < 90 ? f.cmedia : this.#media;
+      if (s && s.parentNode !== home) home.append(s);
+    }
+
+    // Host box follows the visible body (or stays at the open size with fold-box="fixed").
+    const x0 = g.book ? (e * g.BW) / 2 : 0, y0 = g.book ? 0 : (e * g.BH) / 2;
+    let r = { x: x0, y: y0, w: g.W - x0, h: g.H - y0 };
+    if (g.land) r = { x: r.y, y: g.W - r.x - r.w, w: r.h, h: r.w };
+    const bw = g.fixed ? (g.land ? g.H : g.W) : r.w, bh = g.fixed ? (g.land ? g.W : g.H) : r.h;
+    this.#device.style.transform = `translate(${(bw - r.w) / 2 - r.x}px, ${(bh - r.h) / 2 - r.y}px) ${g.rot}`;
+    Object.assign(this.#stage.style, { width: `${bw}px`, height: `${bh}px` });
+    this.#size = { W: bw, H: bh };
+    f.aspect.textContent = `:host { aspect-ratio: ${bw} / ${bh}; }`;
+    this.#scale();
+  }
+
+  #foldMirror() {
+    const f = this.#fold, g = f.g, m = this.#screen.cloneNode(true);
+    m.querySelectorAll('slot, iframe, .ffx').forEach((n) => n.remove());
+    m.classList.add('fmirror');
+    m.removeAttribute('part');
+    m.setAttribute('aria-hidden', 'true');
+    m.inert = true;
+    const hx = g.hinge - (g.book ? g.sx : g.sy), cut = (g.book ? g.w : g.h) - hx - 0.5;
+    Object.assign(m.style, { left: `${g.sx - g.leaf.x}px`, top: `${g.sy - g.leaf.y}px`, visibility: '', clipPath: g.book ? `inset(0 ${cut}px 0 0)` : `inset(0 0 ${cut}px 0)` });
+    const v = this.#media.querySelector('video'), mv = m.querySelector('video');
+    if (v && mv) { mv.muted = true; mv.currentTime = v.currentTime; mv.play?.().catch(() => {}); }
+    f.mfx = Object.assign(document.createElement('div'), { className: 'ffx' });
+    m.append(f.mfx);
+    f.front.insertBefore(m, f.fshade);
+    const mm = m.querySelector('.media');
+    if (mm) mm.scrollTop = this.#media.scrollTop;
+    f.mirror = m;
+  }
 }
 
 function resolveDevice(id) {
@@ -685,7 +1043,7 @@ function resolveDevice(id) {
 }
 
 // Reflect attributes as camelCase properties: el.safeArea = 'pad', el.device = 'pixel-10-pro'
-for (const name of ATTRS) {
+for (const name of [...ATTRS, ...FOLD_ATTRS]) {
   const prop = name.replace(/-(\w)/g, (_, c) => c.toUpperCase());
   Object.defineProperty(BezelDevice.prototype, prop, {
     get() { return this.getAttribute(name); },
@@ -693,5 +1051,11 @@ for (const name of ATTRS) {
     configurable: true,
   });
 }
+
+Object.defineProperty(BezelDevice.prototype, 'folded', {
+  get() { return this.hasAttribute('folded'); },
+  set(v) { this.toggleAttribute('folded', !!v && v !== 'false'); },
+  configurable: true,
+});
 
 if (!customElements.get('bezel-device')) customElements.define('bezel-device', BezelDevice);

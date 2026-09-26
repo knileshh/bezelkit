@@ -30,6 +30,16 @@
 //   Back coordinates are px from the body's top-left corner as seen from BEHIND, so a phone's
 //   camera sits top-left. Body = screen + bezels + 2 × rim, about 6 px per mm on phones
 //   (body width in px ÷ real width in mm gives the scale for other devices).
+//
+// Foldables (kind: 'foldable') add:
+//   fold     'book' (vertical hinge, the left half closes over the right) | 'flip' (horizontal hinge,
+//            the top half closes over the bottom)
+//   ppi      inner display density; with dpr it sets the physical scale (CSS px per mm) of the body
+//   body     { open: [w, h, depth], folded: [w, h, depth] }  in mm, from the maker's spec sheet
+//   cover    { w, h, radius, ppi, dpr?, cutout, safe, statusBar?, home? }  the outer display, in its own
+//            CSS px; it is drawn on the back of the moving half at the same physical scale as `screen`
+//   `screen` is the inner (main) display. `safe` may also carry `left`/`right`.
+//   Foldables have no `back`: the cover display is their other face.
 
 const registry = new Map();
 
@@ -43,6 +53,8 @@ const aliases = {
   imac: 'imac-24',
   watch: 'apple-watch-series-11',
   browser: 'browser-chrome',
+  fold: 'galaxy-z-fold7',
+  flip: 'galaxy-z-flip7',
 };
 
 export function defineDevice(spec) {
@@ -239,6 +251,65 @@ defineDevice({
       parts: [{ x: 70, y: 68, d: 56 }, { x: 70, y: 132, d: 50 }, { x: 138, y: 58, d: 18, kind: 'flash' }],
     },
   },
+});
+
+// ─── Foldables ─────────────────────────────────────────────────────────────
+// Resolutions, ppi, body sizes and colour names are official. No maker publishes CSS viewports for
+// these, so w/h are derived as resolution ÷ dpr (Android 420dpi = 2.625, iOS 3x) and rounded.
+// Radii, bezels, button positions, safe areas and hex values are estimates.
+
+// samsung.com/levant/smartphones/galaxy-z-fold7/specs, en.wikipedia.org/wiki/Samsung_Galaxy_Z_Fold_7
+// Inner 1968×2184 @ 368 ppi, cover 1080×2520 @ 422 ppi. Hole-punch returns on the inner display, top of the
+// right half (9to5google.com/2025/06/28/galaxy-z-fold-7-leak-unfolded-hole-punch-camera).
+defineDevice({
+  id: 'galaxy-z-fold7', name: 'Galaxy Z Fold7', brand: 'Samsung', kind: 'foldable', fold: 'book', year: 2025, dpr: 2.625, ppi: 368,
+  screen: { w: 750, h: 832, radius: 20 }, rim: 3,
+  cutout: { type: 'hole', d: 11, top: 13, left: 557 }, statusBar: 'android', home: 'pill', safe: { top: 36, bottom: 24 },
+  cover: { w: 411, h: 960, radius: 34, ppi: 422, cutout: { type: 'hole', d: 11, top: 12 }, safe: { top: 34, bottom: 24 } },
+  body: { open: [143.2, 158.4, 4.2], folded: [72.8, 158.4, 8.9] },
+  buttons: [{ side: 'right', at: 190, len: 95 }, { side: 'right', at: 305, len: 62 }],
+  colors: [['Blue Shadow', '#3b4a64'], ['Silver Shadow', '#b8bcc3'], ['Jetblack', '#202124'], ['Mint', '#c1dcd1']],
+});
+
+// samsung.com/levant/smartphones/galaxy-z-flip7/specs, en.wikipedia.org/wiki/Samsung_Galaxy_Z_Flip_7
+// Main 1080×2520 @ 397 ppi, FlexWindow 948×1048 (4.1″ → ~345 ppi, derived). The FlexWindow wraps edge to edge
+// around the two rear cameras (news.samsung.com/us, Flip7 launch), which sit bottom-left when closed.
+defineDevice({
+  id: 'galaxy-z-flip7', name: 'Galaxy Z Flip7', brand: 'Samsung', kind: 'foldable', fold: 'flip', year: 2025, dpr: 2.625, ppi: 397,
+  screen: { w: 411, h: 960, radius: 30 }, rim: 3,
+  cutout: { type: 'hole', d: 11, top: 14 }, statusBar: 'android', home: 'pill', safe: { top: 36, bottom: 24 },
+  cover: { w: 361, h: 399, radius: 46, ppi: 345, cutout: { type: 'flexcam', d: 54, left: 12, top: 333, gap: 10 }, safe: { top: 28, bottom: 0 }, home: null },
+  body: { open: [75.2, 166.7, 6.5], folded: [75.2, 85.5, 13.7] },
+  buttons: [{ side: 'right', at: 300, len: 88 }, { side: 'right', at: 400, len: 56 }],
+  colors: [['Blue Shadow', '#3c4e6c'], ['Jetblack', '#1d1e21'], ['Coralred', '#e0665a'], ['Mint', '#b8dccc']],
+});
+
+// store.google.com/product/pixel_10_pro_fold_specs, gsmarena.com/google_pixel_10_pro_fold-14014.php
+// Inner 2076×2152 @ 373 ppi (camera top-right), outer 1080×2364 @ 408 ppi (camera top-centre).
+defineDevice({
+  id: 'pixel-10-pro-fold', name: 'Pixel 10 Pro Fold', brand: 'Google', kind: 'foldable', fold: 'book', year: 2025, dpr: 2.625, ppi: 373,
+  screen: { w: 791, h: 820, radius: 24 }, rim: 4,
+  cutout: { type: 'hole', d: 12, top: 14, left: 764 }, statusBar: 'android', home: 'pill', safe: { top: 40, bottom: 24 },
+  cover: { w: 411, h: 901, radius: 40, ppi: 408, cutout: { type: 'hole', d: 12, top: 14 }, safe: { top: 40, bottom: 24 } },
+  body: { open: [150.4, 155.2, 5.2], folded: [76.3, 155.2, 10.8] },
+  buttons: [{ side: 'right', at: 170, len: 62 }, { side: 'right', at: 250, len: 110 }],
+  colors: [['Moonstone', '#6e7a89'], ['Jade', '#c7d9c8']],
+});
+
+// Official (announced 2026-09-09): apple.com/newsroom/2026/09/apple-unveils-iphone-duo, apple.com/iphone-duo/specs,
+// developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo
+// A wide "passport" book fold: inner 1878×2670 @ 430 ppi is landscape when open (164.6 × 117.8 mm), outer
+// 1398×2034 @ 460 ppi. Points aren't published; 890×626 and 466×678 assume 3x. The inner FaceTime camera is
+// under the display; the outer camera sits top-right in a vertical Dynamic Island, with the status bar and
+// toolbars on the trailing edge. Island size and side-rail widths are estimates.
+defineDevice({
+  id: 'iphone-duo', name: 'iPhone Duo', brand: 'Apple', kind: 'foldable', fold: 'book', year: 2026, dpr: 3, ppi: 430,
+  screen: { w: 890, h: 626, radius: 36 }, rim: 4,
+  cutout: null, statusBar: 'ios-side', home: 'indicator', safe: { top: 0, bottom: 20, right: 44 },
+  cover: { w: 466, h: 678, radius: 50, ppi: 460, cutout: { type: 'island-v', w: 36, h: 92, top: 14, right: 11 }, safe: { top: 0, bottom: 20, right: 58 } },
+  body: { open: [164.6, 117.8, 5.2], folded: [84.1, 117.8, 11.3] },
+  buttons: [{ side: 'top', at: 690, len: 64 }, { side: 'right', at: 110, len: 70 }],
+  colors: [['Night Sky', '#243149'], ['Star White', '#ecebe6']],
 });
 
 // ─── Tablets ───────────────────────────────────────────────────────────────
