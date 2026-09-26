@@ -1,0 +1,150 @@
+{
+  "iphone-17-pro-max": {
+    "bezel": 8.5,
+    "rim": 7,
+    "cutout": { "type": "island", "w": 125, "h": 37, "top": 14 },
+    "buttons": [
+      { "side": "left", "at": 186, "len": 42 },
+      { "side": "left", "at": 259, "len": 68 },
+      { "side": "left", "at": 344, "len": 68 },
+      { "side": "right", "at": 282, "len": 107 },
+      { "side": "right", "at": 624, "len": 103, "flush": true }
+    ]
+  },
+  "iphone-17-pro": {
+    "bezel": 9,
+    "rim": 7,
+    "cutout": { "type": "island", "w": 125, "h": 37, "top": 14 },
+    "buttons": [
+      { "side": "left", "at": 186, "len": 42 },
+      { "side": "left", "at": 259, "len": 68 },
+      { "side": "left", "at": 344, "len": 68 },
+      { "side": "right", "at": 282, "len": 107 },
+      { "side": "right", "at": 543, "len": 103, "flush": true }
+    ]
+  },
+  "iphone-air": {
+    "bezel": 8.5,
+    "rim": 7,
+    "cutout": { "type": "island", "w": 125, "h": 37, "top": 20 },
+    "safe": { "top": 68, "bottom": 34 },
+    "buttons": [
+      { "side": "left", "at": 185, "len": 42 },
+      { "side": "left", "at": 257, "len": 68 },
+      { "side": "left", "at": 343, "len": 68 },
+      { "side": "right", "at": 280, "len": 108 },
+      { "side": "right", "at": 581, "len": 103, "flush": true }
+    ]
+  },
+  "iphone-17": {
+    "bezel": 8.75,
+    "rim": 6,
+    "cutout": { "type": "island", "w": 125, "h": 37, "top": 14 },
+    "buttons": [
+      { "side": "left", "at": 185, "len": 42 },
+      { "side": "left", "at": 257, "len": 68 },
+      { "side": "left", "at": 343, "len": 68 },
+      { "side": "right", "at": 281, "len": 107 },
+      { "side": "right", "at": 541, "len": 103, "flush": true }
+    ]
+  },
+  "iphone-16e": {
+    "screen": { "w": 390, "h": 844, "radius": 47.33 },
+    "bezel": 15,
+    "rim": 6,
+    "cutout": { "type": "notch", "w": 162, "h": 34 },
+    "buttons": [
+      { "side": "left", "at": 166, "len": 46 },
+      { "side": "left", "at": 239, "len": 72 },
+      { "side": "left", "at": 324, "len": 72 },
+      { "side": "right", "at": 262, "len": 111 }
+    ]
+  },
+  "iphone-se": {
+    "bezel": { "t": 99, "r": 17, "b": 99, "l": 17 },
+    "rim": 11,
+    "bodyRadius": 66,
+    "buttons": [
+      { "side": "left", "at": 113, "len": 36 },
+      { "side": "left", "at": 188, "len": 68 },
+      { "side": "left", "at": 268, "len": 68 },
+      { "side": "right", "at": 188, "len": 68 }
+    ]
+  },
+  "apple-watch-ultra": {
+    "name": "Apple Watch Ultra 4",
+    "year": 2026,
+    "screen": { "w": 211, "h": 257, "radius": 57 },
+    "bezel": { "t": 9.5, "r": 9, "b": 9.5, "l": 9 },
+    "rim": 19,
+    "bodyRadius": 85,
+    "buttons": [
+      { "side": "right", "at": 86, "len": 60, "w": 14, "crown": true },
+      { "side": "right", "at": 169, "len": 72, "w": 5 },
+      { "side": "left", "at": 138, "len": 92, "w": 5, "color": "#f26b1d" }
+    ]
+  },
+  "apple-watch-series-11": {
+    "bezel": 15.25,
+    "rim": 8.25,
+    "bodyRadius": 74,
+    "buttons": [
+      { "side": "right", "at": 69, "len": 46, "w": 12, "crown": true },
+      { "side": "right", "at": 148, "len": 80, "w": 4 }
+    ]
+  },
+  "_new_devices": [
+    {
+      "id": "iphone-18-pro-max", "name": "iPhone 18 Pro Max", "brand": "Apple", "kind": "phone", "year": 2026, "dpr": 3,
+      "screen": { "w": 440, "h": 956, "radius": 62 }, "bezel": 8.5, "rim": 7,
+      "cutout": { "type": "island", "w": 95, "h": 37, "top": 14 },
+      "statusBar": "ios", "home": "indicator", "safe": { "top": 62, "bottom": 34 },
+      "buttons": [
+        { "side": "left", "at": 186, "len": 42 },
+        { "side": "left", "at": 259, "len": 68 },
+        { "side": "left", "at": 344, "len": 68 },
+        { "side": "right", "at": 282, "len": 107 },
+        { "side": "right", "at": 624, "len": 103, "flush": true }
+      ],
+      "colors": [["Burgundy", "#5e2a33"], ["Glacier", "#bcc8d6"], ["Silver", "#dcdcda"], ["Black", "#2b2b2d"]]
+    },
+    {
+      "id": "iphone-18-pro", "name": "iPhone 18 Pro", "brand": "Apple", "kind": "phone", "year": 2026, "dpr": 3,
+      "screen": { "w": 402, "h": 874, "radius": 62 }, "bezel": 9, "rim": 7,
+      "cutout": { "type": "island", "w": 95, "h": 37, "top": 14 },
+      "statusBar": "ios", "home": "indicator", "safe": { "top": 62, "bottom": 34 },
+      "buttons": [
+        { "side": "left", "at": 186, "len": 42 },
+        { "side": "left", "at": 259, "len": 68 },
+        { "side": "left", "at": 344, "len": 68 },
+        { "side": "right", "at": 282, "len": 107 },
+        { "side": "right", "at": 543, "len": 103, "flush": true }
+      ],
+      "colors": [["Burgundy", "#5e2a33"], ["Glacier", "#bcc8d6"], ["Silver", "#dcdcda"], ["Black", "#2b2b2d"]]
+    },
+    {
+      "id": "iphone-17e", "name": "iPhone 17e", "brand": "Apple", "kind": "phone", "year": 2026, "dpr": 3,
+      "screen": { "w": 390, "h": 844, "radius": 47.33 }, "bezel": 15, "rim": 6,
+      "cutout": { "type": "notch", "w": 162, "h": 34 },
+      "statusBar": "ios", "home": "indicator", "safe": { "top": 47, "bottom": 34 },
+      "buttons": [
+        { "side": "left", "at": 166, "len": 46 },
+        { "side": "left", "at": 239, "len": 72 },
+        { "side": "left", "at": 324, "len": 72 },
+        { "side": "right", "at": 262, "len": 111 }
+      ],
+      "colors": [["Black", "#2a2a2c"], ["White", "#f1f1ef"], ["Soft Pink", "#f0d7d4"]]
+    },
+    {
+      "id": "apple-watch-series-12", "name": "Apple Watch Series 12 (46mm)", "brand": "Apple", "kind": "watch", "year": 2026, "dpr": 2,
+      "screen": { "w": 208, "h": 248, "radius": 50 }, "bezel": 19.75, "rim": 5, "bodyRadius": 75,
+      "pad": { "t": 0, "r": 16, "b": 0, "l": 2 },
+      "statusBar": "watch", "safe": { "top": 0, "bottom": 0 },
+      "buttons": [
+        { "side": "right", "at": 73, "len": 45, "w": 14, "crown": true },
+        { "side": "right", "at": 151, "len": 77, "w": 4 }
+      ],
+      "colors": [["Black", "#232325"], ["Dark Bronze", "#5c4a3d"], ["Light Gold", "#e4d4b9"], ["Space Gray", "#5a5c60"], ["Natural", "#c9c4bb"], ["Radiant Gold", "#d9b98a"]]
+    }
+  ]
+}

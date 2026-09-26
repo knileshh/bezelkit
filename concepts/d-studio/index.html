@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>bezelkit · device frames that fit your screenshots</title>
+<meta name="description" content="One zero-dependency web component with accurate phone, tablet, laptop and watch frames. It checks your screenshot against each real screen and fits it properly.">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&family=Martian+Mono:wght@400;500&family=Shantell+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #eef0f4;
+  --ink: #14161b;
+  --ink-2: #4b5060;
+  --ink-3: #8a8f9c;
+  --mat: #2f57e6;
+  --mat-deep: #2243c4;
+  --grid: rgba(255, 255, 255, .10);
+  --grid-major: rgba(255, 255, 255, .22);
+  --n-cover: #ffe14d;
+  --n-top: #9fefc9;
+  --n-scroll: #ffb5d3;
+  --n-contain: #cbbfff;
+  --n-html: #a3dcff;
+  --tomato: #ff5533;
+  --fixed: #14a05a;
+  --display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --hand: 'Shantell Sans', 'Segoe Print', 'Comic Sans MS', cursive;
+  --mono: 'Martian Mono', ui-monospace, 'Cascadia Mono', monospace;
+  --r-lg: 28px;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.5 var(--display); font-variation-settings: 'opsz' 14; -webkit-font-smoothing: antialiased; overflow-x: clip; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--n-cover); outline-offset: 3px; border-radius: 6px; }
+code, pre, kbd { font-family: var(--mono); }
+.wrap { max-width: 1400px; margin: 0 auto; padding: 0 28px; }
+
+/* ── nav ── */
+.nav { display: flex; align-items: center; gap: 28px; height: 64px; }
+.logo { display: flex; align-items: center; gap: 9px; text-decoration: none; font-weight: 800; font-size: 21px; letter-spacing: -.035em; font-variation-settings: 'opsz' 48, 'wdth' 85; }
+.logo svg { display: block; }
+.nav-links { display: flex; gap: 22px; margin-left: auto; font-size: 15px; font-weight: 500; }
+.nav-links a { text-decoration: none; color: var(--ink-2); }
+.nav-links a:hover { color: var(--ink); }
+.npm { display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--ink); border-radius: 999px; padding: 6px 14px; background: #fff; font: 500 12px var(--mono); cursor: pointer; }
+.npm:hover { background: var(--n-cover); }
+
+/* ── hero head ── */
+.hero-head { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 48px; align-items: end; padding: 14px 0 22px; }
+h1 { margin: 0; font-weight: 750; font-size: clamp(40px, 4.3vw, 62px); line-height: .96; letter-spacing: -.026em; font-variation-settings: 'opsz' 96, 'wdth' 86; text-wrap: balance; }
+h1 .squiggle { position: relative; white-space: nowrap; }
+h1 .squiggle svg { position: absolute; left: -2%; bottom: -.16em; width: 104%; height: .32em; overflow: visible; }
+.lede { margin: 0 0 14px; font-size: 16.5px; line-height: 1.5; color: var(--ink-2); max-width: 44ch; text-wrap: pretty; }
+.lede code { font-size: .8em; background: #fff; padding: 2px 6px; border-radius: 6px; color: var(--ink); }
+.ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.btn { display: inline-flex; align-items: center; gap: 9px; border: 0; border-radius: 999px; padding: 12px 20px; font-weight: 650; font-size: 15px; cursor: pointer; text-decoration: none; }
+.btn-ink { background: var(--ink); color: #fff; box-shadow: 0 1px 0 rgba(255,255,255,.2) inset, 0 8px 20px -8px rgba(20,22,27,.6); }
+.btn-ink:hover { background: #2a2e38; }
+.btn-ghost { color: var(--ink); padding: 12px 6px; }
+.btn-ghost:hover { text-decoration: underline; text-underline-offset: 4px; }
+.privacy { font-size: 13px; color: var(--ink-3); flex-basis: 100%; }
+
+/* ── desk ── */
+.desk-wrap { position: relative; }
+.desk {
+  --desk-h: clamp(440px, calc(100svh - 372px), 660px);
+  position: relative; height: var(--desk-h); border-radius: var(--r-lg); overflow: hidden; isolation: isolate;
+  background:
+    linear-gradient(45deg, transparent calc(50% - .6px), var(--grid-major) 50%, transparent calc(50% + .6px)) 0 0 / 100% 100% no-repeat,
+    linear-gradient(var(--grid-major) 1px, transparent 1px) -1px -1px / 120px 120px,
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px) -1px -1px / 120px 120px,
+    linear-gradient(var(--grid) 1px, transparent 1px) -1px -1px / 24px 24px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) -1px -1px / 24px 24px,
+    radial-gradient(130% 110% at 28% 12%, #3b63f2 0%, var(--mat) 45%, var(--mat-deep) 100%);
+  box-shadow: 0 0 0 1px rgba(15, 30, 110, .25), 0 1px 0 1px rgba(255,255,255,.5), 0 40px 70px -40px rgba(20, 40, 140, .55);
+  touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.ruler { position: absolute; left: 0; right: 0; top: 0; height: 22px; pointer-events: none; z-index: 0;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,.5) 0 1px, transparent 1px 24px) -1px 0 / auto 7px repeat-x; }
+.ruler span { position: absolute; top: 9px; transform: translateX(-50%); font: 500 8.5px var(--mono); color: rgba(255,255,255,.55); }
+.ruler.v { top: 0; bottom: 0; left: 0; right: auto; width: 22px; height: auto;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,.5) 0 1px, transparent 1px 24px) 0 -1px / 7px auto repeat-y; }
+.ruler.v span { top: auto; left: 10px; transform: translateY(-50%); }
+.mat-print { position: absolute; right: 22px; bottom: 16px; font: 500 9.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.5); pointer-events: none; }
+.hint { position: absolute; font: 600 17px/1.15 var(--hand); color: #fff; pointer-events: none; z-index: 950; transition: opacity .4s; display: flex; align-items: flex-start; gap: 4px; transform: rotate(-4deg); }
+.hint svg { flex: none; margin-top: 10px; }
+.hint.is-gone { opacity: 0; }
+
+.piece { position: absolute; left: 0; top: 0; transform-origin: 50% 50%; cursor: grab; will-change: transform; outline: none; }
+.piece:active { cursor: grabbing; }
+.piece-in { position: relative; }
+.piece bezel-device { display: block; }
+.piece:focus-visible .sel { display: block; }
+
+/* Figma-ish selection frame */
+.sel { display: none; position: absolute; inset: -9px; border: 1.5px solid #fff; border-radius: 4px; pointer-events: none; }
+.piece.is-selected .sel { display: block; }
+.sel i { position: absolute; width: 9px; height: 9px; background: #fff; border: 1.5px solid var(--mat-deep); border-radius: 2px; }
+.sel i:nth-child(1) { left: -5px; top: -5px; } .sel i:nth-child(2) { right: -5px; top: -5px; }
+.sel i:nth-child(3) { left: -5px; bottom: -5px; } .sel i:nth-child(4) { right: -5px; bottom: -5px; }
+.sel span { position: absolute; left: -2px; bottom: calc(100% + 7px); white-space: nowrap; background: #fff; color: var(--mat-deep); font: 500 9.5px var(--mono); padding: 3px 7px; border-radius: 5px; }
+.piece.is-target .sel { display: block; border: 2.5px dashed var(--n-cover); inset: -12px; border-radius: 10px; }
+.piece.is-target .sel i, .piece.is-target .sel span { display: none; }
+
+/* sticky notes */
+.note {
+  --bg: var(--n-cover);
+  position: absolute; left: var(--nx); top: var(--ny); width: 128px; padding: 10px 10px 8px; background: var(--bg); color: #2a2410;
+  transform: rotate(var(--nr)); transform-origin: 30% 0; border-radius: 2px 2px 10px 2px;
+  box-shadow: 0 1px 1px rgba(0,0,0,.12), 0 10px 18px -8px rgba(0,0,0,.35);
+  font-family: var(--hand); pointer-events: none; transition: opacity .25s;
+}
+.note::before { content: ''; position: absolute; left: 50%; top: -8px; width: 44px; height: 15px; transform: translateX(-50%) rotate(-3deg); background: rgba(255, 252, 238, .62); box-shadow: 0 0 0 1px rgba(255,255,255,.2) inset; }
+.note b { display: block; font-weight: 700; font-size: 15px; line-height: 1.05; letter-spacing: -.01em; }
+.note span { display: block; font-size: 11px; line-height: 1.26; margin-top: 3px; }
+.note code { display: block; margin-top: 6px; font-size: 7.5px; letter-spacing: .01em; opacity: .62; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.note[data-kind="top"] { --bg: var(--n-top); }
+.note[data-kind="scroll"] { --bg: var(--n-scroll); }
+.note[data-kind="contain"] { --bg: var(--n-contain); }
+.note[data-kind="html"] { --bg: var(--n-html); }
+.note[data-kind="wait"] { opacity: 0; }
+.note.is-pop { animation: pop .5s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes pop { 0% { transform: rotate(var(--nr)) scale(.82); } 100% { transform: rotate(var(--nr)) scale(1); } }
+.piece.is-back .note { opacity: 0; }
+
+.veil { position: absolute; inset: 14px; z-index: 990; border: 3px dashed rgba(255,255,255,.9); border-radius: 20px; display: grid; place-items: center; text-align: center; background: rgba(28, 56, 170, .55); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .18s; color: #fff; }
+.veil strong { display: block; font: 700 34px/1.05 var(--hand); }
+.veil small { font: 500 11px var(--mono); opacity: .8; }
+.desk.is-dropping .veil { opacity: 1; }
+
+/* floating toolbars */
+.bar { position: absolute; z-index: 20; top: 16px; display: flex; align-items: center; gap: 2px; padding: 5px; background: #fff; border-radius: 16px; box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 14px 30px -14px rgba(10, 20, 70, .55); }
+.bar-src { left: 16px; }
+.bar-act { right: 16px; }
+.bar-label { font: 500 10px var(--mono); color: var(--ink-3); padding: 0 8px 0 10px; letter-spacing: .02em; }
+.chip { border: 0; background: transparent; border-radius: 11px; padding: 8px 12px; font-weight: 550; font-size: 13.5px; cursor: pointer; white-space: nowrap; }
+.chip:hover { background: #eef0f5; }
+.chip[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.chip-yours { background: var(--n-cover); display: inline-flex; gap: 7px; align-items: center; }
+.chip-yours:hover { background: #ffd71a; }
+.chip-yours[aria-pressed="true"] { background: var(--ink); color: var(--n-cover); }
+.sep { width: 1px; height: 22px; background: #e3e5ec; margin: 0 4px; }
+.stack-nav { display: none; }
+
+/* ── tray: reject pile + palette ── */
+.tray { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 32px; padding: 18px 4px 8px; align-items: start; }
+.tray h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.tray p { margin: 1px 0 0; font-size: 13.5px; color: var(--ink-2); }
+.tray-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+.rejects { display: flex; gap: 14px; align-items: flex-start; }
+.pile-copy { width: 168px; flex: none; padding-top: 4px; }
+.pile-copy h2 { font-size: 17px; }
+.pile-copy p { margin-top: 4px; }
+.reject { position: relative; flex: none; width: 118px; padding: 6px 6px 8px; background: #fff; border: 0; border-radius: 6px; text-align: center; cursor: grab; transform: rotate(var(--r)); transition: transform .2s cubic-bezier(.3,1.5,.5,1), box-shadow .2s; box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 8px 18px -10px rgba(20, 30, 60, .45); touch-action: none; }
+.reject:hover { transform: rotate(0deg) translateY(-4px); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 16px 26px -12px rgba(20, 30, 60, .5); }
+.reject img { display: block; width: 100%; height: auto; border-radius: 3px; background: #eef0f4; pointer-events: none; -webkit-user-drag: none; }
+.reject .cap { display: block; margin-top: 5px; font: 600 12px/1.15 var(--hand); color: var(--ink); }
+.stamp { position: absolute; right: -8px; top: 10px; padding: 2px 6px; border: 2px solid var(--tomato); border-radius: 5px; color: var(--tomato); background: rgba(255,255,255,.88); font: 700 10px var(--mono); letter-spacing: .08em; transform: rotate(12deg); }
+.reject.is-fixed .stamp { border-color: var(--fixed); color: var(--fixed); }
+.reject.is-fixed .stamp::after { content: 'FIXED'; }
+.reject:not(.is-fixed) .stamp::after { content: 'NOPE'; }
+.reject.is-lifted { opacity: .35; }
+.ghost { position: fixed; z-index: 9999; left: 0; top: 0; pointer-events: none; margin: 0; transform-origin: 50% 30%; }
+.ghost.reject { box-shadow: 0 30px 40px -18px rgba(10, 20, 60, .55); }
+
+.palette-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.swatch { border: 0; padding: 0; min-width: 0; background: #fff; border-radius: 10px; overflow: hidden; text-align: left; cursor: pointer; box-shadow: 0 0 0 1px rgba(20,22,27,.08), 0 6px 14px -10px rgba(20,30,60,.4); transition: transform .2s cubic-bezier(.3,1.5,.5,1); }
+.swatch:hover { transform: translateY(-3px); }
+.swatch .stripe { display: flex; height: 34px; }
+.swatch .stripe i { flex: 1; }
+.swatch b { display: block; padding: 6px 8px 7px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 650; line-height: 1.1; }
+.swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink), 0 10px 18px -10px rgba(20,30,60,.5); transform: translateY(-3px); }
+.finishes { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px 12px; font: 400 10.5px/1.6 var(--mono); color: var(--ink-2); }
+.finishes span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.finishes i { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.15) inset; }
+
+/* ── sections ── */
+section.band { padding: 112px 0 0; }
+.wrap .kicker { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--mat); margin: 0 0 12px; }
+h2.big { margin: 0; font-size: clamp(34px, 3.6vw, 52px); line-height: 1; font-weight: 750; letter-spacing: -.028em; font-variation-settings: 'opsz' 96, 'wdth' 86; max-width: 18ch; }
+.band-intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: end; margin-bottom: 36px; }
+.band-intro p { margin: 0; color: var(--ink-2); font-size: 17px; max-width: 50ch; }
+.band-intro code { font-size: .78em; background: #fff; padding: 2px 6px; border-radius: 6px; color: var(--ink); }
+
+.fits { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.fit { background: var(--c); border-radius: 22px; padding: 22px 20px 20px; display: flex; flex-direction: column; min-width: 0; }
+.fit-stage { height: 290px; display: grid; place-items: center; margin-bottom: 18px; }
+.fit-stage bezel-device { width: 128px; }
+.fit h3 { margin: 0; font: 700 24px/1 var(--hand); letter-spacing: -.01em; }
+.fit .rule { margin: 8px 0 8px; font: 500 10.5px var(--mono); color: rgba(20,22,27,.65); }
+.fit p { margin: 0; font-size: 14.5px; line-height: 1.42; color: #262a33; }
+.fit .live { margin-top: auto; padding-top: 14px; font: 400 9.5px var(--mono); color: rgba(20,22,27,.55); }
+.aside-line { margin: 22px 4px 0; font-size: 15px; color: var(--ink-2); display: flex; gap: 12px; align-items: baseline; }
+.aside-line b { color: var(--ink); }
+
+.code-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 40px; align-items: start; }
+.code-copy p { color: var(--ink-2); font-size: 17px; margin: 16px 0 22px; max-width: 40ch; }
+.fw { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 26px; }
+.fw span { font-size: 13px; font-weight: 550; padding: 5px 11px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px rgba(20,22,27,.08); }
+.codebox { position: relative; background: var(--ink); color: #e7e9ef; border-radius: 22px; padding: 26px 26px 24px; box-shadow: 0 40px 60px -40px rgba(20,22,27,.6); }
+.codebox pre { margin: 0; font-size: 12.5px; line-height: 1.75; overflow-x: auto; white-space: pre; }
+.codebox .t { color: var(--n-scroll); } .codebox .a { color: var(--n-top); } .codebox .s { color: var(--n-cover); } .codebox .c { color: #7c8294; } .codebox .k { color: var(--n-contain); }
+.copy { position: absolute; top: 14px; right: 14px; border: 0; border-radius: 10px; padding: 7px 12px; background: rgba(255,255,255,.1); color: #fff; font: 500 11px var(--mono); cursor: pointer; }
+.copy:hover { background: rgba(255,255,255,.2); }
+.log { margin-top: 14px; background: #fff; border-radius: 16px; padding: 14px 18px; box-shadow: 0 0 0 1px rgba(20,22,27,.07); }
+.log h3 { margin: 0 0 8px; font: 500 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); display: flex; justify-content: space-between; }
+.log ol { list-style: none; margin: 0; padding: 0; font: 400 11px/1.9 var(--mono); color: var(--ink-2); min-height: 5.7em; }
+.log li { display: grid; grid-template-columns: 11em 1fr auto; gap: 10px; white-space: nowrap; }
+.log li b { font-weight: 500; color: var(--ink); overflow: hidden; text-overflow: ellipsis; }
+.log li em { font-style: normal; padding: 0 7px; border-radius: 5px; background: var(--c, var(--n-cover)); color: var(--ink); }
+
+footer { margin-top: 120px; padding: 30px 0 44px; border-top: 1px solid rgba(20,22,27,.1); display: flex; gap: 20px; flex-wrap: wrap; justify-content: space-between; font-size: 13.5px; color: var(--ink-3); }
+footer a { color: var(--ink-2); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ── desk → stack under 760px ── */
+@media (max-width: 760px) {
+  .wrap { padding: 0 16px; }
+  .nav { gap: 12px; height: 58px; }
+  .nav-links a:not(.gh) { display: none; }
+  .npm { display: none; }
+  .hero-head { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 6px 0 18px; }
+  h1 { font-size: 42px; }
+  .lede { font-size: 15.5px; }
+  .bar { position: static; box-shadow: none; background: transparent; padding: 0; }
+  .bar-src { overflow-x: auto; scrollbar-width: none; margin: 0 -16px 10px; padding: 0 16px; }
+  .bar-src::-webkit-scrollbar { display: none; }
+  .bar-src .chip { background: #fff; box-shadow: 0 0 0 1px rgba(20,22,27,.08); }
+  .bar-src .chip[aria-pressed="true"] { background: var(--ink); }
+  .bar-src .chip-yours { background: var(--n-cover); }
+  .bar-src .bar-label { display: none; }
+  .bar-src .sep { display: none; }
+  .bar-src { gap: 6px; }
+  .bar-act { display: none; }
+  .desk { --desk-h: 500px; border-radius: 24px; touch-action: pan-y; }
+  .desk .piece { touch-action: pan-y; }
+  .mat-print, .hint { display: none; }
+  .sel { display: none !important; }
+  .desk.is-stack .piece { transition: transform .5s cubic-bezier(.2, .85, .25, 1), opacity .35s; }
+  .desk.is-stack .piece.is-drag { transition: none; }
+  .desk.is-stack .piece:not(.is-top) .note { opacity: 0; }
+  .desk.is-stack .note { transition: opacity .2s; }
+  .stack-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; }
+  .stack-nav .round { width: 44px; height: 44px; border-radius: 50%; border: 0; background: #fff; box-shadow: 0 0 0 1px rgba(20,22,27,.1); font-size: 20px; cursor: pointer; display: grid; place-items: center; }
+  .stack-nav .count { font: 500 11px var(--mono); color: var(--ink-2); text-align: center; flex: 1; }
+  .stack-nav .count b { display: block; font: 700 15px var(--display); color: var(--ink); }
+  .stack-nav .flip-m { border: 0; border-radius: 999px; padding: 11px 16px; background: var(--ink); color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .tray { grid-template-columns: minmax(0, 1fr); gap: 26px; padding-top: 24px; }
+  .rejects { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px; padding: 12px 16px 14px; scrollbar-width: none; }
+  .rejects::-webkit-scrollbar { display: none; }
+  .pile-copy { width: 150px; }
+  .reject { touch-action: pan-x; }
+  .palette-row { display: flex; overflow-x: auto; margin: 0 -16px; padding: 4px 16px 10px; scrollbar-width: none; }
+  .palette-row::-webkit-scrollbar { display: none; }
+  .swatch { flex: none; width: 104px; }
+  section.band { padding-top: 80px; }
+  .band-intro { grid-template-columns: minmax(0, 1fr); gap: 14px; margin-bottom: 24px; }
+  .fits { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .fit { padding: 16px 14px; border-radius: 18px; }
+  .fit-stage { height: 220px; }
+  .fit-stage bezel-device { width: 96px; }
+  .fit h3 { font-size: 20px; }
+  .fit p { font-size: 13.5px; }
+  .aside-line { flex-direction: column; gap: 4px; }
+  .code-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .codebox { padding: 20px 16px; border-radius: 18px; }
+  .codebox pre { font-size: 11px; }
+  .log li { grid-template-columns: 1fr auto; }
+  .log li span:first-child { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav" aria-label="Main">
+    <a class="logo" href="./" aria-label="bezelkit home">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="6" y="1.5" width="14" height="23" rx="4.5" fill="none" stroke="#14161b" stroke-width="2.2"/><rect x="10.5" y="4.6" width="5" height="1.8" rx=".9" fill="#14161b"/><rect x="9" y="8.5" width="8" height="12" rx="1.5" fill="#2f57e6"/></svg>
+      bezelkit
+    </a>
+    <div class="nav-links">
+      <a href="#how">How it fits</a>
+      <a href="#code">Code</a>
+      <a class="gh" href="https://github.com/knileshh/bezelkit">GitHub</a>
+    </div>
+    <button class="npm" type="button" data-copy="npm i bezelkit" aria-label="Copy install command">npm i bezelkit</button>
+  </nav>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <header class="hero-head">
+        <h1 id="hero-title">Drop one screenshot. Seven frames fit it <span class="squiggle">right.<svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M3 13 C 30 3, 48 19, 76 10 S 128 3, 152 12 S 186 16, 197 6" fill="none" stroke="#2f57e6" stroke-width="5" stroke-linecap="round"/></svg></span></h1>
+        <div>
+          <p class="lede"><code>&lt;bezel-device&gt;</code> draws accurate 2025 phones, tablets, laptops and watches. It checks your image against each real screen, then fills, scrolls, pins or letterboxes it. It never stretches it.</p>
+          <div class="ctas">
+            <button class="btn btn-ink" type="button" data-pick>
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 11V2.5M4.5 6 8 2.5 11.5 6M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Try your screenshot
+            </button>
+            <a class="btn btn-ghost" href="#code">See the tag →</a>
+            <span class="privacy">Or drop an image anywhere on the desk. It never leaves your browser.</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="desk-wrap">
+        <div class="bar bar-src" role="toolbar" aria-label="Put one screenshot on every device">
+          <button class="chip" data-src="mixed" aria-pressed="true">Mixed bag</button>
+          <span class="sep"></span>
+          <span class="bar-label">ALL GET</span>
+          <button class="chip" data-src="native" aria-pressed="false">Their own</button>
+          <button class="chip" data-src="phone" aria-pressed="false">A phone shot</button>
+          <button class="chip" data-src="long" aria-pressed="false">A long scroll</button>
+          <button class="chip" data-src="old" aria-pressed="false">An old 16:9</button>
+          <button class="chip" data-src="desktop" aria-pressed="false">A desktop shot</button>
+          <span class="sep"></span>
+          <button class="chip chip-yours" data-pick data-src="user" aria-pressed="false">
+            <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 11V2.5M4.5 6 8 2.5 11.5 6M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="yours-label">Yours</span>
+          </button>
+        </div>
+        <div class="bar bar-act" role="toolbar" aria-label="Desk actions">
+          <button class="chip" type="button" data-flip><span class="flip-label">Flip it over</span></button>
+          <button class="chip" type="button" data-tidy>Tidy the desk</button>
+        </div>
+
+        <div class="desk" id="desk" aria-label="A desk of device frames. Drag them around, click one to bring it forward, double-click to flip it.">
+          <div class="ruler" aria-hidden="true"></div>
+          <div class="ruler v" aria-hidden="true"></div>
+          <div class="hint" aria-hidden="true">
+            <span>go on,<br>pick one up</span>
+            <svg width="46" height="40" viewBox="0 0 46 40"><path d="M3 4 C 18 4, 34 10, 38 30" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M31 25 L38 32 L42 23" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="mat-print" aria-hidden="true">bezelkit · self-healing desk · drop screenshots anywhere</div>
+          <div class="veil" aria-hidden="true"><div><strong>Let go. It goes on every screen.</strong><small>PNG · JPG · WEBP · stays on your device</small></div></div>
+        </div>
+
+        <div class="stack-nav">
+          <button class="round" type="button" data-step="-1" aria-label="Previous device">‹</button>
+          <div class="count" aria-live="polite"><b class="stack-name">iPhone 17 Pro</b><span class="stack-pos">1 of 7 · swipe</span></div>
+          <button class="flip-m" type="button" data-flip>Flip</button>
+          <button class="round" type="button" data-step="1" aria-label="Next device">›</button>
+        </div>
+      </div>
+
+      <div class="tray">
+        <div class="rejects" id="rejects">
+          <div class="pile-copy">
+            <h2>The reject pile</h2>
+            <p>Four ways mockups usually go wrong. Drag one onto a device to see it fixed.</p>
+          </div>
+        </div>
+        <div class="palette">
+          <div class="tray-head">
+            <div><h2>Swap the finish</h2><p>Every device, in its own official colour names.</p></div>
+          </div>
+          <div class="palette-row" id="palette" role="group" aria-label="Device finishes"></div>
+          <div class="finishes" id="finishes" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="how" aria-labelledby="how-title">
+      <div class="band-intro">
+        <div>
+          <p class="kicker">How it fits</p>
+          <h2 class="big" id="how-title">It measures before it frames.</h2>
+        </div>
+        <p>Each <code>&lt;bezel-device&gt;</code> compares your image's shape with the device's real CSS viewport, then picks one of four fits. The notes on the desk are these decisions, read straight from its <code>bezel-fit</code> event. Want a different one? Set <code>fit</code> yourself.</p>
+      </div>
+      <div class="fits" id="fits">
+        <article class="fit" style="--c: var(--n-cover)" data-fit="cover">
+          <div class="fit-stage"><bezel-device device="iphone-17-pro" color="silver" alt="A screenshot the same shape as the screen, filling it"></bezel-device></div>
+          <h3>Fills it</h3>
+          <p class="rule">same shape, within 4%</p>
+          <p>A screenshot from the same kind of phone covers the screen edge to edge. At most a few pixels get trimmed.</p>
+          <p class="live">waiting for bezel-fit…</p>
+        </article>
+        <article class="fit" style="--c: var(--n-top)" data-fit="top">
+          <div class="fit-stage"><bezel-device device="iphone-17-pro" color="silver" alt="A slightly tall screenshot pinned to the top"></bezel-device></div>
+          <h3>Pins the top</h3>
+          <p class="rule">a little taller, under 1.18×</p>
+          <p>It keeps the header where people look first and lets the last few rows tuck away under the bottom edge.</p>
+          <p class="live">waiting for bezel-fit…</p>
+        </article>
+        <article class="fit" style="--c: var(--n-scroll)" data-fit="scroll">
+          <div class="fit-stage"><bezel-device device="iphone-17-pro" color="silver" alt="A long screenshot that scrolls inside the screen"></bezel-device></div>
+          <h3>Scrolls it</h3>
+          <p class="rule">much taller, 1.18× or more</p>
+          <p>A full-page capture becomes a real scrolling screen. Nothing is squashed and the tab bar is still there at the end.</p>
+          <p class="live">waiting for bezel-fit…</p>
+        </article>
+        <article class="fit" style="--c: var(--n-contain)" data-fit="contain">
+          <div class="fit-stage"><bezel-device device="iphone-17-pro" color="silver" alt="A wide older screenshot letterboxed with its own edge colours"></bezel-device></div>
+          <h3>Letterboxes it</h3>
+          <p class="rule">any wider</p>
+          <p>An older 16:9 shot sits in the middle at its true shape. The gaps are painted with colours sampled from its own edges.</p>
+          <p class="live">waiting for bezel-fit…</p>
+        </article>
+      </div>
+      <p class="aside-line"><b>And the status bar?</b> Live HTML and iframes get padded clear of the island and get a drawn status bar. Screenshots keep their own, so you never see two clocks.</p>
+    </section>
+
+    <section class="band" id="code" aria-labelledby="code-title">
+      <div class="code-grid">
+        <div class="code-copy">
+          <p class="kicker">Use it</p>
+          <h2 class="big" id="code-title">One script. One tag.</h2>
+          <p>No build step and no dependencies. It is a standard custom element, so any framework just renders the tag. Give it a width and the frame stays sharp at any size.</p>
+          <div class="fw" aria-label="Works with"><span>Plain HTML</span><span>React 19</span><span>Vue</span><span>Svelte</span><span>Astro</span><span>MDX</span><span>Webflow</span></div>
+        </div>
+        <div>
+          <div class="codebox">
+            <button class="copy" type="button" data-copy-code>Copy</button>
+<pre id="snippet"><span class="c">&lt;!-- 1. load it once --&gt;</span>
+<span class="t">&lt;script</span> <span class="a">type</span>=<span class="s">"module"</span>
+  <span class="a">src</span>=<span class="s">"https://cdn.jsdelivr.net/npm/bezelkit@0/dist/bezelkit.js"</span><span class="t">&gt;&lt;/script&gt;</span>
+
+<span class="c">&lt;!-- 2. frame anything --&gt;</span>
+<span class="t">&lt;bezel-device</span> <span class="a">device</span>=<span class="s">"iphone-17-pro"</span> <span class="a">color</span>=<span class="s">"cosmic-orange"</span>
+  <span class="a">src</span>=<span class="s">"screenshot.png"</span><span class="t">&gt;&lt;/bezel-device&gt;</span>
+
+<span class="c">&lt;!-- 3. optional: listen, flip --&gt;</span>
+<span class="t">&lt;script</span> <span class="a">type</span>=<span class="s">"module"</span><span class="t">&gt;</span>
+  <span class="k">const</span> phone = document.querySelector(<span class="s">'bezel-device'</span>);
+  phone.addEventListener(<span class="s">'bezel-fit'</span>, (e) =&gt; console.log(e.detail.fit));
+  phone.flip(); <span class="c">// turns it over to show the back</span>
+<span class="t">&lt;/script&gt;</span></pre>
+          </div>
+          <div class="log">
+            <h3><span>bezel-fit, live from the desk above</span><span id="log-count">0 events</span></h3>
+            <ol id="log"></ol>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>bezelkit · MIT · <span id="device-count">26</span> frames · zero dependencies</span>
+    <span>Device names are trademarks of their owners. The frames are original CSS drawings. The screens on this page are drawn with canvas.</span>
+    <a href="https://github.com/knileshh/bezelkit">Source on GitHub</a>
+  </footer>
+</div>
+<input type="file" id="file" accept="image/*" hidden>
+
+<script type="module">
+import { getDevice, listDevices } from '../../src/bezel.js';
+
+const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
+let reduce = reduceMQ.matches;
+reduceMQ.addEventListener('change', (e) => { reduce = e.matches; });
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+/* ───────────────────────── sample screens, drawn on canvas ───────────────────────── */
+const C = { bg: '#f3f7ee', card: '#ffffff', ink: '#14301f', muted: '#6d8173', green: '#1f7a4c', leaf: '#3cb36c', water: '#2f7bff', chip: '#e3ecdf', line: '#dfe7da', sun: '#ffc94a', pink: '#ff8fb1', pot: '#e07a4f' };
+const PLANTS = [
+  ['Monstera', 'Water today', .18, '#3cb36c'], ['Fiddle leaf fig', 'In 2 days', .55, '#2e9e5b'], ['Golden pothos', 'In 3 days', .7, '#9bcb3c'],
+  ['Snake plant', 'In 9 days', .92, '#4c8c6b'], ['Calathea', 'Mist today', .3, '#e0719b'], ['String of pearls', 'In 5 days', .8, '#7fbf7a'],
+  ['Peace lily', 'Water today', .26, '#5da06f'], ['Rubber plant', 'In 4 days', .66, '#2f6b4f'], ['Aloe vera', 'In 12 days', .95, '#86b97a'], ['Bird of paradise', 'In 2 days', .5, '#f08a4b'],
+];
+const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const rr = (g, x, y, w, h, r, fill) => { g.beginPath(); g.roundRect(x, y, w, h, r); g.fillStyle = fill; g.fill(); };
+const txt = (g, s, x, y, size, color, weight = 400, align = 'left') => { g.font = `${weight} ${size}px ${SANS}`; g.fillStyle = color; g.textAlign = align; g.fillText(s, x, y); g.textAlign = 'left'; };
+function leaf(g, x, y, len, ang, col) {
+  g.save(); g.translate(x, y); g.rotate(ang); g.beginPath(); g.moveTo(0, 0);
+  g.quadraticCurveTo(len * .5, -len * .42, len, 0); g.quadraticCurveTo(len * .5, len * .42, 0, 0);
+  g.fillStyle = col; g.fill(); g.restore();
+}
+function plant(g, cx, cy, r, col) {
+  g.globalAlpha = .16; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fillStyle = col; g.fill(); g.globalAlpha = 1;
+  const py = cy + r * .22;
+  leaf(g, cx, py, r * .78, -2.2, col); leaf(g, cx, py, r * .86, -1.1, col); leaf(g, cx, py, r * .7, -1.62, col);
+  g.beginPath(); g.moveTo(cx - r * .34, py); g.lineTo(cx + r * .34, py); g.lineTo(cx + r * .25, py + r * .5); g.lineTo(cx - r * .25, py + r * .5); g.closePath(); g.fillStyle = C.pot; g.fill();
+}
+function statusNew(g, w, u) {
+  txt(g, '9:41', 44 * u, 37 * u, 17 * u, C.ink, 700);
+  for (let i = 0; i < 4; i++) rr(g, w - 106 * u + i * 5 * u, (32 - i * 2.4) * u, 3.4 * u, (5 + i * 2.4) * u, 1 * u, C.ink);
+  g.strokeStyle = C.ink; g.lineWidth = 2 * u; g.lineCap = 'round';
+  for (let i = 0; i < 3; i++) { g.beginPath(); g.arc(w - 73 * u, 38 * u, (3 + i * 3.4) * u, -2.36, -.78); g.stroke(); }
+  rr(g, w - 58 * u, 27 * u, 25 * u, 12 * u, 3.5 * u, C.ink); rr(g, w - 32 * u, 31 * u, 2 * u, 4 * u, 1 * u, C.ink);
+}
+function statusOld(g, w, u) {
+  for (let i = 0; i < 5; i++) { g.beginPath(); g.arc(10 * u + i * 6 * u, 10 * u, 2.2 * u, 0, 7); g.fillStyle = C.ink; g.fill(); }
+  txt(g, 'Carrier', 42 * u, 14 * u, 11 * u, C.ink, 500);
+  txt(g, '9:41 AM', w / 2, 14 * u, 12 * u, C.ink, 700, 'center');
+  rr(g, w - 34 * u, 5 * u, 24 * u, 10.5 * u, 2.5 * u, C.ink);
+}
+function drawPhone(g, w, h, o = {}) {
+  const u = w / 402, S = (n) => n * u;
+  g.fillStyle = C.bg; g.fillRect(0, 0, w, h);
+  let top;
+  if (o.bare) top = S(4); else if (o.old) { statusOld(g, w, u); top = S(28); } else { statusNew(g, w, u); top = S(62); }
+  if (o.bare) { txt(g, 'Your plants', w / 2, S(34), S(24), C.ink, 800, 'center'); top = S(40); }
+  else {
+    txt(g, 'TUESDAY 14 OCTOBER', S(22), top + S(14), S(11.5), C.muted, 700);
+    txt(g, 'Your plants', S(22), top + S(50), S(34), C.ink, 800);
+    g.beginPath(); g.arc(w - S(42), top + S(36), S(20), 0, 7); g.fillStyle = C.pink; g.fill();
+    txt(g, 'S', w - S(42), top + S(43), S(18), '#fff', 800, 'center');
+  }
+  let y = top + S(70);
+  rr(g, S(18), y, w - S(36), S(136), S(24), C.green);
+  g.save(); g.beginPath(); g.roundRect(S(18), y, w - S(36), S(136), S(24)); g.clip();
+  g.beginPath(); g.arc(w - S(70), y + S(38), S(24), 0, 7); g.fillStyle = C.sun; g.fill();
+  leaf(g, w - S(40), y + S(150), S(90), -2.1, '#2f9a60'); leaf(g, w - S(40), y + S(150), S(76), -1.5, '#48b877'); leaf(g, w - S(40), y + S(150), S(64), -2.7, '#6cc98c');
+  g.restore();
+  txt(g, '3 need water', S(38), y + S(46), S(25), '#fff', 800);
+  txt(g, 'Monstera, Calathea, Peace lily', S(38), y + S(70), S(13), 'rgba(255,255,255,.8)', 500);
+  rr(g, S(38), y + S(88), S(112), S(32), S(16), '#fff'); txt(g, 'Water all', S(94), y + S(109), S(14), C.green, 700, 'center');
+  y += S(160);
+  const barH = o.old ? S(50) : S(84);
+  const limit = h - barH - S(8);
+  const rooms = ['Living room', 'Bedroom', 'Kitchen', 'Balcony', 'Office', 'Hallway'];
+  let i = 0, room = 0;
+  while (y + S(72) < limit) {
+    if (i % 4 === 0) {
+      txt(g, rooms[room % rooms.length], S(22), y + S(16), S(16), C.ink, 800);
+      txt(g, `${4} plants`, w - S(22), y + S(16), S(13), C.muted, 600, 'right');
+      y += S(30); room++;
+      if (y + S(72) >= limit) break;
+    }
+    const [name, sub, lvl, col] = PLANTS[i % PLANTS.length];
+    rr(g, S(18), y, w - S(36), S(72), S(18), C.card);
+    plant(g, S(54), y + S(36), S(23), col);
+    txt(g, name, S(88), y + S(31), S(16), C.ink, 700);
+    txt(g, sub, S(88), y + S(51), S(13), lvl < .35 ? C.water : C.muted, 600);
+    const mx = w - S(36) - S(62);
+    rr(g, mx, y + S(40), S(62), S(8), S(4), C.chip); rr(g, mx, y + S(40), Math.max(S(8), S(62) * lvl), S(8), S(4), lvl < .35 ? C.water : C.leaf);
+    txt(g, `${Math.round(lvl * 100)}%`, mx + S(62), y + S(30), S(12), C.muted, 700, 'right');
+    y += S(82); i++;
+  }
+  g.fillStyle = '#fff'; g.fillRect(0, h - barH, w, barH); g.fillStyle = C.line; g.fillRect(0, h - barH, w, Math.max(1, S(1)));
+  ['Today', 'Plants', 'Shop', 'Me'].forEach((t, k) => {
+    const cx = (w / 4) * (k + .5), ty = h - barH + (o.old ? S(8) : S(12));
+    rr(g, cx - S(11), ty, S(22), S(22), S(7), k === 0 ? C.green : '#c5d1c3');
+    txt(g, t, cx, ty + S(36), S(11), k === 0 ? C.green : C.muted, 650, 'center');
+  });
+  if (!o.old) rr(g, w / 2 - S(67), h - S(12), S(134), S(5), S(3), C.ink);
+}
+function drawTablet(g, w, h) {
+  const u = Math.min(w, h) / 820, S = (n) => n * u;
+  g.fillStyle = C.bg; g.fillRect(0, 0, w, h);
+  txt(g, '9:41  Tue 14 Oct', S(26), S(22), S(14), C.ink, 650);
+  rr(g, w - S(52), S(11), S(26), S(12), S(3.5), C.ink);
+  txt(g, 'Your plants', S(40), S(96), S(44), C.ink, 800);
+  ['All', 'Thirsty', 'Rooms'].forEach((t, k) => { rr(g, w - S(40) - (3 - k) * S(96), S(62), S(88), S(38), S(19), k === 0 ? C.ink : '#fff'); txt(g, t, w - S(40) - (3 - k) * S(96) + S(44), S(87), S(15), k === 0 ? '#fff' : C.ink, 650, 'center'); });
+  let y = S(128);
+  rr(g, S(40), y, w - S(80), S(170), S(28), C.green);
+  g.save(); g.beginPath(); g.roundRect(S(40), y, w - S(80), S(170), S(28)); g.clip();
+  g.beginPath(); g.arc(w - S(130), y + S(56), S(34), 0, 7); g.fillStyle = C.sun; g.fill();
+  leaf(g, w - S(70), y + S(190), S(140), -2.1, '#2f9a60'); leaf(g, w - S(70), y + S(190), S(120), -1.5, '#48b877'); leaf(g, w - S(70), y + S(190), S(100), -2.7, '#6cc98c');
+  g.restore();
+  txt(g, '3 plants need water today', S(72), y + S(70), S(32), '#fff', 800);
+  txt(g, 'Monstera, Calathea and Peace lily. The rest are happy.', S(72), y + S(104), S(16), 'rgba(255,255,255,.82)', 500);
+  y += S(200);
+  const cols = w > h ? 4 : 3, gap = S(18), cw = (w - S(80) - gap * (cols - 1)) / cols, ch = S(200);
+  let i = 0;
+  while (y + ch < h - S(24)) {
+    for (let c = 0; c < cols; c++) {
+      const [name, sub, lvl, col] = PLANTS[i % PLANTS.length]; const x = S(40) + c * (cw + gap);
+      rr(g, x, y, cw, ch, S(22), C.card); plant(g, x + S(52), y + S(56), S(34), col);
+      txt(g, name, x + S(20), y + S(124), S(18), C.ink, 750); txt(g, sub, x + S(20), y + S(148), S(14), lvl < .35 ? C.water : C.muted, 600);
+      rr(g, x + S(20), y + S(168), cw - S(40), S(8), S(4), C.chip); rr(g, x + S(20), y + S(168), (cw - S(40)) * lvl, S(8), S(4), lvl < .35 ? C.water : C.leaf);
+      i++;
+    }
+    y += ch + gap;
+  }
+}
+function drawDesktop(g, w, h) {
+  const u = w / 1440, S = (n) => n * u;
+  g.fillStyle = C.bg; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#fff'; g.fillRect(0, 0, S(250), h);
+  plant(g, S(44), S(56), S(18), C.leaf); txt(g, 'Sprout', S(72), S(64), S(26), C.ink, 800);
+  ['Today', 'All plants', 'Rooms', 'Calendar', 'Shop', 'Settings'].forEach((t, k) => {
+    if (k === 1) rr(g, S(18), S(112 + k * 46), S(214), S(38), S(10), C.chip);
+    txt(g, t, S(38), S(137 + k * 46), S(15.5), k === 1 ? C.ink : C.muted, k === 1 ? 700 : 500);
+  });
+  const x0 = S(290);
+  txt(g, 'Good morning, Sam', x0, S(90), S(40), C.ink, 800);
+  txt(g, 'Three plants are thirsty. Everyone else is thriving.', x0, S(122), S(16), C.muted, 500);
+  const cw = (w - x0 - S(40) - S(60)) / 4;
+  [['Plants', '10'], ['Thirsty', '3'], ['Humidity', '48%'], ['Streak', '21 days']].forEach(([k, v], i) => {
+    const x = x0 + i * (cw + S(20)); rr(g, x, S(150), cw, S(104), S(16), i === 1 ? C.green : '#fff');
+    txt(g, k, x + S(20), S(184), S(14), i === 1 ? 'rgba(255,255,255,.8)' : C.muted, 600); txt(g, v, x + S(20), S(230), S(34), i === 1 ? '#fff' : C.ink, 800);
+  });
+  let y = S(282); const cols = 5, gap = S(20), pw = (w - x0 - S(40) - gap * (cols - 1)) / cols, ph = S(210); let i = 0;
+  while (y < h - S(20)) {
+    for (let c = 0; c < cols; c++) {
+      const [name, sub, lvl, col] = PLANTS[i % PLANTS.length]; const x = x0 + c * (pw + gap);
+      rr(g, x, y, pw, ph, S(18), '#fff'); plant(g, x + pw / 2, y + S(70), S(44), col);
+      txt(g, name, x + S(18), y + S(150), S(17), C.ink, 750); txt(g, sub, x + S(18), y + S(174), S(14), lvl < .35 ? C.water : C.muted, 600);
+      rr(g, x + S(18), y + S(190), pw - S(36), S(7), S(4), C.chip); rr(g, x + S(18), y + S(190), (pw - S(36)) * lvl, S(7), S(4), lvl < .35 ? C.water : C.leaf);
+      i++;
+    }
+    y += ph + gap;
+  }
+}
+function drawWatch(g, w, h) {
+  const u = w / 208, S = (n) => n * u;
+  g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
+  txt(g, '10:09', w - S(20), S(30), S(17), '#fff', 650, 'right');
+  const cx = w / 2, cy = h / 2 + S(4), r = S(62);
+  g.lineWidth = S(15); g.lineCap = 'round';
+  g.strokeStyle = 'rgba(47,123,255,.25)'; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke();
+  g.strokeStyle = '#3f8bff'; g.beginPath(); g.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * .72); g.stroke();
+  plant(g, cx, cy - S(6), S(30), '#3cb36c');
+  txt(g, 'Monstera', cx, h - S(34), S(15), '#fff', 700, 'center');
+  txt(g, 'Water today', cx, h - S(16), S(12), '#6fb0ff', 600, 'center');
+}
+
+const cache = new Map();
+function shot(w, h, { scale = 2, kind = 'phone', ...o } = {}) {
+  const key = `${kind}:${w}x${h}@${scale}:${JSON.stringify(o)}`;
+  if (cache.has(key)) return cache.get(key);
+  const c = document.createElement('canvas');
+  c.width = Math.round(w * scale); c.height = Math.round(h * scale);
+  const g = c.getContext('2d'); g.scale(scale, scale);
+  ({ phone: drawPhone, tablet: drawTablet, desktop: drawDesktop, watch: drawWatch })[kind](g, w, h, o);
+  const job = new Promise((res) => c.toBlob((b) => res({ url: URL.createObjectURL(b), canvas: c, w: c.width, h: c.height }), 'image/webp', .88));
+  cache.set(key, job);
+  return job;
+}
+const SHARED = {
+  phone: () => shot(402, 874, { scale: 3 }),
+  long: () => shot(402, 2300, { scale: 2 }),
+  old: () => shot(375, 667, { scale: 2, old: true }),
+  desktop: () => shot(1440, 900, { scale: 1, kind: 'desktop' }),
+  tall: () => shot(402, 960, { scale: 2 }),
+};
+function nativeShot(spec) {
+  const { w, h } = spec.screen;
+  if (spec.kind === 'phone') return shot(w, h, { scale: Math.min(3, Math.round(spec.dpr || 3)) });
+  if (spec.kind === 'tablet') return shot(w, h, { scale: 1, kind: 'tablet' });
+  if (spec.kind === 'watch') return shot(w, h, { scale: 2, kind: 'watch' });
+  return shot(w, h, { scale: 1, kind: 'desktop' });
+}
+
+/* ───────────────────────── the desk ───────────────────────── */
+const DESK = [
+  { id: 'macbook-air-13', short: 'MacBook Air 13″', color: 'Sky Blue', w: 440, x: .44, y: .45, r: -2, note: ['-14%', '-4%', -4], mix: 'native' },
+  { id: 'ipad-air-11', short: 'iPad Air 11″', color: 'Purple', w: 212, x: .13, y: .56, r: -7, note: ['52%', '78%', 4], mix: 'native' },
+  { id: 'iphone-17', short: 'iPhone 17', color: 'Lavender', w: 126, x: .29, y: .72, r: -12, note: ['62%', '62%', -3], mix: 'tall' },
+  { id: 'apple-watch-series-11', short: 'Watch Series 11', color: 'Rose Gold', w: 96, x: .565, y: .83, r: 11, note: ['-124%', '26%', -5], mix: 'native' },
+  { id: 'iphone-17-pro', short: 'iPhone 17 Pro', color: 'Cosmic Orange', w: 136, x: .69, y: .52, r: 6, note: ['54%', '76%', -4], mix: 'native' },
+  { id: 'pixel-10-pro', short: 'Pixel 10 Pro', color: 'Jade', w: 132, x: .805, y: .49, r: -5, note: ['60%', '1%', 3], mix: 'long' },
+  { id: 'galaxy-s25', short: 'Galaxy S25', color: 'Mint', w: 124, x: .92, y: .62, r: 8, note: ['-62%', '74%', -4], mix: 'old' },
+];
+const desk = $('#desk');
+const stackMQ = matchMedia('(max-width: 760px)');
+let mode = stackMQ.matches ? 'stack' : 'desk';
+let Z = 10, selected = null, order = [];
+const state = { source: 'mixed', user: null, userName: '', mood: 0 };
+
+const pieces = DESK.map((cfg, i) => {
+  const spec = getDevice(cfg.id);
+  const el = document.createElement('div');
+  el.className = 'piece'; el.tabIndex = 0; el.dataset.i = i;
+  el.setAttribute('role', 'group');
+  el.setAttribute('aria-label', `${cfg.short}. Drag or use arrow keys to move, F to flip.`);
+  el.innerHTML = `<div class="piece-in">
+    <bezel-device device="${cfg.id}" color="${slug(cfg.color)}" alt="Sample plant-care app on ${cfg.short}"></bezel-device>
+    <div class="sel" aria-hidden="true"><i></i><i></i><i></i><i></i><span>${cfg.short} · ${spec.screen.w}×${spec.screen.h}</span></div>
+    <aside class="note" data-kind="wait" style="--nx:${cfg.note[0]};--ny:${cfg.note[1]};--nr:${cfg.note[2]}deg" aria-live="polite"><b></b><span></span><code></code></aside>
+  </div>`;
+  desk.appendChild(el);
+  const p = { i, cfg, spec, el, dev: el.querySelector('bezel-device'), note: el.querySelector('.note'), cx: 0, cy: 0, vx: 0, vy: 0, r: cfg.r, base: cfg.r, lift: 1, liftT: 1, w: 0, h: 0, nx: cfg.x, ny: cfg.y, context: null, last: null, dragging: false };
+  p.dev.addEventListener('bezel-fit', (e) => { p.last = e.detail; renderNote(p); logFit(cfg.short, e.detail); });
+  return p;
+});
+order = pieces.map((p) => p.i);
+// iPhone 17 Pro leads the stack on mobile
+order.sort((a, b) => (b === 4) - (a === 4));
+const firstOrder = order.slice();
+
+/* notes: plain words from the bezel-fit detail */
+const CUT = { island: 'the Dynamic Island', hole: 'the camera hole', notch: 'the notch', 'mac-notch': 'the notch', camera: 'the camera' };
+function explain(p) {
+  const d = p.last, ctx = p.context;
+  if (ctx === 'island') {
+    const cut = CUT[p.spec.cutout?.type] ?? 'the top edge';
+    return { kind: 'html', title: 'Pads it', why: `Live HTML, so it starts below ${cut} and gets a drawn status bar.`, meta: `safe-area=auto → pad · ${p.dev.screenSize.w}×${p.dev.screenSize.h}` };
+  }
+  if (!d) return null;
+  const q = d.mismatch, off = Math.abs(q - 1) * 100;
+  const meta = `fit=${d.requested} → ${d.fit} · ${d.media.w}×${d.media.h}`;
+  let title, why;
+  switch (d.fit) {
+    case 'cover':
+      title = 'Fills it';
+      why = ctx === 'double' ? 'It already has a status bar, so no second one is drawn on top.'
+        : off < .6 ? 'Same shape as this screen, so it fills it edge to edge.'
+        : `Within ${off.toFixed(1)}% of this screen's shape, so it fills it and trims a hair.`;
+      break;
+    case 'top': title = 'Pins the top'; why = `A bit taller than this screen. The header stays and the bottom ${Math.round((1 - q) * 100)}% tucks away.`; break;
+    case 'scroll':
+      title = 'Scrolls it';
+      why = ctx === 'crop' ? `A long capture, ${(1 / q).toFixed(1)}× this screen. It scrolls, so the tab bar is still there.`
+        : `${(1 / q).toFixed(1)}× taller than this screen, so it scrolls instead of squashing. Try it.`;
+      break;
+    case 'contain':
+      title = 'Letterboxes it';
+      why = ctx === 'squish' ? 'An old 16:9 shot. Centred at its true shape, gaps painted from its own edges.'
+        : `${q.toFixed(2)}× wider than this screen. Centred, with the gaps painted from its own edges.`;
+      break;
+    default: title = d.fit; why = 'Set by hand with the fit attribute.';
+  }
+  return { kind: d.fit, title, why, meta };
+}
+function renderNote(p) {
+  const e = explain(p);
+  if (!e) return;
+  const n = p.note;
+  const changed = n.dataset.kind !== e.kind || n.querySelector('span').textContent !== e.why;
+  n.dataset.kind = e.kind;
+  n.querySelector('b').textContent = e.title;
+  n.querySelector('span').textContent = e.why;
+  n.querySelector('code').textContent = e.meta;
+  if (changed && !reduce) { n.classList.remove('is-pop'); void n.offsetWidth; n.classList.add('is-pop'); }
+}
+
+/* sources */
+async function setSrc(p, url) {
+  if (p.dev.getAttribute('src') === url && !p.dev.children.length) { renderNote(p); return; }
+  p.dev.replaceChildren();
+  p.dev.setAttribute('src', url);
+}
+async function useSource(kind) {
+  state.source = kind;
+  $$('.bar-src .chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.src === kind)));
+  const shared = kind === 'user' ? { url: state.user } : SHARED[kind] ? await SHARED[kind]() : null;
+  for (const p of pieces) {
+    p.context = null;
+    if (p.dev.getAttribute('side') === 'back') flipPiece(p);
+    const own = kind === 'mixed' && p.cfg.mix !== 'native' ? await SHARED[p.cfg.mix]() : null;
+    await setSrc(p, (shared ?? own ?? await nativeShot(p.spec)).url);
+  }
+}
+$$('.bar-src .chip:not([data-pick])').forEach((b) => b.addEventListener('click', () => useSource(b.dataset.src)));
+
+/* your own screenshot: picker, drop, paste */
+const file = $('#file');
+$$('[data-pick]').forEach((b) => b.addEventListener('click', () => (state.user && b.classList.contains('chip-yours') && state.source !== 'user') ? useSource('user') : file.click()));
+file.addEventListener('change', () => { if (file.files[0]) takeFile(file.files[0]); file.value = ''; });
+function takeFile(f) {
+  if (!f || !f.type.startsWith('image/')) return;
+  if (state.user) URL.revokeObjectURL(state.user);
+  state.user = URL.createObjectURL(f);
+  state.userName = f.name;
+  $('.yours-label').textContent = f.name.length > 16 ? f.name.slice(0, 14) + '…' : f.name;
+  useSource('user');
+  if (mode === 'stack') desk.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+}
+let dragDepth = 0;
+const hasFiles = (e) => [...(e.dataTransfer?.types ?? [])].includes('Files');
+addEventListener('dragenter', (e) => { if (!hasFiles(e)) return; dragDepth++; desk.classList.add('is-dropping'); });
+addEventListener('dragleave', (e) => { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; desk.classList.remove('is-dropping'); } });
+addEventListener('dragover', (e) => { if (hasFiles(e)) e.preventDefault(); });
+addEventListener('drop', (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth = 0; desk.classList.remove('is-dropping'); takeFile([...e.dataTransfer.files].find((f) => f.type.startsWith('image/'))); });
+addEventListener('paste', (e) => { const f = [...(e.clipboardData?.files ?? [])].find((x) => x.type.startsWith('image/')); if (f) takeFile(f); });
+
+/* ── layout: desk ── */
+function deskScale() { return Math.min(desk.clientWidth / 1320, desk.clientHeight / 540); }
+function measure() { for (const p of pieces) { p.w = p.el.offsetWidth; p.h = p.el.offsetHeight; } }
+function render(p) {
+  p.el.style.transform = `translate3d(${(p.cx - p.w / 2).toFixed(1)}px, ${(p.cy - p.h / 2).toFixed(1)}px, 0) rotate(${p.r.toFixed(2)}deg) scale(${p.lift.toFixed(4)})`;
+}
+function sizePiece(p, w) { p.el.style.width = p.dev.style.width = `${Math.round(w)}px`; }
+function layoutDesk(reset) {
+  const W = desk.clientWidth, H = desk.clientHeight, k = deskScale();
+  pieces.forEach((p) => sizePiece(p, p.cfg.w * k));
+  measure();
+  pieces.forEach((p) => {
+    if (reset) { p.nx = p.cfg.x; p.ny = p.cfg.y; p.base = p.cfg.r; }
+    p.vx = p.vy = 0; p.cx = p.nx * W; p.cy = p.ny * H; p.r = p.base; p.lift = p.liftT = 1;
+    p.el.style.opacity = ''; p.el.classList.remove('is-top');
+    keepIn(p, W, H); render(p);
+  });
+  placeHint();
+}
+function keepIn(p, W = desk.clientWidth, H = desk.clientHeight) {
+  const mx = p.w * .42, my = p.h * .42; let hit = false;
+  if (p.cx < mx) { p.cx = mx; p.vx = Math.abs(p.vx) * .45; hit = true; } else if (p.cx > W - mx) { p.cx = W - mx; p.vx = -Math.abs(p.vx) * .45; hit = true; }
+  if (p.cy < my) { p.cy = my; p.vy = Math.abs(p.vy) * .45; hit = true; } else if (p.cy > H - my) { p.cy = H - my; p.vy = -Math.abs(p.vy) * .45; hit = true; }
+  return hit;
+}
+function front(p) {
+  p.el.style.zIndex = ++Z;
+  if (Z > 800) { [...pieces].sort((a, b) => (+a.el.style.zIndex || 0) - (+b.el.style.zIndex || 0)).forEach((q, n) => { q.el.style.zIndex = 10 + n; }); Z = 10 + pieces.length; }
+}
+function select(p) {
+  selected = p;
+  pieces.forEach((q) => q.el.classList.toggle('is-selected', q === p && mode === 'desk'));
+  updateFlipLabel();
+}
+function updateFlipLabel() {
+  const p = mode === 'stack' ? pieces[order[0]] : selected;
+  if (!p) return;
+  const back = p.dev.getAttribute('side') === 'back';
+  $('.flip-label').textContent = back ? `Show the front` : `Flip the ${p.cfg.short}`;
+  $('.flip-m').textContent = back ? 'Front' : 'Flip';
+}
+
+/* physics */
+let raf = 0, last = 0, drag = null;
+function kick() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }
+function tick(t) {
+  const dt = Math.min(34, t - last || 16); last = t; let busy = !!drag;
+  if (mode === 'desk') {
+    const W = desk.clientWidth, H = desk.clientHeight;
+    for (const p of pieces) {
+      if (!p.dragging && (Math.abs(p.vx) > .004 || Math.abs(p.vy) > .004)) {
+        p.cx += p.vx * dt; p.cy += p.vy * dt;
+        const f = Math.pow(.9935, dt); p.vx *= f; p.vy *= f;
+        keepIn(p, W, H); busy = true;
+      } else if (!p.dragging) { p.vx = p.vy = 0; }
+      const tilt = reduce ? 0 : clamp(p.vx * 9, -13, 13);
+      const rT = p.base + (p.dragging ? tilt : tilt * .4);
+      p.r += (rT - p.r) * (1 - Math.pow(.984, dt));
+      p.lift += (p.liftT - p.lift) * (1 - Math.pow(.978, dt));
+      if (Math.abs(rT - p.r) > .03 || Math.abs(p.liftT - p.lift) > .0008) busy = true;
+      render(p);
+    }
+    if (!busy) pieces.forEach((p) => { p.nx = p.cx / W; p.ny = p.cy / H; });
+  }
+  raf = busy ? requestAnimationFrame(tick) : 0;
+}
+
+function onDown(e, p) {
+  if (e.button !== 0) return;
+  if (mode === 'stack') return stackDown(e, p);
+  e.preventDefault();
+  try { p.el.setPointerCapture(e.pointerId); } catch {}
+  p.el.focus({ preventScroll: true });
+  select(p); front(p);
+  drag = { p, id: e.pointerId, sx: e.clientX, sy: e.clientY, ox: p.cx, oy: p.cy, lx: e.clientX, ly: e.clientY, lt: e.timeStamp, moved: false };
+  p.dragging = true; p.vx = p.vy = 0; p.liftT = reduce ? 1 : 1.045; kick();
+}
+function onMove(e, p) {
+  if (mode === 'stack') return stackMove(e, p);
+  if (!drag || drag.p !== p || drag.id !== e.pointerId) return;
+  const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+  if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+  if (!drag.moved) { drag.moved = true; hideHint(); }
+  const dt = Math.max(1, e.timeStamp - drag.lt);
+  p.vx = p.vx * .55 + ((e.clientX - drag.lx) / dt) * .45;
+  p.vy = p.vy * .55 + ((e.clientY - drag.ly) / dt) * .45;
+  p.vx = clamp(p.vx, -3, 3); p.vy = clamp(p.vy, -3, 3);
+  drag.lx = e.clientX; drag.ly = e.clientY; drag.lt = e.timeStamp;
+  p.cx = drag.ox + dx; p.cy = drag.oy + dy; keepIn(p);
+  kick();
+}
+function onUp(e, p) {
+  if (mode === 'stack') return stackUp(e, p);
+  if (!drag || drag.p !== p) return;
+  p.dragging = false; p.liftT = 1;
+  if (e.timeStamp - drag.lt > 70 || reduce || e.type === 'pointercancel') { p.vx = p.vy = 0; }
+  else if (drag.moved) p.base = clamp(p.base + p.vx * 5, -22, 22);
+  drag = null; kick();
+}
+pieces.forEach((p) => {
+  p.el.addEventListener('pointerdown', (e) => onDown(e, p));
+  p.el.addEventListener('pointermove', (e) => onMove(e, p));
+  p.el.addEventListener('pointerup', (e) => onUp(e, p));
+  p.el.addEventListener('pointercancel', (e) => onUp(e, p));
+  p.el.addEventListener('dblclick', () => mode === 'desk' && flipPiece(p));
+  p.el.addEventListener('dragstart', (e) => e.preventDefault());
+  p.el.addEventListener('focus', () => { if (mode === 'desk' && selected !== p) { select(p); front(p); } });
+  p.el.addEventListener('keydown', (e) => {
+    const step = e.shiftKey ? 48 : 16, mv = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+    if (mv && mode === 'desk') { e.preventDefault(); p.cx += mv[0]; p.cy += mv[1]; keepIn(p); render(p); p.nx = p.cx / desk.clientWidth; p.ny = p.cy / desk.clientHeight; hideHint(); }
+    else if (mv && mode === 'stack' && mv[0]) { e.preventDefault(); stackStep(mv[0] > 0 ? 1 : -1); }
+    else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); flipPiece(p); }
+  });
+});
+
+function flipPiece(p) {
+  if (!p) return;
+  const toBack = p.dev.getAttribute('side') !== 'back';
+  p.el.classList.toggle('is-back', toBack);
+  p.dev.flip(toBack ? 'back' : 'front').then(updateFlipLabel);
+  updateFlipLabel();
+}
+$$('[data-flip]').forEach((b) => b.addEventListener('click', () => flipPiece(mode === 'stack' ? pieces[order[0]] : selected)));
+$('[data-tidy]').addEventListener('click', () => {
+  desk.classList.add('is-tidying');
+  pieces.forEach((p) => { p.el.style.transition = reduce ? '' : 'transform .6s cubic-bezier(.2,.9,.25,1.1)'; });
+  layoutDesk(true);
+  setTimeout(() => pieces.forEach((p) => { p.el.style.transition = ''; }), 650);
+});
+
+/* hint */
+const hint = $('.hint');
+function placeHint() {
+  const p = pieces[1];
+  if (!p || mode !== 'desk') return;
+  hint.style.left = `${Math.max(34, p.cx - p.w / 2 + 6)}px`;
+  hint.style.top = `${Math.max(76, p.cy - p.h / 2 - 66)}px`;
+}
+function hideHint() { hint.classList.add('is-gone'); }
+
+/* ── layout: swipeable stack ── */
+let sw = null;
+function layoutStack() {
+  const W = desk.clientWidth, H = desk.clientHeight;
+  const boxW = Math.min(W - 56, 330), boxH = H - 120;
+  const cap = { watch: 160, tablet: 250, laptop: 330, desktop: 330, phone: 999 };
+  pieces.forEach((p) => { const a = p.aspect; sizePiece(p, Math.min(boxW, boxH / a, cap[p.spec.kind] ?? 999)); });
+  measure();
+  order.forEach((idx, k) => {
+    const p = pieces[idx];
+    p.cx = W / 2 + (k ? (k % 2 ? 1 : -1) * k * 5 : 0);
+    p.cy = H / 2 - 8 + k * 11;
+    p.r = k ? (k % 2 ? 1 : -1) * (2.5 + k * 1.4) : 0;
+    p.lift = 1 - k * .05;
+    p.el.style.zIndex = 100 - k;
+    p.el.style.opacity = k > 3 ? '0' : '1';
+    p.el.classList.toggle('is-top', k === 0);
+    p.el.tabIndex = k === 0 ? 0 : -1;
+    render(p);
+  });
+  const top = pieces[order[0]];
+  $('.stack-name').textContent = top.cfg.short;
+  $('.stack-pos').textContent = `${firstOrder.indexOf(top.i) + 1} of ${pieces.length} · swipe`;
+  updateFlipLabel();
+}
+function stackStep(dir) {
+  const W = desk.clientWidth;
+  if (dir > 0) {
+    const p = pieces[order[0]];
+    p.cx = W / 2 - W * 1.05; p.r = -22; render(p);
+    const go = () => { order.push(order.shift()); layoutStack(); };
+    reduce ? go() : setTimeout(go, 230);
+  } else {
+    order.unshift(order.pop());
+    const p = pieces[order[0]];
+    if (!reduce) { p.el.classList.add('is-drag'); p.cx = W / 2 + W; p.r = 20; render(p); void p.el.offsetWidth; p.el.classList.remove('is-drag'); }
+    layoutStack();
+  }
+}
+function stackDown(e, p) {
+  if (p.i !== order[0]) return;
+  sw = { p, id: e.pointerId, sx: e.clientX, sy: e.clientY, lx: e.clientX, lt: e.timeStamp, vx: 0, on: false };
+}
+function stackMove(e, p) {
+  if (!sw || sw.p !== p || sw.id !== e.pointerId) return;
+  const dx = e.clientX - sw.sx, dy = e.clientY - sw.sy;
+  if (!sw.on) {
+    if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { sw = null; return; } // it's a page scroll
+    if (Math.abs(dx) < 8) return;
+    sw.on = true; try { p.el.setPointerCapture(e.pointerId); } catch {} p.el.classList.add('is-drag');
+  }
+  const dt = Math.max(1, e.timeStamp - sw.lt);
+  sw.vx = sw.vx * .5 + ((e.clientX - sw.lx) / dt) * .5; sw.lx = e.clientX; sw.lt = e.timeStamp;
+  const W = desk.clientWidth, H = desk.clientHeight;
+  p.cx = W / 2 + dx; p.cy = H / 2 - 8 + dy * .15; p.r = reduce ? 0 : dx * .06;
+  render(p);
+}
+function stackUp(e, p) {
+  if (!sw || sw.p !== p) return;
+  const dx = e.clientX - sw.sx, on = sw.on, vx = sw.vx; sw = null;
+  p.el.classList.remove('is-drag');
+  if (!on) return;
+  const W = desk.clientWidth;
+  if (Math.abs(dx) > W * .22 || Math.abs(vx) > .55) {
+    const dir = Math.sign(dx || vx);
+    p.cx = W / 2 + dir * W * 1.05; p.r = dir * 22; render(p);
+    const go = () => { order.push(order.shift()); layoutStack(); };
+    reduce ? go() : setTimeout(go, 230);
+  } else layoutStack();
+}
+$$('[data-step]').forEach((b) => b.addEventListener('click', () => stackStep(+b.dataset.step)));
+
+/* mode switching */
+function applyMode() {
+  mode = stackMQ.matches ? 'stack' : 'desk';
+  desk.classList.toggle('is-stack', mode === 'stack');
+  pieces.forEach((p) => { p.el.tabIndex = 0; p.el.classList.remove('is-drag'); });
+  if (mode === 'stack') layoutStack(); else { layoutDesk(false); select(selected ?? pieces[4]); }
+}
+stackMQ.addEventListener('change', applyMode);
+let rz = 0;
+new ResizeObserver(() => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { if (!pieces[0].aspect) return; mode === 'stack' ? layoutStack() : layoutDesk(false); buildRulers(); }); }).observe(desk);
+
+function buildRulers() {
+  const [h, v] = $$('.ruler', desk);
+  h.innerHTML = Array.from({ length: Math.floor(desk.clientWidth / 120) }, (_, i) => i ? `<span style="left:${i * 120}px">${i * 5}</span>` : '').join('');
+  v.innerHTML = Array.from({ length: Math.floor(desk.clientHeight / 120) }, (_, i) => i ? `<span style="top:${i * 120}px">${i * 5}</span>` : '').join('');
+}
+
+/* ───────────────────────── reject pile ───────────────────────── */
+const TW = 108, TH = 132;
+// A polaroid of a broken mockup. `bw` is the phone's drawn width: 58 shows it whole, bigger values zoom into the top.
+function thumb(bw, draw, annotate) {
+  const s = 2, c = document.createElement('canvas');
+  c.width = TW * s; c.height = TH * s;
+  const g = c.getContext('2d'); g.scale(s, s);
+  g.fillStyle = '#e9ecf2'; g.fillRect(0, 0, TW, TH);
+  const k = bw / 58, bh = bw * 2.14, bx = (TW - bw) / 2 + (bw > 200 ? bw * .3 : 0), by = bw > 60 ? 6 : 4;
+  const inset = 3 * Math.min(k, 1.6), sx = bx + inset, sy = by + inset, sW = bw - inset * 2, sH = bh - inset * 2;
+  rr(g, bx, by, bw, bh, 12 * k, '#1d1e22');
+  g.save(); g.beginPath(); g.roundRect(sx, sy, sW, sH, 9.5 * k); g.clip();
+  draw(g, sx, sy, sW, sH);
+  g.restore();
+  const iu = sW / 402;
+  rr(g, sx + sW / 2 - 62.5 * iu, sy + 11 * iu, 125 * iu, 37 * iu, 18.5 * iu, '#000');
+  g.strokeStyle = '#ff5533'; g.fillStyle = '#ff5533'; g.lineWidth = 2; g.lineCap = 'round'; g.lineJoin = 'round';
+  annotate?.(g, { sx, sy, sW, sH, iu });
+  return c.toDataURL('image/png');
+}
+function ring(g, cx, cy, rx, ry) {
+  for (const [d, a] of [[0, 0], [1.2, .5]]) { g.beginPath(); g.ellipse(cx + d, cy - d * .6, rx + d, ry, -.08 + a * .1, .2, Math.PI * 2 + .5); g.stroke(); }
+}
+const REJECTS = [
+  { kind: 'squish', cap: 'Squished to fit', r: -4, label: 'An old 16:9 screenshot stretched to fit a tall phone',
+    draw: async () => { const o = (await SHARED.old()).canvas; return thumb(58, (g, x, y, w, h) => g.drawImage(o, x, y, w, h), (g, b) => {
+      const fx = b.sW / 375, fy = b.sH / 667; // the sun: a circle in the original, an egg once stretched
+      ring(g, b.sx + 309.7 * fx, b.sy + 126.9 * fy, 22.4 * fx + 3.5, 22.4 * fy + 3.5);
+      const ax = TW - 10; g.beginPath(); g.moveTo(ax, 18); g.lineTo(ax, 112); g.stroke();
+      g.beginPath(); g.moveTo(ax - 4, 23); g.lineTo(ax, 17); g.lineTo(ax + 4, 23); g.moveTo(ax - 4, 107); g.lineTo(ax, 113); g.lineTo(ax + 4, 107); g.stroke();
+    }); } },
+  { kind: 'crop', cap: 'Tab bar? Cropped.', r: 3, label: 'A long screenshot cropped so its header and tab bar are gone',
+    draw: async () => { const L = (await SHARED.long()).canvas; return thumb(58, (g, x, y, w, h) => { const sh = L.width * h / w; g.drawImage(L, 0, (L.height - sh) / 2, L.width, sh, x, y, w, h); }, (g, b) => {
+      g.setLineDash([3, 3]);
+      for (const y of [b.sy + 16, b.sy + b.sH - 16]) { g.beginPath(); g.moveTo(6, y); g.lineTo(TW - 6, y); g.stroke(); }
+      g.setLineDash([]);
+      for (const y of [b.sy + 16, b.sy + b.sH - 16]) { g.beginPath(); g.arc(9, y - 4, 2.6, 0, 7); g.arc(9, y + 4, 2.6, 0, 7); g.stroke(); }
+    }); } },
+  { kind: 'island', cap: 'Header under the island', r: -2, label: 'An app header hidden under the Dynamic Island',
+    draw: async () => { const b = (await shot(402, 874, { scale: 1, bare: true })).canvas; return thumb(150, (g, x, y, w) => g.drawImage(b, x, y, w, w * 874 / 402), (g, b) => ring(g, b.sx + b.sW / 2, b.sy + 29 * b.iu, 82 * b.iu + 6, 22 * b.iu + 5)); } },
+  { kind: 'double', cap: 'Two clocks', r: 5, label: 'A screenshot with a second status bar drawn over its own',
+    draw: async () => { const n = (await SHARED.phone()).canvas; return thumb(250, (g, x, y, w) => {
+      g.drawImage(n, x, y, w, w * 874 / 402);
+      const u = w / 402; g.fillStyle = 'rgba(255,255,255,.9)'; g.fillRect(x, y + 44 * u, w, 30 * u);
+      g.font = `700 ${16 * u}px ${SANS}`; g.fillStyle = '#111'; g.fillText('12:30', x + 30 * u, y + 65 * u);
+    }, (g, b) => ring(g, b.sx + 58 * b.iu, b.sy + 46 * b.iu, 36 * b.iu + 6, 26 * b.iu + 4)); } },
+];
+const pile = $('#rejects');
+REJECTS.forEach(async (R) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'reject'; b.dataset.kind = R.kind; b.style.setProperty('--r', `${R.r}deg`);
+  b.setAttribute('aria-label', `${R.label}. Press to fix it on the selected device, or drag it onto any device.`);
+  b.innerHTML = `<img alt="" width="108" height="132"><span class="cap">${R.cap}</span><span class="stamp" aria-hidden="true"></span>`;
+  pile.appendChild(b);
+  b.querySelector('img').src = await R.draw();
+  wireReject(b, R);
+});
+let rd = null, suppressClick = false;
+function pieceAt(x, y) {
+  const hit = document.elementsFromPoint(x, y).find((n) => n.classList?.contains('piece'));
+  if (!hit) return null;
+  return mode === 'stack' ? pieces[order[0]] : pieces[+hit.dataset.i];
+}
+function wireReject(b, R) {
+  b.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    rd = { b, R, id: e.pointerId, sx: e.clientX, sy: e.clientY, moved: false, ghost: null, target: null, rect: b.getBoundingClientRect() };
+  });
+  b.addEventListener('pointermove', (e) => {
+    if (!rd || rd.b !== b || rd.id !== e.pointerId) return;
+    const dx = e.clientX - rd.sx, dy = e.clientY - rd.sy;
+    if (!rd.moved) {
+      if (Math.hypot(dx, dy) < 6) return;
+      if (mode === 'stack' && Math.abs(dx) > Math.abs(dy) * 1.2) { rd = null; return; } // horizontal: let the row scroll
+      rd.moved = true; try { b.setPointerCapture(e.pointerId); } catch {}
+      const g = b.cloneNode(true); g.classList.add('ghost'); g.removeAttribute('aria-label'); g.setAttribute('aria-hidden', 'true');
+      g.style.width = `${rd.rect.width}px`; document.body.appendChild(g); rd.ghost = g; b.classList.add('is-lifted'); hideHint();
+    }
+    e.preventDefault();
+    rd.ghost.style.transform = `translate(${rd.rect.left + dx}px, ${rd.rect.top + dy}px) rotate(${reduce ? 0 : clamp(dx * .02, -8, 8)}deg) scale(1.06)`;
+    const t = pieceAt(e.clientX, e.clientY);
+    if (t !== rd.target) { rd.target?.el.classList.remove('is-target'); t?.el.classList.add('is-target'); rd.target = t; }
+  });
+  const end = (e) => {
+    if (!rd || rd.b !== b) return;
+    const { ghost, target, moved } = rd; rd = null;
+    b.classList.remove('is-lifted');
+    target?.el.classList.remove('is-target');
+    if (!moved) return;
+    suppressClick = true; setTimeout(() => { suppressClick = false; }, 0);
+    if (target && e.type === 'pointerup') { ghost.remove(); applyFix(R.kind, target, b); }
+    else if (!reduce) { const r = b.getBoundingClientRect(); ghost.animate([{ transform: ghost.style.transform }, { transform: `translate(${r.left}px, ${r.top}px) rotate(0deg)` }], { duration: 260, easing: 'cubic-bezier(.3,1.2,.5,1)' }).finished.then(() => ghost.remove()); }
+    else ghost.remove();
+  };
+  b.addEventListener('pointerup', end);
+  b.addEventListener('pointercancel', end);
+  b.addEventListener('click', () => {
+    if (suppressClick) return;
+    const target = mode === 'stack' ? pieces[order[0]] : (selected ?? pieces[4]);
+    applyFix(R.kind, target, b);
+    if (mode === 'stack') desk.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+  });
+}
+function miniApp() {
+  const rows = PLANTS.slice(0, 7).map(([n, s, l, c]) => `<li><i style="--c:${c}"></i><span>${n}<em${l < .35 ? ' class="thirsty"' : ''}>${s}</em></span><b>${Math.round(l * 100)}%</b></li>`).join('');
+  return `<div class="mini"><p class="mini-day">Tuesday 14 October</p><h4>Your plants</h4><div class="mini-hero"><b>3 need water</b><span>Monstera, Calathea, Peace lily</span></div><ul>${rows}</ul></div>`;
+}
+async function applyFix(kind, p, card) {
+  if (!p) return;
+  if (p.dev.getAttribute('side') === 'back') flipPiece(p);
+  p.context = kind;
+  if (mode === 'desk') { select(p); front(p); }
+  state.source = 'custom';
+  $$('.bar-src .chip').forEach((b) => b.setAttribute('aria-pressed', 'false'));
+  if (kind === 'island') { p.dev.removeAttribute('src'); p.dev.innerHTML = miniApp(); requestAnimationFrame(() => renderNote(p)); }
+  else {
+    const url = kind === 'squish' ? (await SHARED.old()).url : kind === 'crop' ? (await SHARED.long()).url : (await nativeShot(p.spec)).url;
+    await setSrc(p, url);
+  }
+  card?.classList.add('is-fixed');
+  if (!reduce) p.el.querySelector('.piece-in').animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 380, easing: 'cubic-bezier(.3,1.5,.5,1)' });
+}
+
+/* ───────────────────────── palette ───────────────────────── */
+const hex2rgb = (h) => { const n = parseInt(h.slice(1, 7), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const dist = (a, b) => { const m = (a[0] + b[0]) / 2, dr = a[0] - b[0], dg = a[1] - b[1], db = a[2] - b[2]; return (2 + m / 256) * dr * dr + 4 * dg * dg + (2 + (255 - m) / 256) * db * db; };
+const MOODS = [
+  { name: 'Studio mix' }, { name: 'Soft pastels', target: '#c6cde8' }, { name: 'Warm metals', target: '#d59a72' },
+  { name: 'Cool blues', target: '#8ea9c9' }, { name: 'Silver', target: '#dadbdc' }, { name: 'After dark', target: '#25282f' },
+];
+function pick(mood, spec, cfg) {
+  if (!mood.target) return spec.colors.find(([n]) => n === cfg.color);
+  const t = hex2rgb(mood.target);
+  return [...spec.colors].sort((a, b) => dist(hex2rgb(a[1]), t) - dist(hex2rgb(b[1]), t))[0];
+}
+const palette = $('#palette');
+MOODS.forEach((m, mi) => {
+  const picks = pieces.map((p) => pick(m, p.spec, p.cfg));
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'swatch'; b.setAttribute('aria-pressed', String(mi === 0));
+  b.setAttribute('aria-label', `${m.name}: ${picks.map((c, i) => `${pieces[i].cfg.short} in ${c[0]}`).join(', ')}`);
+  b.innerHTML = `<span class="stripe">${picks.map((c) => `<i style="background:${c[1]}"></i>`).join('')}</span><b>${m.name}</b>`;
+  b.addEventListener('click', () => { $$('.swatch').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); wear(mi); });
+  palette.appendChild(b);
+});
+function wear(mi) {
+  state.mood = mi;
+  const picks = pieces.map((p) => pick(MOODS[mi], p.spec, p.cfg));
+  pieces.forEach((p, i) => p.dev.setAttribute('color', slug(picks[i][0])));
+  $('#finishes').innerHTML = picks.map((c, i) => `<span title="${pieces[i].cfg.short}"><i style="background:${c[1]}"></i>${c[0]}</span>`).join('');
+}
+wear(0);
+
+/* ───────────────────────── how it fits tiles ───────────────────────── */
+const TILE_SRC = { cover: SHARED.phone, top: SHARED.tall, scroll: SHARED.long, contain: SHARED.old };
+$$('#fits .fit').forEach(async (t) => {
+  const dev = t.querySelector('bezel-device'), live = t.querySelector('.live');
+  dev.addEventListener('bezel-fit', (e) => { const d = e.detail; live.textContent = `bezel-fit → ${d.fit} · ${d.media.w}×${d.media.h} on ${d.screen.w}×${d.screen.h}`; });
+  dev.setAttribute('src', (await TILE_SRC[t.dataset.fit]()).url);
+  if (t.dataset.fit === 'scroll') drift(dev);
+});
+// Let the "Scrolls it" phone scroll itself slowly while it is on screen, so the fit is visible, not just described.
+function drift(dev) {
+  let on = false, dir = 1, pause = 0, lt = 0;
+  new IntersectionObserver(([e]) => { on = e.isIntersecting; if (on) requestAnimationFrame(step); }).observe(dev);
+  function step(t) {
+    const m = dev.shadowRoot?.querySelector('.media');
+    if (!on || reduce || !m) return;
+    const dt = Math.min(50, t - (lt || t)); lt = t;
+    if (pause > 0) pause -= dt;
+    else {
+      m.scrollTop += dir * dt * .09;
+      const max = m.scrollHeight - m.clientHeight;
+      if (max > 0 && (m.scrollTop >= max - 1 || m.scrollTop <= 0)) { dir *= -1; pause = 1400; }
+    }
+    requestAnimationFrame(step);
+  }
+}
+
+/* ───────────────────────── live event log + copy ───────────────────────── */
+const logEl = $('#log'); let logN = 0;
+const FITC = { cover: 'var(--n-cover)', top: 'var(--n-top)', scroll: 'var(--n-scroll)', contain: 'var(--n-contain)' };
+function logFit(name, d) {
+  logN++;
+  $('#log-count').textContent = `${logN} event${logN === 1 ? '' : 's'}`;
+  const li = document.createElement('li');
+  li.innerHTML = `<span>mismatch ${d.mismatch.toFixed(2)}</span><b>${name}</b><em style="--c:${FITC[d.fit] ?? '#eee'}">${d.fit}</em>`;
+  logEl.prepend(li);
+  while (logEl.children.length > 3) logEl.lastChild.remove();
+}
+async function copy(text, btn, done = 'Copied') {
+  const was = btn.textContent;
+  try { await navigator.clipboard.writeText(text); btn.textContent = done; } catch { btn.textContent = 'Select and copy'; }
+  setTimeout(() => { btn.textContent = was; }, 1400);
+}
+$('[data-copy]').addEventListener('click', (e) => copy(e.currentTarget.dataset.copy, e.currentTarget, 'Copied ✓'));
+$('[data-copy-code]').addEventListener('click', (e) => copy($('#snippet').textContent, e.currentTarget));
+$('#device-count').textContent = listDevices().length;
+
+/* ───────────────────────── boot ───────────────────────── */
+await customElements.whenDefined('bezel-device');
+// measure each device's own shape once at a known width
+pieces.forEach((p) => sizePiece(p, 200));
+pieces.forEach((p) => { p.aspect = p.el.offsetHeight / p.el.offsetWidth; });
+buildRulers();
+applyMode();
+if (mode === 'desk') select(pieces[4]);
+front(pieces[4]);
+if (!reduce && mode === 'desk') {
+  pieces.forEach((p, i) => p.el.querySelector('.piece-in').animate(
+    [{ transform: 'translateY(-70px) rotate(-7deg) scale(1.08)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+    { duration: 720, delay: 60 + i * 75, easing: 'cubic-bezier(.2,.9,.25,1.15)', fill: 'backwards' }));
+}
+useSource('mixed');
+</script>
+<style>
+/* slotted live-HTML demo used by the "Header under the island" fix */
+.mini { min-height: 100%; padding: 10px 18px 24px; background: #f3f7ee; color: #14301f; font: 15px/1.35 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+.mini-day { margin: 4px 0 0; font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #6d8173; }
+.mini h4 { margin: 2px 0 14px; font-size: 32px; font-weight: 800; letter-spacing: -.02em; }
+.mini-hero { background: #1f7a4c; color: #fff; border-radius: 22px; padding: 18px 20px; margin-bottom: 16px; }
+.mini-hero b { display: block; font-size: 23px; }
+.mini-hero span { font-size: 13px; opacity: .8; }
+.mini ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.mini li { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 18px; padding: 12px 14px; }
+.mini li i { width: 42px; height: 42px; border-radius: 50%; background: color-mix(in srgb, var(--c) 22%, white); flex: none; box-shadow: inset 0 -14px 0 -6px var(--c); }
+.mini li span { flex: 1; font-weight: 700; }
+.mini li em { display: block; font-style: normal; font-weight: 600; font-size: 13px; color: #6d8173; }
+.mini li em.thirsty { color: #2f7bff; }
+.mini li b { font-size: 12px; color: #6d8173; }
+</style>
+</body>
+</html>

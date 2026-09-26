@@ -1,0 +1,136 @@
+{
+  "pixel-10-pro": {
+    "dpr": 2.25,
+    "screen": { "w": 427, "h": 952, "radius": 52 },
+    "bezel": 15,
+    "rim": 5,
+    "bodyRadius": 72,
+    "cutout": { "type": "hole", "d": 32, "top": 18 },
+    "safe": { "top": 68, "bottom": 24 },
+    "buttons": [
+      { "side": "right", "at": 278, "len": 75 },
+      { "side": "right", "at": 400, "len": 132 }
+    ]
+  },
+  "galaxy-s25-ultra": {
+    "dpr": 2.8125,
+    "screen": { "w": 384, "h": 832, "radius": 24 },
+    "bezel": { "t": 6, "r": 7, "b": 6, "l": 7 },
+    "bodyRadius": 35,
+    "cutout": { "type": "hole", "d": 17, "top": 8 },
+    "buttons": [
+      { "side": "right", "at": 161, "len": 110 },
+      { "side": "right", "at": 322, "len": 59 }
+    ]
+  },
+  "galaxy-s25": {
+    "bezel": { "t": 7, "r": 8, "b": 7, "l": 8 },
+    "cutout": { "type": "hole", "d": 18, "top": 10 },
+    "buttons": [
+      { "side": "right", "at": 149, "len": 106 },
+      { "side": "right", "at": 307, "len": 54 }
+    ]
+  },
+  "galaxy-tab-s10-plus": {
+    "dpr": 2,
+    "screen": { "w": 876, "h": 1400, "radius": 16 },
+    "bezel": 45,
+    "cutout": { "type": "camera", "side": "right", "d": 7 },
+    "buttons": [
+      { "side": "right", "at": 233, "len": 53 },
+      { "side": "right", "at": 342, "len": 113 }
+    ]
+  },
+  "ipad-pro-13": {
+    "name": "iPad Pro 13″ (M5)",
+    "year": 2025,
+    "screen": { "w": 1032, "h": 1376, "radius": 26 },
+    "bezel": 38,
+    "bodyRadius": 80,
+    "cutout": { "type": "camera", "side": "right", "d": 8 },
+    "buttons": [
+      { "side": "top", "at": 982, "len": 63 },
+      { "side": "right", "at": 100, "len": 52 },
+      { "side": "right", "at": 163, "len": 52 }
+    ]
+  },
+  "ipad-pro-11": {
+    "name": "iPad Pro 11″ (M5)",
+    "year": 2025,
+    "screen": { "w": 834, "h": 1210, "radius": 26 },
+    "bezel": 41,
+    "bodyRadius": 75,
+    "cutout": { "type": "camera", "side": "right", "d": 8 },
+    "buttons": [
+      { "side": "top", "at": 789, "len": 63 },
+      { "side": "right", "at": 101, "len": 52 },
+      { "side": "right", "at": 163, "len": 52 }
+    ]
+  },
+  "ipad-air-11": {
+    "name": "iPad Air 11″ (M4)",
+    "year": 2026,
+    "bezel": 48,
+    "bodyRadius": 61,
+    "cutout": { "type": "camera", "side": "right", "d": 8 },
+    "buttons": [
+      { "side": "top", "at": 770, "len": 89 },
+      { "side": "right", "at": 101, "len": 52 },
+      { "side": "right", "at": 163, "len": 52 }
+    ]
+  },
+  "ipad-mini": {
+    "name": "iPad mini (A17 Pro)",
+    "bezel": 52,
+    "bodyRadius": 81,
+    "buttons": [
+      { "side": "top", "at": 82, "len": 64 },
+      { "side": "top", "at": 158, "len": 64 },
+      { "side": "top", "at": 668, "len": 109 }
+    ]
+  },
+  "_new_devices": [
+    {
+      "id": "pixel-11-pro", "name": "Pixel 11 Pro", "brand": "Google", "kind": "phone", "year": 2026, "dpr": 2.25,
+      "screen": { "w": 427, "h": 952, "radius": 52 }, "bezel": 15, "rim": 5, "bodyRadius": 72,
+      "cutout": { "type": "hole", "d": 32, "top": 18 }, "statusBar": "android", "home": "pill", "safe": { "top": 68, "bottom": 24 },
+      "buttons": [{ "side": "right", "at": 278, "len": 75 }, { "side": "right", "at": 400, "len": 132 }],
+      "colors": [["Obsidian", "#232427"], ["Fog", "#c8ccd1"], ["Canyon", "#b0715a"], ["Olive", "#6e735a"]]
+    },
+    {
+      "id": "pixel-11", "name": "Pixel 11", "brand": "Google", "kind": "phone", "year": 2026, "dpr": 2.625,
+      "screen": { "w": 412, "h": 924, "radius": 50 }, "bezel": 17, "rim": 5, "bodyRadius": 72,
+      "cutout": { "type": "hole", "d": 32, "top": 17 }, "statusBar": "android", "home": "pill", "safe": { "top": 66, "bottom": 24 },
+      "buttons": [{ "side": "right", "at": 271, "len": 74 }, { "side": "right", "at": 391, "len": 129 }],
+      "colors": [["Obsidian", "#232427"], ["Frost", "#dfe6ec"], ["Pistachio", "#c9d8b0"], ["Hibiscus", "#d9607a"]]
+    },
+    {
+      "id": "galaxy-s26-ultra", "name": "Galaxy S26 Ultra", "brand": "Samsung", "kind": "phone", "year": 2026, "dpr": 2.8125,
+      "screen": { "w": 384, "h": 832, "radius": 24 }, "bezel": 8, "rim": 4, "bodyRadius": 36,
+      "cutout": { "type": "hole", "d": 17, "top": 8 }, "statusBar": "android", "home": "pill", "safe": { "top": 34, "bottom": 24 },
+      "buttons": [{ "side": "right", "at": 161, "len": 110 }, { "side": "right", "at": 322, "len": 59 }],
+      "colors": [["Black", "#232426"], ["Cobalt Violet", "#5d5388"], ["Sky Blue", "#aac3dc"], ["White", "#ecece9"], ["Silver Shadow", "#c4c5c7"], ["Pink Gold", "#e5c9bb"]]
+    },
+    {
+      "id": "galaxy-s26", "name": "Galaxy S26", "brand": "Samsung", "kind": "phone", "year": 2026, "dpr": 3,
+      "screen": { "w": 360, "h": 780, "radius": 38 }, "bezel": 9, "rim": 4, "bodyRadius": 52,
+      "cutout": { "type": "hole", "d": 18, "top": 10 }, "statusBar": "android", "home": "pill", "safe": { "top": 30, "bottom": 24 },
+      "buttons": [{ "side": "right", "at": 147, "len": 105 }, { "side": "right", "at": 303, "len": 54 }],
+      "colors": [["Cobalt Violet", "#5d5388"], ["Sky Blue", "#aac3dc"], ["Black", "#232426"], ["White", "#ecece9"], ["Silver Shadow", "#c4c5c7"], ["Pink Gold", "#e5c9bb"]]
+    },
+    {
+      "id": "galaxy-tab-s11", "name": "Galaxy Tab S11", "brand": "Samsung", "kind": "tablet", "year": 2025, "dpr": 2,
+      "screen": { "w": 800, "h": 1280, "radius": 16 }, "bezel": 43, "rim": 3,
+      "cutout": { "type": "camera", "side": "right", "d": 7 }, "statusBar": "android", "home": "pill", "safe": { "top": 28, "bottom": 20 },
+      "buttons": [{ "side": "right", "at": 240, "len": 55 }, { "side": "right", "at": 352, "len": 116 }],
+      "colors": [["Gray", "#5f6166"], ["Silver", "#d6d7d9"]]
+    },
+    {
+      "id": "ipad-air-13", "name": "iPad Air 13″ (M4)", "brand": "Apple", "kind": "tablet", "year": 2026, "dpr": 2,
+      "screen": { "w": 1024, "h": 1366, "radius": 18 }, "bezel": 42, "rim": 4, "bodyRadius": 62,
+      "cutout": { "type": "camera", "side": "right", "d": 8 }, "statusBar": "ipados", "home": "indicator", "safe": { "top": 24, "bottom": 20 },
+      "buttons": [{ "side": "top", "at": 962, "len": 89 }, { "side": "right", "at": 101, "len": 52 }, { "side": "right", "at": 164, "len": 52 }],
+      "colors": [["Space Gray", "#5b5d62"], ["Blue", "#a8bcd0"], ["Purple", "#bdb3cf"], ["Starlight", "#e9e2d6"]]
+    }
+  ]
+}

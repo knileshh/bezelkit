@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bezelkit — pick a homepage direction</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<style>
+  :root { --bg: #f3f1ec; --ink: #17150f; --muted: #6b665c; --line: #dcd6ca; --card: #fff; --accent: #d2522b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 40px 28px 80px; }
+  header { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 30px; flex-wrap: wrap; }
+  h1 { margin: 0; font: 700 40px/1.05 ui-sans-serif, system-ui, sans-serif; letter-spacing: -.02em; }
+  header p { margin: 8px 0 0; color: var(--muted); max-width: 46em; }
+  .jump { display: flex; gap: 8px; flex-wrap: wrap; }
+  .jump a { padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; background: #fff; text-decoration: none; color: var(--ink); font-weight: 600; font-size: 13.5px; }
+  .concept { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 26px; margin-bottom: 26px; }
+  .top { display: flex; justify-content: space-between; align-items: start; gap: 20px; flex-wrap: wrap; margin-bottom: 18px; }
+  .tag { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--ink); color: #fff; font-weight: 800; margin-right: 12px; vertical-align: middle; }
+  h2 { display: inline; margin: 0; font-size: 24px; letter-spacing: -.01em; vertical-align: middle; }
+  .one { margin: 8px 0 0; color: var(--muted); max-width: 52em; }
+  .open { display: inline-flex; align-items: center; gap: 6px; padding: 11px 16px; border-radius: 10px; background: var(--accent); color: #fff; font-weight: 700; text-decoration: none; white-space: nowrap; }
+  .shots { display: grid; grid-template-columns: 2.2fr 1fr .55fr; gap: 12px; align-items: start; }
+  .shots .col { display: grid; gap: 12px; }
+  figure { margin: 0; }
+  figure img { display: block; width: 100%; border-radius: 10px; border: 1px solid var(--line); background: #eee; }
+  figcaption { margin-top: 5px; font-size: 12px; color: var(--muted); }
+  .notes { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+  .notes h3 { margin: 0 0 6px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .notes ul { margin: 0; padding-left: 18px; }
+  .notes li { margin: 3px 0; }
+  .mix { background: #fff8f4; border: 1px dashed var(--accent); border-radius: 14px; padding: 18px 22px; }
+  .mix h3 { margin: 0 0 6px; }
+  @media (max-width: 900px) { .shots, .notes { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Pick a homepage direction</h1>
+      <p>Four working concepts, all using the real <code>&lt;bezel-device&gt;</code> component. Screenshots are below; "Open live" runs each page on the local dev server (<code>http://localhost:8766</code>). You can also mix them, e.g. "B's story with C's code editor".</p>
+    </div>
+    <nav class="jump"><a href="#a">A · Drop-first</a><a href="#b">B · Keynote</a><a href="#c">C · Live code</a><a href="#d">D · Studio</a></nav>
+  </header>
+
+  <section class="concept" id="a">
+    <div class="top">
+      <div><span class="tag">A</span><h2>Drop-first tool</h2><p class="one">Calm utility like remove.bg or Squoosh. Drop one screenshot and it's framed on five devices at once. Every frame explains its decision and shows a small "typical mockup" thumbnail of what other kits would do.</p></div>
+      <a class="open" href="http://localhost:8766/concepts/a-drop/" target="_blank" rel="noopener">Open live ↗</a>
+    </div>
+    <div class="shots">
+      <figure><img src="a-drop/shots/desktop-1-top.png" alt="Concept A hero"><figcaption>Hero: drop sheet with five frames</figcaption></figure>
+      <div class="col"><figure><img src="a-drop/shots/desktop-2-code.png" alt=""><figcaption>Pick devices and copy the code</figcaption></figure><figure><img src="a-drop/shots/desktop-3-why.png" alt=""><figcaption>"Why it fits" row</figcaption></figure></div>
+      <figure><img src="a-drop/shots/mobile-1-top.png" alt=""><figcaption>Mobile</figcaption></figure>
+    </div>
+    <div class="notes">
+      <div><h3>Strengths</h3><ul><li>Fastest route to "try it with my screenshot"</li><li>Measurement-line styling makes the precision visible</li><li>Doubles as a free tool people bookmark</li></ul></div>
+      <div><h3>Watch out for</h3><ul><li>Letterbox bars blend in (by design), so the fix is subtle at a glance</li><li>Captions sit just below the fold at 1440×900</li><li>Less "wow" than B or D</li></ul></div>
+    </div>
+  </section>
+
+  <section class="concept" id="b">
+    <div class="top">
+      <div><span class="tag">B</span><h2>Keynote</h2><p class="one">A dark, cinematic, scroll-driven story. One screenshot breaks in four labelled ways (squashed, doubled status bar, sliced, covered by the notch), then snaps into the real frame. After that come the device lineup, a flip to the back, a front+back product shot, the code and a drop-your-own call to action.</p></div>
+      <a class="open" href="http://localhost:8766/concepts/b-keynote/" target="_blank" rel="noopener">Open live ↗</a>
+    </div>
+    <div class="shots">
+      <figure><img src="b-keynote/shots/desktop-02-squashed.png" alt="Concept B problem scene"><figcaption>Problem scene: "Squashed."</figcaption></figure>
+      <div class="col"><figure><img src="b-keynote/shots/desktop-06-framed.png" alt=""><figcaption>The fix lands</figcaption></figure><figure><img src="b-keynote/shots/desktop-10-side-both.png" alt=""><figcaption>Front + back product shot</figcaption></figure></div>
+      <figure><img src="b-keynote/shots/mobile-01-top.png" alt=""><figcaption>Mobile</figcaption></figure>
+    </div>
+    <div class="notes">
+      <div><h3>Strengths</h3><ul><li>Makes the problem the clearest and most memorable</li><li>Shows off flip, stacked shots and the lineup</li><li>Premium feel, very shareable</li></ul></div>
+      <div><h3>Watch out for</h3><ul><li>You have to scroll to get the point; no instant try-it at the top</li><li>Heaviest page; "Doubled" is subtle</li><li>Mobile hides the callouts</li></ul></div>
+    </div>
+  </section>
+
+  <section class="concept" id="c">
+    <div class="top">
+      <div><span class="tag">C</span><h2>Live code</h2><p class="one">Developer-first, like shadcn/ui or Stripe docs. Edit the tag in a code editor, or click chips, and the device updates live with dimension lines. A "fails gallery" has five cards; each toggles from the typical broken result to bezelkit and shows a diff of the one attribute that changed.</p></div>
+      <a class="open" href="http://localhost:8766/concepts/c-code/" target="_blank" rel="noopener">Open live ↗</a>
+    </div>
+    <div class="shots">
+      <figure><img src="c-code/shots/desktop-top.png" alt="Concept C hero"><figcaption>Hero: editor + live device</figcaption></figure>
+      <div class="col"><figure><img src="c-code/shots/desktop-fails.png" alt=""><figcaption>Fails gallery (typical)</figcaption></figure><figure><img src="c-code/shots/desktop-fails-fixed.png" alt=""><figcaption>Fails gallery (fixed)</figcaption></figure></div>
+      <figure><img src="c-code/shots/mobile-top.png" alt=""><figcaption>Mobile</figcaption></figure>
+    </div>
+    <div class="notes">
+      <div><h3>Strengths</h3><ul><li>Best for the people who'll actually install it</li><li>The fails gallery explains the problem quickly and honestly</li><li>Doubles as documentation</li></ul></div>
+      <div><h3>Watch out for</h3><ul><li>Less inviting to designers and marketers</li><li>"Squished" card is subtle at card size</li><li>Busy above the fold</li></ul></div>
+    </div>
+  </section>
+
+  <section class="concept" id="d">
+    <div class="top">
+      <div><span class="tag">D</span><h2>Playful studio</h2><p class="one">Bright and tactile. Seven draggable devices sit on a cutting mat, each with a sticky note explaining its fit. Drop a screenshot and it lands on all of them. A "reject pile" of broken mockups can be dragged onto a device to fix it. There are palette swatches and flip on double-click.</p></div>
+      <a class="open" href="http://localhost:8766/concepts/d-studio/" target="_blank" rel="noopener">Open live ↗</a>
+    </div>
+    <div class="shots">
+      <figure><img src="d-studio/shots/d-desktop-top.png" alt="Concept D hero"><figcaption>Hero: the desk</figcaption></figure>
+      <div class="col"><figure><img src="d-studio/shots/d-tray.png" alt=""><figcaption>Reject pile + palette</figcaption></figure><figure><img src="d-studio/shots/d-how.png" alt=""><figcaption>How it fits</figcaption></figure></div>
+      <figure><img src="d-studio/shots/d-mobile-top.png" alt=""><figcaption>Mobile (swipe stack)</figcaption></figure>
+    </div>
+    <div class="notes">
+      <div><h3>Strengths</h3><ul><li>Most fun and distinctive, and invites play</li><li>Shows every fit decision at once, labelled</li><li>Great for designers and social clips</li></ul></div>
+      <div><h3>Watch out for</h3><ul><li>Busy; lots of sticky notes to read</li><li>Tight between 760 and 1000px wide</li><li>Mobile swipe only tested with simulated touch</li></ul></div>
+    </div>
+  </section>
+
+  <div class="mix">
+    <h3>My recommendation: <strong>C as the base, with B's problem scene on top</strong></h3>
+    <p style="margin:0">Open on B's "your screenshot breaks four ways → snaps into place" as the hero, since it's the clearest statement of the problem. Then go straight into C's live editor and fails gallery, which convert the people who'll install it. Borrow A's "drop your own" as a button inside the editor. D is the most fun but the hardest to keep readable; its desk could be a later "Studio" page.</p>
+  </div>
+</div>
+</body>
+</html>

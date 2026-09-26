@@ -1,0 +1,1330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bezelkit: device frames that fit your screenshots</title>
+<meta name="description" content="One zero-dependency web component for accurate CSS device frames. Real viewports, current devices, and a fit engine that stops stretched, cropped and notch-covered screenshots.">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet">
+<script type="module" src="../../src/bezel.js"></script>
+<style>
+:root {
+  --paper: #f8f8f6;
+  --surface: #ffffff;
+  --line: #e6e6e1;
+  --line-2: #d6d6cf;
+  --ink: #0f1115;
+  --ink-2: #3a3d45;
+  --muted: #676b75;
+  --redline: #e8336b;
+  --redline-soft: #fde7ee;
+  --ok: #0c8a5d;
+  --fail: #c2410c;
+  --carbon: #0f1217;
+  --carbon-2: #161a21;
+  --carbon-line: #262b35;
+  --c-text: #c9ced8;
+  --c-dim: #6b7382;
+  --c-tag: #f3f4f6;
+  --c-attr: #93b4ff;
+  --c-str: #f5c16c;
+  --c-com: #5d6575;
+  --c-kw: #d7a6ff;
+  --display: "Bricolage Grotesque", "Geist", ui-sans-serif, system-ui, sans-serif;
+  --sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SFMono-Regular", "Cascadia Mono", Consolas, monospace;
+  --wrap: 1264px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --r: 14px;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 72px; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+code, kbd, pre, textarea { font-family: var(--mono); }
+:focus-visible { outline: 2px solid var(--redline); outline-offset: 2px; border-radius: 6px; }
+.wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 var(--gutter); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: 12px; top: -60px; background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 8px; z-index: 50; }
+.skip:focus { top: 12px; }
+
+/* ── nav ─────────────────────────────────────────── */
+.nav { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 86%, transparent); backdrop-filter: saturate(1.4) blur(10px); border-bottom: 1px solid transparent; transition: border-color .2s; }
+.nav.stuck { border-bottom-color: var(--line); }
+.nav .wrap { display: flex; align-items: center; gap: 28px; height: 60px; }
+.brand { display: inline-flex; align-items: center; gap: 9px; font: 600 16px/1 var(--mono); letter-spacing: -.02em; text-decoration: none; }
+.glyph { width: 13px; height: 20px; border: 2px solid var(--ink); border-radius: 4px; position: relative; }
+.glyph::after { content: ""; position: absolute; left: 50%; top: 2px; width: 4px; height: 2px; border-radius: 2px; background: var(--ink); transform: translateX(-50%); }
+.nav nav { display: flex; gap: 22px; font-size: 14px; color: var(--ink-2); }
+.nav nav a { text-decoration: none; }
+.nav nav a:hover { color: var(--ink); }
+.nav-r { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.pill { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--surface); font: 500 13px/1 var(--mono); cursor: pointer; text-decoration: none; }
+.pill:hover { border-color: var(--ink-2); }
+.pill .dollar { color: var(--muted); }
+.pill.dark { background: var(--ink); color: #fff; border-color: var(--ink); font-family: var(--sans); font-weight: 550; }
+.pill.dark:hover { background: #262a31; }
+.ico { width: 14px; height: 14px; flex: none; }
+
+/* ── hero ────────────────────────────────────────── */
+.hero { padding: clamp(24px, 3.4vw, 44px) 0 clamp(48px, 6vw, 88px); }
+.hero-head { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 24px 56px; align-items: end; margin-bottom: 28px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; font: 500 12px/1 var(--mono); color: var(--ink-2); }
+.meta span { padding: 6px 8px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--surface); }
+.meta span b { font-weight: 600; color: var(--ink); }
+h1 { font: 640 clamp(40px, 5vw, 68px)/.98 var(--display); font-variation-settings: "wdth" 86, "opsz" 96; letter-spacing: -.028em; margin: 0; text-wrap: balance; }
+h1 .fit { position: relative; display: inline-block; color: var(--redline); }
+h1 .fit::after { content: ""; position: absolute; left: .04em; right: .04em; bottom: -.1em; height: .1em; border-top: 2px solid var(--redline); }
+h1 .fit i { position: absolute; bottom: -.18em; width: 2px; height: .2em; background: var(--redline); }
+h1 .fit i:first-child { left: .04em; } h1 .fit i:last-child { right: .04em; }
+.lede { margin: 0; max-width: 46ch; color: var(--ink-2); font-size: 17px; }
+.lede code { font-size: .88em; background: var(--surface); border: 1px solid var(--line); padding: 1px 5px; border-radius: 5px; }
+.hero-cta { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+.hero-cta .pill { height: 40px; padding: 0 16px; font: 550 14px/1 var(--sans); }
+
+.bench { display: grid; grid-template-columns: minmax(0, 12fr) minmax(0, 12fr); border: 1px solid var(--line-2); border-radius: 18px; overflow: hidden; background: var(--surface); box-shadow: 0 1px 0 rgba(0,0,0,.02), 0 30px 60px -40px rgba(15,17,21,.35); }
+
+/* editor pane */
+.ed-pane { background: var(--carbon); color: var(--c-text); display: flex; flex-direction: column; min-width: 0; }
+.pane-bar { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px 0 16px; border-bottom: 1px solid var(--carbon-line); font: 12px/1 var(--mono); color: var(--c-dim); }
+.pane-bar .file { color: var(--c-text); display: inline-flex; align-items: center; gap: 8px; }
+.pane-bar .file::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--redline); box-shadow: 0 0 0 3px rgba(232,51,107,.18); }
+.pane-bar .hint { margin-left: auto; }
+.pane-bar kbd { display: inline-block; min-width: 18px; padding: 2px 5px; border: 1px solid var(--carbon-line); border-bottom-width: 2px; border-radius: 4px; color: var(--c-text); font-size: 11px; text-align: center; }
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; padding: 0 9px; border-radius: 6px; border: 1px solid var(--carbon-line); background: transparent; color: var(--c-text); font: 12px/1 var(--mono); cursor: pointer; }
+.icon-btn:hover { background: var(--carbon-2); color: #fff; }
+
+.ed { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); font: 400 14px/22px var(--mono); }
+.gutter { padding: 16px 12px 16px 16px; text-align: right; color: #3d4452; user-select: none; white-space: pre; font-variant-numeric: tabular-nums; }
+.ed-scroll { overflow-x: auto; scrollbar-width: thin; scrollbar-color: #2a303b transparent; }
+.ed-inner { position: relative; display: inline-block; min-width: 100%; }
+.ed pre, .ed textarea { margin: 0; padding: 16px 20px 16px 4px; font: inherit; letter-spacing: 0; tab-size: 2; white-space: pre; word-wrap: normal; }
+.ed pre { color: var(--c-text); pointer-events: none; min-height: 100%; }
+.ed textarea { position: absolute; inset: 0; width: 100%; height: 100%; resize: none; border: 0; outline: none; background: transparent; color: transparent; caret-color: #fff; overflow: hidden; }
+.ed textarea::selection { background: rgba(147,180,255,.28); color: transparent; }
+.ed-scroll:has(textarea:focus-visible) { box-shadow: inset 0 0 0 1px rgba(232,51,107,.6); }
+.t-punc, .t-eq { color: var(--c-dim); }
+.t-tag { color: var(--c-tag); font-weight: 500; }
+.t-attr { color: var(--c-attr); }
+.t-str { color: var(--c-str); }
+.t-com { color: var(--c-com); font-style: italic; }
+.t-kw { color: var(--c-kw); }
+.bad { text-decoration: wavy underline var(--redline); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+
+.lint { display: flex; align-items: center; gap: 8px; min-height: 36px; margin: 0 16px; padding: 8px 0; border-top: 1px dashed var(--carbon-line); font: 12px/1.4 var(--mono); color: var(--c-dim); }
+.lint .dot { width: 6px; height: 6px; border-radius: 50%; background: #3ecf8e; flex: none; }
+.lint.warn .dot { background: var(--redline); }
+.lint.warn { color: #f3b3c6; }
+.lint code { color: var(--c-text); }
+
+.chips { padding: 6px 16px 16px; display: grid; gap: 7px; }
+.chip-row { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 8px; align-items: start; }
+.chip-row > .k { font: 12px/27px var(--mono); color: var(--c-attr); white-space: nowrap; }
+.chip-row > .k::after { content: "="; color: var(--c-dim); }
+.chip-row.bool > .k::after { content: ""; }
+.chip-set { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 27px; padding: 0 9px; border-radius: 7px; border: 1px solid var(--carbon-line); background: var(--carbon-2); color: #aab1bf; font: 12px/1 var(--mono); cursor: pointer; white-space: nowrap; }
+.chip:hover { color: #fff; border-color: #3a4150; }
+.chip[aria-checked="true"], .chip[aria-pressed="true"] { background: #f4f4f5; color: var(--carbon); border-color: #f4f4f5; }
+.chip .sw { width: 11px; height: 11px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); }
+.chip[aria-checked="true"] .sw { box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
+.chip-select { height: 28px; border-radius: 7px; border: 1px dashed #3a4150; background: transparent; color: #aab1bf; font: 12px/1 var(--mono); padding: 0 8px; max-width: 150px; }
+.chip-select option { color: #111; }
+
+/* stage pane */
+.stage-pane { position: relative; display: flex; flex-direction: column; min-width: 0; border-left: 1px solid var(--line-2); }
+.stage { position: relative; flex: 1; min-height: 500px; padding: 56px 64px 48px; background-color: #fbfbfa; background-image: radial-gradient(circle at 1px 1px, #dcdcd5 1px, transparent 0); background-size: 16px 16px; overflow: hidden; }
+.stage bezel-device { position: absolute; top: 58px; left: 64px; width: calc(100% - 128px); height: calc(100% - 100px); }
+.stage-tl { position: absolute; top: 14px; left: 16px; font: 11px/1 var(--mono); color: var(--muted); letter-spacing: .02em; display: flex; gap: 8px; align-items: center; z-index: 2; }
+.stage-tl b { color: var(--ink); font-weight: 600; }
+.dim { position: absolute; pointer-events: none; opacity: 0; z-index: 2; }
+.dim.on { opacity: 1; }
+.dim-x { height: 9px; border-left: 1px solid var(--redline); border-right: 1px solid var(--redline); }
+.dim-x::before { content: ""; position: absolute; left: 0; right: 0; top: 4px; border-top: 1px solid var(--redline); }
+.dim-y { width: 9px; border-top: 1px solid var(--redline); border-bottom: 1px solid var(--redline); }
+.dim-y::before { content: ""; position: absolute; top: 0; bottom: 0; left: 4px; border-left: 1px solid var(--redline); }
+.dim span { position: absolute; font: 600 10.5px/1 var(--mono); color: var(--redline); background: #fbfbfa; padding: 2px 5px; border: 1px solid var(--redline); border-radius: 4px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dim-x span { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.dim-y span { top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(90deg); }
+.readout { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--line-2); background: var(--surface); }
+.readout div { padding: 10px 14px; border-left: 1px solid var(--line); min-width: 0; }
+.readout div:first-child { border-left: 0; }
+.readout dt { font: 500 10.5px/1 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.readout dd { margin: 0; font: 500 13px/1.2 var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.readout dd .arrow { color: var(--muted); }
+.readout dd .hot { color: var(--redline); }
+.evt { display: flex; gap: 10px; align-items: center; padding: 8px 14px; border-top: 1px solid var(--line); background: var(--surface); font: 12px/1.3 var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; }
+.evt b { color: var(--ink); font-weight: 600; }
+.evt code { overflow: hidden; text-overflow: ellipsis; }
+.evt .flash { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); flex: none; transition: background .5s; }
+.evt .flash.hit { background: var(--redline); transition: none; }
+
+/* demo app slotted into frames (light DOM, so page CSS applies) */
+.demo-app { height: 100%; display: flex; flex-direction: column; background: #fff; color: #161a2b; font: 400 15px/1.35 var(--sans); }
+.demo-app header { position: relative; display: flex; align-items: center; justify-content: center; height: 48px; border-bottom: 1px solid #e8ebf2; flex: none; }
+.demo-app header b { font-size: 17px; font-weight: 650; }
+.demo-app header span { position: absolute; right: 16px; font-size: 13px; color: #3553e0; font-weight: 550; }
+.demo-app ul { list-style: none; margin: 0; padding: 4px 0; flex: 1; overflow: hidden; }
+.demo-app li { display: grid; grid-template-columns: 38px 1fr auto; gap: 12px; align-items: center; padding: 10px 16px; border-bottom: 1px solid #f0f2f7; }
+.demo-app li i { width: 38px; height: 38px; border-radius: 50%; background: var(--c); display: grid; place-items: center; color: #fff; font: normal 600 14px/1 var(--sans); }
+.demo-app li strong { display: block; font-weight: 600; font-size: 15px; }
+.demo-app li small { color: #6c7289; font-size: 13px; }
+.demo-app li time { font-size: 12px; color: #8a90a6; align-self: start; padding-top: 2px; }
+.demo-app nav { display: flex; justify-content: space-around; height: 56px; border-top: 1px solid #e8ebf2; background: #fbfcfe; flex: none; align-items: center; font-size: 11px; color: #8a90a6; }
+.demo-app nav span { display: grid; justify-items: center; gap: 3px; }
+.demo-app nav span::before { content: ""; width: 20px; height: 20px; border-radius: 6px; background: #cfd5e3; }
+.demo-app nav span.on { color: #3553e0; } .demo-app nav span.on::before { background: #3553e0; }
+
+/* ── sections ────────────────────────────────────── */
+section.band { padding: clamp(56px, 8vw, 104px) 0; border-top: 1px solid var(--line); }
+.sec-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 40px; align-items: end; margin-bottom: 32px; }
+.eyebrow { margin: 0 0 12px; font: 500 12px/1 var(--mono); color: var(--redline); letter-spacing: .02em; }
+h2 { font: 650 clamp(30px, 3.6vw, 46px)/1.02 var(--display); font-variation-settings: "wdth" 82, "opsz" 72; letter-spacing: -.03em; margin: 0; text-wrap: balance; }
+.sec-head p.sub { margin: 12px 0 0; color: var(--ink-2); max-width: 60ch; }
+.sub code, .note code, td code, .api code { font-size: .87em; }
+
+/* fails gallery */
+.fails { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.case { display: flex; flex-direction: column; border: 1px solid var(--line-2); border-radius: var(--r); background: var(--surface); overflow: hidden; min-width: 0; transition: border-color .25s; }
+.case-top { display: flex; align-items: center; gap: 8px; padding: 12px 12px 10px 14px; }
+.case-top h3 { margin: 0; font: 600 14px/1.2 var(--sans); letter-spacing: -.01em; }
+.badge { display: inline-flex; align-items: center; gap: 5px; font: 600 10.5px/1 var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--fail); }
+.badge::before { content: "✕"; font-size: 10px; }
+.case.fixed .badge { color: var(--ok); }
+.case.fixed .badge::before { content: "✓"; }
+.case-stage { position: relative; height: 330px; background: #f3f3f0; border-block: 1px solid var(--line); overflow: hidden; }
+.case.fixed .case-stage { background-color: #f7f7f5; background-image: radial-gradient(circle at 1px 1px, #dedfd8 1px, transparent 0); background-size: 12px 12px; }
+.case-stage > bezel-device, .case-stage > .raster { position: absolute; top: 18px; left: 14px; width: calc(100% - 28px); height: calc(100% - 36px); }
+.case-stage.loupe > bezel-device { top: 16px; left: 12px; width: calc(100% - 24px); height: auto; }
+.case-stage.loupe::after { content: ""; position: absolute; inset: auto 0 0; height: 64px; background: linear-gradient(transparent, #f3f3f0); pointer-events: none; }
+.case.fixed .case-stage.loupe::after { background: linear-gradient(transparent, #f7f7f5); }
+.raster { display: flex; align-items: center; justify-content: center; }
+.raster canvas { height: 100%; width: auto; image-rendering: auto; filter: drop-shadow(0 18px 20px rgba(0,0,0,.18)); }
+.case[data-id="blur"].fixed .raster, .case[data-id="blur"]:not(.fixed) bezel-device { display: none; }
+.case-note { margin: 0; padding: 10px 14px 0; font-size: 13px; line-height: 1.45; color: var(--ink-2); min-height: 66px; }
+.diff { margin: 10px 14px 0; padding: 7px 0; border-radius: 8px; background: var(--carbon); font: 11.5px/1.65 var(--mono); overflow: hidden; }
+.diff div { padding: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #7d8594; transition: background .2s, color .2s; }
+.diff .minus::before { content: "- "; } .diff .plus::before { content: "+ "; }
+.case:not(.fixed) .diff .minus { background: rgba(232,51,107,.16); color: #ffb8cb; }
+.case.fixed .diff .plus { background: rgba(62,207,142,.14); color: #9ff0c7; }
+.switch { margin: 12px 14px 14px; display: flex; align-items: center; gap: 10px; padding: 0; border: 0; background: none; cursor: pointer; font: 500 13px/1 var(--sans); color: var(--ink-2); text-align: left; }
+.switch .track { width: 34px; height: 20px; border-radius: 10px; background: #d9d9d2; position: relative; flex: none; transition: background .2s; }
+.switch .track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .2s; }
+.switch[aria-checked="true"] .track { background: var(--ink); }
+.switch[aria-checked="true"] .track::after { transform: translateX(14px); }
+.switch .lbl b { color: var(--ink); font-weight: 600; }
+.fix-all { gap: 10px; }
+
+/* install */
+.install { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr); gap: 40px; align-items: start; }
+.steps { display: grid; gap: 12px; }
+.cmd { display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px; height: 46px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--surface); font: 13px/1 var(--mono); min-width: 0; }
+.cmd code { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmd .dollar { color: var(--muted); }
+.cmd button { height: 30px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--line); background: var(--paper); font: 12px/1 var(--mono); cursor: pointer; }
+.cmd button:hover { border-color: var(--ink-2); }
+.note { font-size: 14px; color: var(--ink-2); margin: 6px 0 0; }
+.tabs-panel { border-radius: var(--r); background: var(--carbon); color: var(--c-text); overflow: hidden; border: 1px solid var(--carbon); min-width: 0; }
+.tablist { display: flex; align-items: center; gap: 2px; padding: 6px 8px 0; border-bottom: 1px solid var(--carbon-line); overflow-x: auto; scrollbar-width: none; }
+.tablist [role="tab"] { height: 38px; padding: 0 12px; border: 0; background: none; color: var(--c-dim); font: 500 13px/1 var(--mono); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tablist [role="tab"]:hover { color: var(--c-text); }
+.tablist [role="tab"][aria-selected="true"] { color: #fff; border-bottom-color: var(--redline); }
+.tablist .icon-btn { margin-left: auto; flex: none; }
+.snippet { margin: 0; padding: 20px 22px 24px; font: 13.5px/1.7 var(--mono); overflow-x: auto; white-space: pre; min-height: 250px; scrollbar-width: thin; scrollbar-color: #2a303b transparent; }
+.tab-foot { padding: 10px 22px; border-top: 1px solid var(--carbon-line); font: 12px/1.5 var(--mono); color: var(--c-dim); }
+.tab-foot code { color: var(--c-text); }
+
+/* devices */
+.filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.filter { height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--surface); font: 500 13px/1 var(--sans); cursor: pointer; display: inline-flex; gap: 7px; align-items: center; }
+.filter span { font: 11px/1 var(--mono); color: var(--muted); }
+.filter[aria-checked="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.filter[aria-checked="true"] span { color: #a9adb6; }
+.table-wrap { border: 1px solid var(--line-2); border-radius: var(--r); background: var(--surface); overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font: 500 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 12px 14px; border-bottom: 1px solid var(--line-2); background: #fbfbfa; white-space: nowrap; }
+td { padding: 0 14px; height: 42px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover td { background: #fbfbf9; }
+td.num { font: 13px/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-2); }
+td code { font: 12.5px/1 var(--mono); padding: 3px 6px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); }
+td .x { color: var(--muted); padding: 0 2px; }
+.sws { display: flex; gap: 4px; }
+.sws i { width: 13px; height: 13px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+.try { height: 28px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--line-2); background: var(--surface); font: 500 12px/1 var(--mono); cursor: pointer; }
+.try:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+td:last-child { text-align: right; width: 1%; }
+
+/* api */
+.api { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.api-card { border: 1px solid var(--line-2); border-radius: var(--r); background: var(--surface); padding: 20px 22px 22px; min-width: 0; }
+.api-card h3 { margin: 0 0 4px; font: 600 15px/1.3 var(--sans); display: flex; gap: 10px; align-items: baseline; }
+.api-card h3 code { font: 500 12px/1 var(--mono); color: var(--muted); }
+.api-card > p { margin: 0 0 14px; font-size: 14px; color: var(--ink-2); }
+.attr-list { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 7px 16px; margin: 0; font: 12.5px/1.45 var(--mono); }
+.attr-list dt { color: #3553e0; }
+.attr-list dd { margin: 0; color: var(--ink-2); }
+.attr-list dd em { font-style: normal; color: var(--muted); }
+.mini { margin: 0; padding: 14px 16px; border-radius: 10px; background: var(--carbon); color: var(--c-text); font: 12.5px/1.65 var(--mono); overflow-x: auto; white-space: pre; }
+.rule { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); font-size: 13.5px; border-top: 1px solid var(--line); }
+.rule > div { padding: 9px 0; border-bottom: 1px solid var(--line); }
+.rule > div:nth-child(odd) { color: var(--ink-2); padding-right: 12px; }
+.rule code { font: 12.5px/1 var(--mono); color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 5px; padding: 3px 6px; }
+.more { display: inline-flex; margin-top: 22px; gap: 8px; font: 500 14px/1 var(--sans); text-decoration: none; border-bottom: 1px solid var(--line-2); padding-bottom: 4px; }
+.more:hover { border-color: var(--ink); }
+
+footer { border-top: 1px solid var(--line); padding: 28px 0 40px; font-size: 13px; color: var(--muted); }
+footer .wrap { display: flex; gap: 20px; flex-wrap: wrap; justify-content: space-between; }
+footer a { color: var(--ink-2); }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; background: var(--ink); color: #fff; font: 500 13px/1 var(--mono); padding: 11px 14px; border-radius: 9px; pointer-events: none; transition: opacity .18s, transform .18s; z-index: 40; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .dim { transition: opacity .18s; }
+  .chip, .filter, .try { transition: background .12s, color .12s, border-color .12s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+  html { scroll-behavior: auto; }
+}
+
+/* ── responsive ──────────────────────────────────── */
+@media (max-width: 1240px) {
+  .fails { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1080px) {
+  .bench { grid-template-columns: minmax(0, 1fr); }
+  .stage-pane { border-left: 0; border-bottom: 1px solid var(--line-2); order: -1; }
+  .stage { min-height: 500px; }
+  .hero-head { grid-template-columns: minmax(0, 1fr); }
+  .install { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 820px) {
+  .nav nav { display: none; }
+  .fails { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 calc(-1 * var(--gutter)); padding: 0 var(--gutter) 8px; scroll-padding: 0 var(--gutter); scrollbar-width: none; }
+  .case { flex: 0 0 min(300px, 80vw); scroll-snap-align: start; }
+  .api { grid-template-columns: minmax(0, 1fr); }
+  .sec-head { grid-template-columns: minmax(0, 1fr); }
+  .sec-head > .pill { justify-self: start; }
+  .col-dpr, .col-fin { display: none; }
+}
+@media (max-width: 560px) {
+  .nav .wrap { gap: 12px; }
+  .nav-r .npm { display: none; }
+  .stage { min-height: 440px; }
+  .stage bezel-device { top: 46px; left: 40px; width: calc(100% - 80px); height: calc(100% - 78px); }
+  .readout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .readout div:nth-child(3) { border-left: 0; }
+  .readout div:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .pane-bar .hint { display: none; }
+  .pane-bar .file { margin-right: auto; }
+  .ed { font-size: 13px; line-height: 21px; }
+  .gutter { padding-left: 12px; padding-right: 8px; }
+  .chip-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .chip-row > .k { line-height: 1.4; }
+  .chips { gap: 12px; }
+  .col-id { display: none; }
+  td, th { padding-left: 10px; padding-right: 10px; }
+  .evt { display: none; }
+  .meta span:last-child { display: none; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#playground">Skip to the playground</a>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="bezelkit home"><span class="glyph" aria-hidden="true"></span>bezelkit</a>
+    <nav aria-label="Sections">
+      <a href="#why">Why</a>
+      <a href="#install">Install</a>
+      <a href="#devices">Devices</a>
+      <a href="#api">API</a>
+    </nav>
+    <div class="nav-r">
+      <button class="pill npm" type="button" data-copy="npm i bezelkit" aria-label="Copy install command: npm i bezelkit"><span class="dollar">$</span>npm i bezelkit
+        <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="5" y="5" width="8.5" height="8.5" rx="1.8"/><path d="M11 5V3.8A1.8 1.8 0 0 0 9.2 2H3.8A1.8 1.8 0 0 0 2 3.8v5.4A1.8 1.8 0 0 0 3.8 11H5"/></svg></button>
+      <a class="pill dark" href="https://github.com/knileshh/bezelkit">GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-head">
+        <div>
+          <p class="meta"><span><b>v0.1</b> MIT</span><span><b>0</b> dependencies</span><span><b id="devCount">26</b> devices</span><span>web component</span></p>
+          <h1>Device frames that <span class="fit"><i></i>fit<i></i></span> your screenshots.</h1>
+        </div>
+        <div>
+          <p class="lede">One <code>&lt;bezel-device&gt;</code> tag draws the frame in CSS, at the device's real viewport, and fits your image without stretching it, cropping it or hiding it under the notch.</p>
+          <div class="hero-cta">
+            <a class="pill dark" href="#install">Install</a>
+            <a class="pill" href="#why">See what it fixes</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="bench" id="playground">
+        <div class="ed-pane">
+          <div class="pane-bar">
+            <span class="file">playground.html</span>
+            <span class="hint" id="edHint">Edit the tag, or press <kbd>/</kbd></span>
+            <button class="icon-btn" type="button" id="resetBtn" aria-label="Reset the code">Reset</button>
+            <button class="icon-btn" type="button" id="copyCode" aria-label="Copy the code">Copy</button>
+          </div>
+          <div class="ed">
+            <div class="gutter" id="gutter" aria-hidden="true">1</div>
+            <div class="ed-scroll">
+              <div class="ed-inner">
+                <pre aria-hidden="true"><code id="hl"></code></pre>
+                <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off"
+                  aria-label="bezel-device markup. Edit attributes to update the preview. Press Escape, then Tab, to leave the editor." aria-describedby="lint"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="lint" id="lint" role="status" aria-live="polite"><span class="dot"></span><span id="lintText">Parsing…</span></div>
+          <div class="chips" id="chips" aria-label="Attribute shortcuts"></div>
+        </div>
+
+        <div class="stage-pane">
+          <div class="stage" id="stage">
+            <div class="stage-tl" aria-hidden="true"><span>preview</span><b id="stageName">iPhone 17 Pro</b></div>
+            <bezel-device id="live" alt="A sample habit-tracker app inside the selected device frame"></bezel-device>
+            <div class="dim dim-x" id="dimX" aria-hidden="true"><span></span></div>
+            <div class="dim dim-y" id="dimY" aria-hidden="true"><span></span></div>
+          </div>
+          <dl class="readout" aria-label="Live measurements">
+            <div><dt>Viewport</dt><dd id="roView">402 × 874</dd></div>
+            <div><dt>Media</dt><dd id="roMedia">—</dd></div>
+            <div><dt>Fit</dt><dd id="roFit">—</dd></div>
+            <div><dt>Ratio Δ</dt><dd id="roDelta">—</dd></div>
+          </dl>
+          <div class="evt" aria-hidden="true"><span class="flash" id="evtFlash"></span><b>bezel-fit</b><code id="evtBody">waiting for media…</code></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="why" aria-labelledby="whyTitle">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="eyebrow">// the problem</p>
+          <h2 id="whyTitle">Five ways mockups break your screenshots</h2>
+          <p class="sub">These come up again and again in issue trackers for mockup kits. Each card starts with the typical result. Turn on <b>bezelkit</b> to render the same content with one attribute changed.</p>
+        </div>
+        <button class="pill fix-all" type="button" id="fixAll" aria-pressed="false">Fix all five</button>
+      </div>
+      <div class="fails" id="fails"></div>
+    </div>
+  </section>
+
+  <section class="band" id="install" aria-labelledby="installTitle">
+    <div class="wrap install">
+      <div>
+        <p class="eyebrow">// install</p>
+        <h2 id="installTitle">Works wherever HTML does</h2>
+        <p class="sub" style="color:var(--ink-2);margin:12px 0 24px;max-width:44ch">It's a standard custom element, so frameworks just render a tag. You don't need a wrapper, a provider or a build plugin.</p>
+        <div class="steps">
+          <div class="cmd"><span class="dollar" aria-hidden="true">$</span><code>npm i bezelkit</code><button type="button" data-copy="npm i bezelkit" aria-label="Copy npm command">Copy</button></div>
+          <div class="cmd"><code>&lt;script type="module" src="https://cdn.jsdelivr.net/npm/bezelkit@0/dist/bezelkit.js"&gt;&lt;/script&gt;</code><button type="button" data-copy='&lt;script type="module" src="https://cdn.jsdelivr.net/npm/bezelkit@0/dist/bezelkit.js"&gt;&lt;/script&gt;' aria-label="Copy CDN script tag">Copy</button></div>
+          <p class="note">One ES module with no runtime dependencies. It also works in Markdown and MDX docs sites, and in Webflow or Framer embeds.</p>
+        </div>
+      </div>
+      <div class="tabs-panel">
+        <div class="tablist" role="tablist" aria-label="Framework" id="tablist"></div>
+        <pre class="snippet" id="snippet" role="tabpanel" tabindex="0"></pre>
+        <div class="tab-foot" id="tabFoot"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="devices" aria-labelledby="devTitle">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="eyebrow">// devices</p>
+          <h2 id="devTitle"><span id="devCount2">26</span> frames, real CSS viewports</h2>
+          <p class="sub">Screen sizes come from published viewport tables, so a 3× capture maps 1:1 and embedded sites hit their real breakpoints. Use <b>Try</b> to load any frame into the playground.</p>
+        </div>
+      </div>
+      <div class="filters" role="radiogroup" aria-label="Filter devices by kind" id="filters"></div>
+      <div class="table-wrap">
+        <table>
+          <caption class="sr">Supported devices</caption>
+          <thead><tr><th scope="col">Device</th><th scope="col" class="col-id">device=</th><th scope="col">Viewport</th><th scope="col" class="col-dpr">DPR</th><th scope="col" class="col-fin">Finishes</th><th scope="col"><span class="sr">Action</span></th></tr></thead>
+          <tbody id="devRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="api" aria-labelledby="apiTitle">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="eyebrow">// api</p>
+          <h2 id="apiTitle">A small API</h2>
+          <p class="sub">Every attribute is also a property (<code>el.safeArea = 'pad'</code>). You also get one event, three exports and some <code>::part()</code> hooks.</p>
+        </div>
+      </div>
+      <div class="api">
+        <article class="api-card">
+          <h3>Attributes <code>&lt;bezel-device&gt;</code></h3>
+          <p>Defaults are shown first. Leave an attribute out and you get the default.</p>
+          <dl class="attr-list">
+            <dt>device</dt><dd>id or alias <em>(iphone, pixel, ipad, macbook…)</em></dd>
+            <dt>src</dt><dd>image · video · URL <em>(no src slots your HTML)</em></dd>
+            <dt>fit</dt><dd>auto · cover · top · contain · scroll · fill · none</dd>
+            <dt>color</dt><dd>finish name or any CSS colour</dd>
+            <dt>orientation</dt><dd>portrait · landscape</dd>
+            <dt>chrome</dt><dd>auto · on · off <em>(synthetic status bar)</em></dd>
+            <dt>safe-area</dt><dd>auto · pad · none</dd>
+            <dt>side</dt><dd>front · back · both <em>(animated flip)</em></dd>
+            <dt>theme · glare · shadow</dt><dd>light · dark · boolean · none</dd>
+            <dt>url · viewport</dt><dd>browser frames: <em>acme.dev · 1440x900</em></dd>
+          </dl>
+        </article>
+        <article class="api-card">
+          <h3>How <code>fit="auto"</code> decides</h3>
+          <p>It compares the image's aspect ratio with the screen's, then picks a mode.</p>
+          <div class="rule">
+            <div>Within 4% of the screen</div><div><code>cover</code> crops a few px</div>
+            <div>Much taller (full-page capture)</div><div><code>scroll</code> inside the screen</div>
+            <div>Slightly taller</div><div><code>top</code> keeps the header</div>
+            <div>Wider</div><div><code>contain</code> letterboxes in edge colours</div>
+          </div>
+        </article>
+        <article class="api-card">
+          <h3>Event <code>bezel-fit</code></h3>
+          <p>Fires once media loads. Use it to catch screenshots taken on the wrong device.</p>
+          <pre class="mini" data-hl>el.addEventListener('bezel-fit', (e) => {
+  const { fit, mismatch } = e.detail;
+  if (Math.abs(mismatch - 1) > 0.04) {
+    console.warn(`Screenshot shape is off; using ${fit}`);
+  }
+});</pre>
+        </article>
+        <article class="api-card">
+          <h3>Exports <code>listDevices · getDevice · defineDevice</code></h3>
+          <p>Read the registry or add your own hardware. The renderer needs no changes.</p>
+          <pre class="mini" data-hl id="exportsCode"></pre>
+        </article>
+      </div>
+      <a class="more" href="https://github.com/knileshh/bezelkit#attributes">Read the full reference on GitHub <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>bezelkit is MIT licensed. <a href="https://github.com/knileshh/bezelkit">Source</a> · <a href="https://github.com/knileshh/bezelkit/issues">Issues</a></span>
+    <span>Device names are trademarks of their owners. The frames are original CSS drawings, not traced artwork, and no brand logos are drawn.</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { listDevices, getDevice } from '../../src/bezel.js';
+
+const $ = (s, r = document) => r.querySelector(s);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const h = (tag, props = {}, ...kids) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'text') el.textContent = v;
+    else if (k === 'style') el.style.cssText = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) if (kid != null) el.append(kid);
+  return el;
+};
+
+// ─── sample screenshots, drawn on canvas (no binary assets) ─────────────────
+const APP = { bg: '#eef1f7', card: '#ffffff', ink: '#161a2b', muted: '#6c7289', accent: '#3553e0', chip: '#e1e6f3', line: '#dee3ee', tab: '#fbfcfe' };
+const FONT = 'Geist, system-ui, -apple-system, "Segoe UI", sans-serif';
+const cache = new Map();
+
+function rr(g, x, y, w, hh, r, fill) { g.beginPath(); g.roundRect(x, y, w, hh, r); g.fillStyle = fill; g.fill(); }
+function txt(g, s, x, y, size, color, weight = 400, align = 'left') { g.font = `${weight} ${size}px ${FONT}`; g.fillStyle = color; g.textAlign = align; g.fillText(s, x, y); g.textAlign = 'left'; }
+
+/** Returns { url, canvas } for a w×h CSS-px screenshot. status: 'ios' | 'alt' */
+function shot(w, hh, { status = 'ios', long = false } = {}) {
+  w = Math.round(w); hh = Math.round(hh);
+  const key = `${w}x${hh}:${status}:${long}`;
+  if (cache.has(key)) return cache.get(key);
+  const scale = w * hh > 1_400_000 ? 1 : 2;
+  const c = document.createElement('canvas');
+  c.width = w * scale; c.height = hh * scale;
+  const g = c.getContext('2d');
+  g.scale(scale, scale);
+  const ratio = w / hh;
+  if (w < 260 && ratio > 0.7 && ratio < 0.95) drawWatch(g, w, hh);
+  else if (ratio >= 1.15 || (long && w >= 900)) drawDesktop(g, w, hh);
+  else drawPhone(g, w, hh, { tablet: w >= 600, status });
+  const out = { url: c.toDataURL('image/webp', 0.92), canvas: c };
+  cache.set(key, out);
+  return out;
+}
+
+function drawPhone(g, w, hh, { tablet, status }) {
+  const u = tablet ? Math.min(w / 640, 1.4) : w / 402;
+  g.fillStyle = APP.bg; g.fillRect(0, 0, w, hh);
+  // Status bar baked into the capture, like any real screenshot.
+  if (status === 'alt') {
+    txt(g, '10:24', 22 * u, 27 * u, 14 * u, APP.ink, 600);
+    [0, 1, 2, 3].forEach((i) => rr(g, w - 92 * u + i * 6 * u, (22 - i * 3) * u, 4 * u, (6 + i * 3) * u, 1 * u, APP.ink));
+    txt(g, '87%', w - 22 * u, 27 * u, 13 * u, APP.ink, 600, 'right');
+  } else {
+    txt(g, '9:41', 44 * u, 38 * u, 17 * u, APP.ink, 600, 'center');
+    [0, 1, 2, 3].forEach((i) => rr(g, w - 104 * u + i * 5 * u, (32 - i * 2.5) * u, 3.4 * u, (3 + i * 2.5) * u, 1 * u, APP.ink));
+    g.lineWidth = 1.2 * u; g.strokeStyle = APP.ink + '66'; g.beginPath(); g.roundRect(w - 62 * u, 26.5 * u, 25 * u, 12 * u, 3.8 * u); g.stroke();
+    rr(g, w - 60.5 * u, 28 * u, 22 * u, 9 * u, 2.5 * u, APP.ink);
+    rr(g, w - 36 * u, 30.5 * u, 1.8 * u, 4 * u, 1 * u, APP.ink + '66');
+  }
+  const pad = 20 * u;
+  const top = 58 * u;
+  txt(g, 'Tuesday, 14 October', pad, top + 34 * u, 13 * u, APP.muted, 500);
+  txt(g, 'Habits', pad, top + 72 * u, 36 * u, APP.ink, 700);
+  rr(g, w - pad - 38 * u, top + 42 * u, 38 * u, 38 * u, 19 * u, APP.accent);
+  txt(g, '+', w - pad - 19 * u, top + 70 * u, 26 * u, '#fff', 500, 'center');
+  // week strip
+  const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const dw = (w - pad * 2) / 7;
+  days.forEach((d, i) => {
+    const x = pad + dw * i + dw / 2;
+    if (i === 1) rr(g, x - 17 * u, top + 92 * u, 34 * u, 52 * u, 12 * u, APP.ink);
+    txt(g, d, x, top + 112 * u, 11 * u, i === 1 ? '#fff' : APP.muted, 600, 'center');
+    txt(g, String(13 + i), x, top + 134 * u, 15 * u, i === 1 ? '#fff' : APP.ink, 600, 'center');
+  });
+  const items = [['Morning run', '5.2 km · 28 min', '#ff7a45', 1], ['Read 20 pages', '12 of 20', '#3553e0', 0.6], ['Drink water', '6 of 8 glasses', '#18a0c8', 0.75], ['Meditate', '10 min', '#8a5cf6', 1], ['No phone after 10', 'Streak 12 days', '#16a34a', 0.4], ['Stretch', '2 of 3 sets', '#e0457b', 0.66], ['Journal', 'Not started', '#f59e0b', 0], ['Walk the dog', '2 of 2', '#0ea5a4', 1]];
+  let y = top + 164 * u, i = 0;
+  const tabH = 84 * u;
+  while (y + 66 * u < hh - tabH - 8 * u) {
+    const [name, sub, col, p] = items[i % items.length];
+    rr(g, pad, y, w - pad * 2, 62 * u, 14 * u, APP.card);
+    rr(g, pad + 12 * u, y + 13 * u, 36 * u, 36 * u, 10 * u, col + '22');
+    rr(g, pad + 23 * u, y + 24 * u, 14 * u, 14 * u, 4 * u, col);
+    txt(g, name, pad + 60 * u, y + 28 * u, 15 * u, APP.ink, 600);
+    txt(g, sub, pad + 60 * u, y + 47 * u, 12.5 * u, APP.muted, 400);
+    const cx = w - pad - 30 * u, cy = y + 31 * u;
+    g.lineWidth = 4 * u; g.lineCap = 'round';
+    g.strokeStyle = APP.chip; g.beginPath(); g.arc(cx, cy, 13 * u, 0, Math.PI * 2); g.stroke();
+    if (p > 0) { g.strokeStyle = col; g.beginPath(); g.arc(cx, cy, 13 * u, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p); g.stroke(); }
+    y += 72 * u; i++;
+  }
+  // Tab bar pinned to the bottom edge: this is what cropping eats first.
+  g.fillStyle = APP.tab; g.fillRect(0, hh - tabH, w, tabH);
+  g.fillStyle = APP.line; g.fillRect(0, hh - tabH, w, 1);
+  ['Today', 'Habits', 'Stats', 'Friends', 'You'].forEach((t, k) => {
+    const cx = (w / 5) * (k + 0.5);
+    rr(g, cx - 11 * u, hh - tabH + 12 * u, 22 * u, 22 * u, 7 * u, k === 1 ? APP.accent : '#c9d0de');
+    txt(g, t, cx, hh - tabH + 50 * u, 11 * u, k === 1 ? APP.accent : APP.muted, 550, 'center');
+  });
+  rr(g, w / 2 - 67 * u, hh - 12 * u, 134 * u, 5 * u, 3 * u, APP.ink);
+}
+
+function drawDesktop(g, w, hh) {
+  const u = w / 1440;
+  g.fillStyle = APP.bg; g.fillRect(0, 0, w, hh);
+  g.fillStyle = APP.card; g.fillRect(0, 0, 248 * u, hh);
+  g.fillStyle = APP.line; g.fillRect(248 * u, 0, 1, hh);
+  rr(g, 28 * u, 36 * u, 28 * u, 28 * u, 8 * u, APP.accent);
+  txt(g, 'Habits', 68 * u, 57 * u, 21 * u, APP.ink, 700);
+  ['Today', 'All habits', 'Stats', 'Friends', 'Reminders', 'Settings'].forEach((t, k) => {
+    if (k === 2) rr(g, 16 * u, (98 + k * 44) * u, 216 * u, 36 * u, 9 * u, APP.chip);
+    txt(g, t, 32 * u, (122 + k * 44) * u, 15 * u, k === 2 ? APP.ink : APP.muted, k === 2 ? 600 : 450);
+  });
+  const x0 = 292 * u, right = w - 44 * u;
+  txt(g, 'October stats', x0, 84 * u, 38 * u, APP.ink, 700);
+  txt(g, 'You kept 82% of your habits this month, up from 71%.', x0, 116 * u, 16 * u, APP.muted);
+  const cw = (right - x0 - 3 * 20 * u) / 4;
+  [['Completion', '82%'], ['Best streak', '19 d'], ['Active habits', '8'], ['Minutes', '1,240']].forEach(([k, v], i) => {
+    const x = x0 + i * (cw + 20 * u);
+    rr(g, x, 146 * u, cw, 108 * u, 14 * u, APP.card);
+    txt(g, k, x + 20 * u, 180 * u, 14 * u, APP.muted, 500);
+    txt(g, v, x + 20 * u, 228 * u, 34 * u, APP.ink, 700);
+  });
+  const chartH = Math.max(hh - 290 * u - 44 * u, 140 * u);
+  rr(g, x0, 280 * u, right - x0, chartH, 14 * u, APP.card);
+  txt(g, 'Daily completion', x0 + 24 * u, 318 * u, 16 * u, APP.ink, 600);
+  const bars = Array.from({ length: 24 }, (_, i) => 0.35 + 0.6 * Math.abs(Math.sin(i * 1.7 + 0.4)));
+  const bw = (right - x0 - 60 * u) / bars.length;
+  bars.forEach((b, i) => {
+    const bh = (chartH - 90 * u) * b;
+    rr(g, x0 + 30 * u + i * bw + bw * 0.18, 280 * u + chartH - 26 * u - bh, bw * 0.64, bh, 6 * u, i === 17 ? APP.accent : '#c7d1f5');
+  });
+}
+
+function drawWatch(g, w, hh) {
+  g.fillStyle = '#000'; g.fillRect(0, 0, w, hh);
+  const cx = w / 2, cy = hh / 2 + 12, k = w / 205;
+  [['#ff4f6d', 0.78], ['#b7f34a', 0.6], ['#39d0ff', 0.9]].forEach(([col, p], i) => {
+    const r = (70 - i * 19) * k;
+    g.lineWidth = 15 * k; g.lineCap = 'round';
+    g.strokeStyle = col + '33'; g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.stroke();
+    g.strokeStyle = col; g.beginPath(); g.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p); g.stroke();
+  });
+  txt(g, '10:09', w - 18 * k, 32 * k, 17 * k, '#fff', 600, 'right');
+}
+
+/** Viewport of a device in the given orientation, in CSS px. */
+function viewport(d, orientation) {
+  let { w, h: hh } = d.screen;
+  const rot = orientation === 'landscape' && ['phone', 'tablet', 'foldable'].includes(d.kind);
+  if (rot) [w, hh] = [hh, w];
+  return { w, h: hh };
+}
+const SAMPLES = {
+  'screenshot.png': (d, o) => { const v = viewport(d, o); return shot(v.w, v.h).url; },
+  'long-page.png': (d, o) => { const v = viewport(d, o); return shot(v.w, v.h * 2.6, { long: true }).url; },
+  'old-16x9.png': (d, o) => { const v = viewport(d, o); return v.w >= v.h ? shot(1024, 768).url : shot(375, 667).url; },
+};
+
+// ─── live HTML app (built with DOM APIs, slotted into frames) ───────────────
+function demoApp() {
+  const rows = [['AK', '#3553e0', 'Ada Kowalski', 'Deploy preview is ready', '9:32'], ['MR', '#e0457b', 'Mo Rahimi', 'Can you check the tab bar?', '9:10'], ['JL', '#0ea5a4', 'Jun Li', 'Shipped 0.1 🎉', 'Mon'], ['SN', '#f59e0b', 'Sam Novak', 'Screenshots for the store', 'Mon'], ['PT', '#8a5cf6', 'Priya Tan', 'Notes from the sync', 'Sun'], ['EB', '#16a34a', 'Eli Brandt', 'Invoice #2291', 'Sat'], ['RC', '#ff7a45', 'Rui Costa', 'Weekend plans?', 'Fri']];
+  return h('div', { class: 'demo-app' },
+    h('header', {}, h('b', { text: 'Inbox' }), h('span', { text: 'Edit' })),
+    h('ul', {}, rows.map(([ini, c, n, s, t]) => h('li', {}, h('i', { style: `--c:${c}`, text: ini }), h('div', {}, h('strong', { text: n }), h('small', { text: s })), h('time', { text: t })))),
+    h('nav', {}, ['Inbox', 'Search', 'Calls', 'You'].map((t, i) => h('span', { class: i === 0 ? 'on' : null, text: t }))),
+  );
+}
+
+// ─── editor: tokenizer, highlighter, parser ─────────────────────────────────
+const code = $('#code'), hl = $('#hl'), gutter = $('#gutter'), live = $('#live');
+const ALLOWED = new Set(customElements.get('bezel-device')?.observedAttributes ?? ['device', 'color', 'orientation', 'src', 'type', 'fit', 'chrome', 'safe-area', 'theme', 'url', 'viewport', 'glare', 'shadow', 'alt', 'side', 'stack', 'logo']);
+const ENUMS = {
+  fit: ['auto', 'cover', 'top', 'contain', 'scroll', 'fill', 'none'],
+  orientation: ['portrait', 'landscape'],
+  chrome: ['auto', 'on', 'off'],
+  'safe-area': ['auto', 'pad', 'none'],
+  theme: ['light', 'dark'],
+  side: ['front', 'back', 'both'],
+  stack: ['left', 'right'],
+  logo: ['none', 'dot'],
+  shadow: ['none'],
+  type: ['image', 'video', 'iframe'],
+};
+const DEFAULT_CODE = `<bezel-device
+  device="iphone-17-pro"
+  color="deep-blue"
+  src="screenshot.png"
+  fit="auto"
+></bezel-device>`;
+
+function tokenize(src) {
+  const toks = [], tags = [];
+  const n = src.length;
+  let i = 0;
+  const push = (t, s, e, extra) => { toks.push({ t, s, e, ...extra }); return toks.length - 1; };
+  while (i < n) {
+    if (src.startsWith('<!--', i)) { const e = src.indexOf('-->', i + 4); const end = e < 0 ? n : e + 3; push('com', i, end); i = end; continue; }
+    if (src[i] === '<' && /[a-zA-Z/]/.test(src[i + 1] ?? '')) {
+      const close = src[i + 1] === '/';
+      const tag = { start: i, close, attrs: [], endTok: null };
+      push('punc', i, i + (close ? 2 : 1));
+      i += close ? 2 : 1;
+      const m = /^[a-zA-Z][\w-]*/.exec(src.slice(i, i + 64));
+      tag.name = m ? m[0].toLowerCase() : '';
+      if (m) { push('tag', i, i + m[0].length); i += m[0].length; }
+      while (i < n) {
+        const c = src[i];
+        if (/\s/.test(c)) { let k = i; while (k < n && /\s/.test(src[k])) k++; push('ws', i, k); i = k; continue; }
+        if (c === '>') { tag.endTok = push('punc', i, i + 1); i++; break; }
+        if (c === '/' && src[i + 1] === '>') { tag.endTok = push('punc', i, i + 2); i += 2; break; }
+        if (c === '<') break;
+        let k = i;
+        while (k < n && !/[\s=>"'<]/.test(src[k]) && !(src[k] === '/' && src[k + 1] === '>')) k++;
+        if (k === i) { push('text', i, i + 1); i++; continue; }
+        const attr = { name: src.slice(i, k).toLowerCase(), nameTok: push('attr', i, k), value: null, valTok: null };
+        i = k;
+        let p = i; while (p < n && /[ \t]/.test(src[p])) p++;
+        if (src[p] === '=') {
+          if (p > i) push('ws', i, p);
+          push('eq', p, p + 1); i = p + 1;
+          let q = i; while (q < n && /[ \t]/.test(src[q])) q++;
+          if (q > i) { push('ws', i, q); i = q; }
+          const qc = src[i];
+          if (qc === '"' || qc === "'") {
+            const e = src.indexOf(qc, i + 1);
+            const end = e < 0 ? n : e + 1;
+            attr.value = src.slice(i + 1, e < 0 ? n : e); attr.valTok = push('str', i, end); attr.unterminated = e < 0; i = end;
+          } else if (i < n && !/[\s>]/.test(qc)) {
+            let e = i; while (e < n && !/[\s>]/.test(src[e])) e++;
+            attr.value = src.slice(i, e); attr.valTok = push('str', i, e); i = e;
+          } else attr.value = '';
+        }
+        tag.attrs.push(attr);
+      }
+      tags.push(tag);
+      continue;
+    }
+    let k = i + 1; while (k < n && src[k] !== '<') k++;
+    push('text', i, k); i = k;
+  }
+  return { toks, tags };
+}
+
+function levenshtein(a, b) {
+  const dp = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = dp[0]; dp[0] = i;
+    for (let j = 1; j <= b.length; j++) { const t = dp[j]; dp[j] = Math.min(dp[j] + 1, dp[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = t; }
+  }
+  return dp[b.length];
+}
+const closest = (v, list) => list.map((x) => [x, levenshtein(v, x)]).sort((a, b) => a[1] - b[1])[0];
+
+const DEVICES = listDevices();
+const DEVICE_IDS = DEVICES.map((d) => d.id);
+const ALIASES = ['iphone', 'android', 'pixel', 'galaxy', 'ipad', 'macbook', 'imac', 'watch', 'browser'];
+
+function validate(attr, device) {
+  const { name, value } = attr;
+  if (!ALLOWED.has(name)) {
+    const near = closest(name, [...ALLOWED]);
+    return `${name} isn't a bezel-device attribute, so it's ignored.${near && near[1] <= 2 ? ` Did you mean ${near[0]}?` : ''}`;
+  }
+  if (attr.unterminated) return `The ${name} value is missing its closing quote.`;
+  if (name === 'device') {
+    if (getDevice(value)) return null;
+    const near = closest(value, [...DEVICE_IDS, ...ALIASES]);
+    return `No device "${value}".${near && near[1] <= 4 ? ` Did you mean ${near[0]}?` : ''}`;
+  }
+  if (name === 'color' && value) {
+    const hit = device.colors.some(([n]) => slug(n) === slug(value)) || CSS.supports('color', value);
+    return hit ? null : `"${value}" isn't a ${device.name} finish or a CSS colour. Using the default.`;
+  }
+  if (ENUMS[name] && !ENUMS[name].includes(value ?? '')) return `${name} takes ${ENUMS[name].join(' | ')}.`;
+  return null;
+}
+
+let lastDevice = 'iphone-17-pro';
+let state = { attrs: new Map(), tag: null, toks: [] };
+
+function update({ fromChip = false } = {}) {
+  const src = code.value;
+  const { toks, tags } = tokenize(src);
+  const tag = tags.find((t) => !t.close && t.name === 'bezel-device') ?? null;
+  const issues = [];
+  const bad = new Set();
+  const attrs = new Map();
+  if (tag) {
+    const devAttr = tag.attrs.find((a) => a.name === 'device');
+    const device = getDevice(devAttr?.value || 'iphone-17-pro') ?? getDevice(lastDevice);
+    for (const a of tag.attrs) {
+      const problem = validate(a, device);
+      if (problem) { issues.push(problem); bad.add(a.valTok ?? a.nameTok); if (!ALLOWED.has(a.name)) bad.add(a.nameTok); continue; }
+      attrs.set(a.name, a.value ?? '');
+    }
+    if (tag.endTok == null) issues.push('The tag is still open. Close it with >.');
+  } else issues.push('No <bezel-device> tag found. Press Reset to restore it.');
+
+  // highlight, built from text nodes only
+  const frag = document.createDocumentFragment();
+  for (const [idx, t] of toks.entries()) {
+    const s = src.slice(t.s, t.e);
+    if (t.t === 'ws' || t.t === 'text') { frag.append(s); continue; }
+    const span = document.createElement('span');
+    span.className = `t-${t.t}${bad.has(idx) ? ' bad' : ''}`;
+    span.textContent = s;
+    frag.append(span);
+  }
+  frag.append('\n');
+  hl.replaceChildren(frag);
+  const lines = src.split('\n').length;
+  gutter.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+
+  state = { attrs, tag, toks };
+  if (tag) apply(attrs);
+  setLint(issues, attrs);
+  syncChips();
+}
+
+function apply(attrs) {
+  if (attrs.has('device')) lastDevice = getDevice(attrs.get('device')).id;
+  const d = getDevice(lastDevice);
+  const next = new Map(attrs);
+  next.set('device', lastDevice);
+  const srcVal = next.get('src');
+  if (srcVal != null) {
+    const sample = SAMPLES[srcVal.trim()];
+    next.set('src', sample ? sample(d, next.get('orientation')) : srcVal);
+  }
+  for (const name of ALLOWED) {
+    if (name === 'alt') continue;
+    if (next.has(name)) { if (live.getAttribute(name) !== next.get(name)) live.setAttribute(name, next.get(name)); }
+    else if (live.hasAttribute(name)) live.removeAttribute(name);
+  }
+  if (!next.has('src')) setReadoutHTML();
+  $('#stageName').textContent = d.name;
+  scheduleDims();
+}
+
+function setLint(issues, attrs) {
+  const box = $('#lint');
+  box.classList.toggle('warn', issues.length > 0);
+  const t = $('#lintText');
+  if (issues.length) {
+    t.textContent = issues[0] + (issues.length > 1 ? ` (+${issues.length - 1} more)` : '');
+  } else {
+    t.replaceChildren(h('code', { text: String(attrs.size) }), ` attribute${attrs.size === 1 ? '' : 's'} set via setAttribute(), never as HTML.`);
+  }
+}
+
+// Rewrite one attribute in the source text. value: string | true (boolean) | null (remove)
+function editAttr(name, value) {
+  const text = code.value;
+  const { tag, toks } = state;
+  if (!tag) return;
+  const fmt = value === true ? name : `${name}="${String(value).replace(/"/g, '&quot;')}"`;
+  const a = tag.attrs.find((x) => x.name === name);
+  let next, caret;
+  if (a) {
+    const s = toks[a.nameTok].s, e = a.valTok != null ? toks[a.valTok].e : toks[a.nameTok].e;
+    if (value === null) {
+      let s2 = s; while (s2 > 0 && /[ \t]/.test(text[s2 - 1])) s2--;
+      if (text[s2 - 1] === '\n') s2--;
+      next = text.slice(0, s2) + text.slice(e); caret = s2;
+    } else { next = text.slice(0, s) + fmt + text.slice(e); caret = s + fmt.length; }
+  } else {
+    if (value === null || tag.endTok == null) return;
+    const endS = toks[tag.endTok].s;
+    const lineStart = text.lastIndexOf('\n', endS - 1) + 1;
+    const multiline = text.slice(tag.start, endS).includes('\n');
+    if (multiline && /^\s*$/.test(text.slice(lineStart, endS))) {
+      next = text.slice(0, lineStart) + '  ' + fmt + '\n' + text.slice(lineStart); caret = lineStart + 2 + fmt.length;
+    } else {
+      let s = endS; while (s > 0 && text[s - 1] === ' ') s--;
+      next = text.slice(0, s) + ' ' + fmt + text.slice(endS); caret = s + 1 + fmt.length;
+    }
+  }
+  code.value = next;
+  code.setSelectionRange(caret, caret);
+  update({ fromChip: true });
+}
+
+code.value = DEFAULT_CODE;
+code.addEventListener('input', () => update());
+code.addEventListener('keydown', (e) => {
+  if (e.key === 'Tab' && !e.shiftKey && !code.dataset.release) {
+    e.preventDefault();
+    code.setRangeText('  ', code.selectionStart, code.selectionEnd, 'end');
+    update();
+  } else if (e.key === 'Escape') {
+    code.dataset.release = '1';
+    toast('Editor released. Press Tab to move on.');
+  }
+});
+code.addEventListener('blur', () => delete code.dataset.release);
+code.addEventListener('focus', () => { $('#edHint').replaceChildren('Press ', h('kbd', { text: 'Esc' }), ' then ', h('kbd', { text: 'Tab' }), ' to leave'); });
+code.addEventListener('blur', () => { $('#edHint').replaceChildren('Edit the tag, or press ', h('kbd', { text: '/' })); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === '/' && !e.metaKey && !e.ctrlKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName)) {
+    e.preventDefault(); code.focus({ preventScroll: false });
+    const rect = code.getBoundingClientRect();
+    if (rect.top < 60 || rect.bottom > innerHeight) $('#playground').scrollIntoView({ block: 'center', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  }
+});
+$('#resetBtn').addEventListener('click', () => { code.value = DEFAULT_CODE; update(); toast('Code reset'); });
+$('#copyCode').addEventListener('click', () => copy(code.value, 'Copied the tag'));
+
+// ─── chips ──────────────────────────────────────────────────────────────────
+const CHIP_DEVICES = ['iphone-17-pro', 'pixel-10-pro', 'galaxy-s25-ultra', 'ipad-pro-11', 'macbook-pro-14', 'apple-watch-ultra', 'browser-safari'].filter((id) => getDevice(id));
+const SHORT = { 'iphone-17-pro': 'iPhone 17 Pro', 'pixel-10-pro': 'Pixel 10 Pro', 'galaxy-s25-ultra': 'S25 Ultra', 'ipad-pro-11': 'iPad Pro 11″', 'macbook-pro-14': 'MacBook Pro', 'apple-watch-ultra': 'Watch Ultra', 'browser-safari': 'Browser' };
+const chipsEl = $('#chips');
+const groups = [];
+
+function radioGroup(name, label, options, { bool = false } = {}) {
+  const set = h('div', { class: 'chip-set', role: bool ? 'group' : 'radiogroup', 'aria-label': label });
+  const row = h('div', { class: `chip-row${bool ? ' bool' : ''}` }, h('span', { class: 'k', 'aria-hidden': 'true', text: name }), set);
+  const g = { name, set, bool, options, row };
+  g.render = (opts) => {
+    set.replaceChildren(...opts.map((o) => {
+      const b = h('button', { type: 'button', class: 'chip', role: bool ? null : 'radio', 'aria-pressed': bool ? 'false' : null, 'aria-checked': bool ? null : 'false', tabindex: '-1', 'data-v': o.value ?? '' },
+        o.swatch ? h('span', { class: 'sw', style: `background:${o.swatch}`, 'aria-hidden': 'true' }) : null, o.label);
+      b.addEventListener('click', () => {
+        if (bool) editAttr(o.attr ?? name, state.attrs.has(o.attr ?? name) && state.attrs.get(o.attr ?? name) === (o.match ?? '') ? null : (o.set ?? true));
+        else editAttr(name, o.value);
+      });
+      b._opt = o;
+      return b;
+    }), ...(g.extra ? [g.extra] : []));
+  };
+  set.addEventListener('keydown', (e) => {
+    const btns = [...set.querySelectorAll('.chip')];
+    const i = btns.indexOf(document.activeElement);
+    if (i < 0) return;
+    let j = null;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') j = (i + 1) % btns.length;
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') j = (i - 1 + btns.length) % btns.length;
+    else if (e.key === 'Home') j = 0; else if (e.key === 'End') j = btns.length - 1;
+    if (j == null) return;
+    e.preventDefault();
+    btns[j].focus();
+    if (!bool) btns[j].click();
+  });
+  g.render(options);
+  groups.push(g);
+  chipsEl.append(row);
+  return g;
+}
+
+const deviceSelect = h('select', { class: 'chip-select', 'aria-label': 'All devices' },
+  h('option', { value: '', text: `All ${DEVICES.length}…` }),
+  DEVICES.map((d) => h('option', { value: d.id, text: d.name })));
+deviceSelect.addEventListener('change', () => { if (deviceSelect.value) loadDevice(deviceSelect.value, false); });
+const gDevice = radioGroup('device', 'Device', CHIP_DEVICES.map((id) => ({ value: id, label: SHORT[id] ?? getDevice(id).name })));
+gDevice.extra = deviceSelect; gDevice.render(gDevice.options);
+const gColor = radioGroup('color', 'Finish', []);
+radioGroup('fit', 'Fit mode', ENUMS.fit.map((v) => ({ value: v, label: v })));
+radioGroup('src', 'Content', [{ value: 'screenshot.png', label: 'screenshot.png' }, { value: 'long-page.png', label: 'long-page.png' }, { value: 'old-16x9.png', label: 'old-16x9.png' }]);
+const gSrcNone = h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', text: 'none: live HTML', title: 'Remove src so the slotted HTML shows' });
+gSrcNone.addEventListener('click', () => editAttr('src', state.attrs.has('src') ? null : 'screenshot.png'));
+groups.find((g) => g.name === 'src').extra = gSrcNone; groups.find((g) => g.name === 'src').render(groups.find((g) => g.name === 'src').options);
+radioGroup('orientation', 'Orientation', ENUMS.orientation.map((v) => ({ value: v, label: v })));
+radioGroup('side', 'Side', ENUMS.side.map((v) => ({ value: v, label: v })));
+radioGroup('flags', 'Flags', [{ attr: 'glare', label: 'glare', match: '' }, { attr: 'theme', label: 'theme="dark"', set: 'dark', match: 'dark' }, { attr: 'shadow', label: 'shadow="none"', set: 'none', match: 'none' }], { bool: true });
+
+let colorFor = null;
+function syncChips() {
+  const d = getDevice(lastDevice);
+  if (colorFor !== d.id) {
+    colorFor = d.id;
+    gColor.render(d.colors.map(([n, c]) => ({ value: slug(n), label: slug(n), swatch: c })));
+  }
+  for (const g of groups) {
+    const btns = [...g.set.querySelectorAll('.chip')];
+    let anyChecked = false;
+    for (const b of btns) {
+      const o = b._opt;
+      if (!o) continue;
+      if (g.bool) {
+        const on = state.attrs.has(o.attr) && state.attrs.get(o.attr) === (o.match ?? '');
+        b.setAttribute('aria-pressed', String(on));
+        b.tabIndex = btns.indexOf(b) === 0 ? 0 : -1;
+        continue;
+      }
+      let cur = state.attrs.get(g.name);
+      if (cur == null) cur = { fit: 'auto', orientation: 'portrait', side: 'front', color: slug(d.colors[0][0]) }[g.name];
+      if (g.name === 'device') cur = lastDevice;
+      if (g.name === 'color' && cur) cur = slug(cur);
+      const on = cur === o.value;
+      anyChecked ||= on;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+    }
+    if (!g.bool && !anyChecked && btns[0]) btns[0].tabIndex = 0;
+  }
+  deviceSelect.value = CHIP_DEVICES.includes(lastDevice) ? '' : lastDevice;
+  gSrcNone.setAttribute('aria-pressed', String(!state.attrs.has('src')));
+}
+
+function loadDevice(id, scroll = true) {
+  const d = getDevice(id);
+  editAttr('device', id);
+  const written = (n) => state.tag?.attrs.some((a) => a.name === n);
+  if (written('color')) editAttr('color', null);
+  if (!['phone', 'tablet', 'foldable'].includes(d.kind) && written('orientation')) editAttr('orientation', null);
+  if (scroll) {
+    $('#playground').scrollIntoView({ block: 'start', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    toast(`Loaded ${d.name}`);
+  }
+}
+
+// ─── readout + dimension lines ──────────────────────────────────────────────
+const fmtN = (n) => Math.round(n).toLocaleString('en-US');
+function setReadoutHTML() {
+  $('#roMedia').textContent = 'live HTML';
+  $('#roFit').replaceChildren('slot', h('span', { class: 'arrow', text: ' · ' }), `chrome ${live.getAttribute('chrome') ?? 'auto'}`);
+  $('#roDelta').textContent = '—';
+  $('#evtBody').textContent = 'no media: your HTML is slotted in, padded to the safe area';
+}
+live.addEventListener('bezel-fit', (e) => {
+  const { requested, fit, media, mismatch } = e.detail;
+  $('#roMedia').textContent = `${fmtN(media.w)} × ${fmtN(media.h)}`;
+  $('#roFit').replaceChildren(...(requested === fit ? [fit] : [requested, h('span', { class: 'arrow', text: ' → ' }), h('b', { text: fit })]));
+  const delta = Math.abs(mismatch - 1) * 100;
+  $('#roDelta').replaceChildren(h('span', { class: delta > 4 ? 'hot' : '', text: `${delta.toFixed(1)}%` }));
+  $('#evtBody').textContent = `{ requested: "${requested}", fit: "${fit}", mismatch: ${mismatch.toFixed(3)} }`;
+  const f = $('#evtFlash'); f.classList.add('hit'); requestAnimationFrame(() => requestAnimationFrame(() => f.classList.remove('hit')));
+  scheduleDims();
+});
+live.addEventListener('bezel-flip', () => scheduleDims());
+
+let dimTimer = 0;
+function scheduleDims() {
+  cancelAnimationFrame(dimTimer);
+  dimTimer = requestAnimationFrame(() => requestAnimationFrame(drawDims));
+}
+function drawDims() {
+  const dx = $('#dimX'), dy = $('#dimY');
+  const d = getDevice(lastDevice);
+  const scr = live.shadowRoot?.querySelector('.screen');
+  const dev = live.shadowRoot?.querySelector('.device');
+  const side = live.getAttribute('side');
+  const vpAttr = /^(\d+)\s*[x×]\s*(\d+)$/i.exec(live.getAttribute('viewport') ?? '');
+  let { w, h: hh } = viewport(d, live.getAttribute('orientation'));
+  if (vpAttr && d.kind === 'browser') [w, hh] = [+vpAttr[1], +vpAttr[2]];
+  $('#roView').textContent = `${w} × ${hh}`;
+  if (!scr || !dev || side === 'back') { dx.classList.remove('on'); dy.classList.remove('on'); return; }
+  const st = $('#stage').getBoundingClientRect();
+  const s = scr.getBoundingClientRect(), b = dev.getBoundingClientRect();
+  if (!s.width) return;
+  Object.assign(dx.style, { left: `${s.left - st.left}px`, width: `${s.width}px`, top: `${b.top - st.top - 22}px` });
+  Object.assign(dy.style, { top: `${s.top - st.top}px`, height: `${s.height}px`, left: `${b.right - st.left + 13}px` });
+  dx.firstElementChild.textContent = `${w}`;
+  dy.firstElementChild.textContent = `${hh}`;
+  dx.classList.add('on'); dy.classList.add('on');
+}
+new ResizeObserver(scheduleDims).observe($('#stage'));
+
+// ─── fails gallery ──────────────────────────────────────────────────────────
+const P17 = getDevice('iphone-17-pro'), SE = getDevice('iphone-se');
+const shot17 = () => shot(P17.screen.w, P17.screen.h).url;
+const CASES = [
+  { id: 'squish', title: 'Squished', base: { device: 'iphone-17-pro', src: () => shot(375, 667).url, fit: 'fill' }, fix: { fit: 'auto' },
+    diff: ['fit="fill"', 'fit="auto"'],
+    note: ['A 16:9 capture forced to fill a 19.5:9 screen. Everything stretches.', 'fit="auto" letterboxes it and fills the bars with the image’s edge colours.'] },
+  { id: 'crop', title: 'Cropped tab bar', base: { device: 'iphone-se', src: shot17, fit: 'cover' }, fix: { device: 'iphone-17-pro', fit: null },
+    diff: ['device="iphone-se"', 'device="iphone-17-pro"'],
+    note: ['A 2017-era 16:9 frame, still common in kits, crops a modern capture.', 'A current frame at the real 402 × 874 viewport. A 3× capture maps 1:1.'] },
+  { id: 'notch', title: 'Island over header', loupe: true, slot: true, base: { device: 'iphone-17-pro', 'safe-area': 'none', chrome: 'off' }, fix: { 'safe-area': null, chrome: null },
+    diff: ['safe-area="none"', 'safe-area="auto"'],
+    note: ['Live HTML drawn edge to edge. The Dynamic Island sits on your title.', 'Padded to the real safe area. Your CSS also gets --bezel-safe-top.'] },
+  { id: 'status', title: 'Two status bars', loupe: true, base: { device: 'iphone-17-pro', src: () => shot(P17.screen.w, P17.screen.h, { status: 'alt' }).url, chrome: 'on' }, fix: { chrome: null },
+    diff: ['chrome="on"', 'chrome="auto"'],
+    note: ['The frame paints a second clock and battery over your screenshot’s.', 'chrome="auto" leaves screenshots alone. Only live HTML gets a bar.'] },
+  { id: 'blur', title: 'Blurry PNG frame', raster: true, base: { device: 'iphone-17-pro', src: shot17 }, fix: {},
+    diff: ['frame.png, scale: 2.6', '<bezel-device>'],
+    note: ['A fixed-size PNG frame scaled up to fit: soft edges, magic numbers.', 'A CSS frame sized by its container. Sharp at any zoom or DPR.'] },
+];
+
+function rasterFrame(srcCanvas) {
+  // Deliberately low-res, like a 1x PNG frame asset from a mockup pack.
+  const W = 62, H = 128, c = h('canvas', { width: W, height: H, role: 'img', 'aria-label': 'Low-resolution PNG device frame, scaled up' });
+  const g = c.getContext('2d');
+  rr(g, 0, 0, W, H, 10, '#353f55');
+  rr(g, 1.5, 1.5, W - 3, H - 3, 9, '#050506');
+  g.save(); g.beginPath(); g.roundRect(3.5, 3.5, W - 7, H - 7, 7); g.clip();
+  g.drawImage(srcCanvas, 3.5, 3.5, W - 7, H - 7); g.restore();
+  rr(g, W / 2 - 9, 5.5, 18, 5, 2.5, '#000');
+  return c;
+}
+
+const failsEl = $('#fails');
+const caseEls = [];
+for (const k of CASES) {
+  const dev = h('bezel-device', { alt: `${k.title}: example` });
+  const setAttrs = (obj) => { for (const [a, v] of Object.entries(obj)) { const val = typeof v === 'function' ? v() : v; val == null ? dev.removeAttribute(a) : dev.setAttribute(a, val); } };
+  setAttrs(k.base);
+  if (k.slot) dev.append(demoApp());
+  const stage = h('div', { class: `case-stage${k.loupe ? ' loupe' : ''}` }, dev);
+  if (k.raster) stage.append(h('div', { class: 'raster' }, rasterFrame(shot(P17.screen.w, P17.screen.h).canvas)));
+  const note = h('p', { class: 'case-note', text: k.note[0] });
+  const badge = h('span', { class: 'badge', text: 'Typical' });
+  const sw = h('button', { type: 'button', class: 'switch', role: 'switch', 'aria-checked': 'false', 'aria-label': `${k.title}: render with bezelkit` },
+    h('span', { class: 'track', 'aria-hidden': 'true' }), h('span', { class: 'lbl' }, 'Render with ', h('b', { text: 'bezelkit' })));
+  const card = h('article', { class: 'case', 'data-id': k.id, 'aria-label': k.title },
+    h('div', { class: 'case-top' }, h('h3', { text: k.title }), h('span', { style: 'margin-left:auto' }, badge)),
+    stage, note,
+    h('div', { class: 'diff', 'aria-label': 'Attribute change' }, h('div', { class: 'minus', text: k.diff[0] }), h('div', { class: 'plus', text: k.diff[1] })),
+    sw);
+  const set = (fixed) => {
+    card.classList.toggle('fixed', fixed);
+    sw.setAttribute('aria-checked', String(fixed));
+    badge.textContent = fixed ? 'bezelkit' : 'Typical';
+    note.textContent = k.note[fixed ? 1 : 0];
+    setAttrs(fixed ? { ...k.base, ...k.fix } : k.base);
+  };
+  sw.addEventListener('click', () => { set(sw.getAttribute('aria-checked') !== 'true'); syncFixAll(); });
+  caseEls.push({ set, sw });
+  failsEl.append(card);
+}
+const fixAll = $('#fixAll');
+function syncFixAll() {
+  const all = caseEls.every((c) => c.sw.getAttribute('aria-checked') === 'true');
+  fixAll.setAttribute('aria-pressed', String(all));
+  fixAll.textContent = all ? 'Show the typical results' : 'Fix all five';
+}
+fixAll.addEventListener('click', () => { const to = fixAll.getAttribute('aria-pressed') !== 'true'; caseEls.forEach((c) => c.set(to)); syncFixAll(); });
+
+// ─── framework tabs ─────────────────────────────────────────────────────────
+const CDN = 'https://cdn.jsdelivr.net/npm/bezelkit@0/dist/bezelkit.js';
+const SNIPPETS = {
+  HTML: { code: `\x3Cscript type="module" src="${CDN}">\x3C/script>
+
+<bezel-device
+  device="iphone-17-pro"
+  src="/shots/home.png"
+  style="width: 320px"
+></bezel-device>`, foot: 'Give it a width and the height follows the device.' },
+  React: { code: `import 'bezelkit';
+
+export function Hero({ shot }) {
+  return (
+    <bezel-device
+      device="pixel-10-pro"
+      color="porcelain"
+      src={shot}
+      style={{ width: 320 }}
+    />
+  );
+}`, foot: 'React 19 passes attributes to custom elements as-is. It\'s safe with SSR: the tag upgrades on load.' },
+  Vue: { code: `\x3Cscript setup>
+import 'bezelkit';
+defineProps({ shot: String });
+\x3C/script>
+
+<template>
+  <bezel-device device="ipad-pro-11" orientation="landscape" :src="shot" />
+</template>
+
+// vite.config.js
+vue({ template: { compilerOptions: { isCustomElement: (t) => t.startsWith('bezel-') } } })`, foot: 'Tell Vue the tag is a custom element with one compiler option.' },
+  Svelte: { code: `\x3Cscript>
+  import 'bezelkit';
+  let { shot } = $props();
+\x3C/script>
+
+<bezel-device device="macbook-pro-14" src={shot} fit="top"></bezel-device>`, foot: 'Svelte 5 renders custom elements natively.' },
+  Astro: { code: `---
+const shot = '/shots/dashboard.png';
+---
+<bezel-device device="browser-safari" url="acme.dev" src={shot}></bezel-device>
+
+\x3Cscript>
+  import 'bezelkit';
+\x3C/script>`, foot: 'Astro renders the tag at build time and bundles the script automatically.' },
+};
+
+const RX = /(<!--[\s\S]*?-->|\/\/[^\n]*|^---$)|("[^"\n]*"|'[^'\n]*'|`[^`\n]*`)|((?<=[\s(])[:@a-zA-Z-]+(?==))|(<\/?[a-zA-Z][\w-]*|(?<!=)\/?>(?!\s*\d))|\b(import|from|export|function|return|const|let|defineProps)\b/gm;
+function highlight(el, src) {
+  const frag = document.createDocumentFragment();
+  let last = 0;
+  for (const m of src.matchAll(RX)) {
+    if (m.index > last) frag.append(src.slice(last, m.index));
+    const cls = m[1] ? 't-com' : m[2] ? 't-str' : m[3] ? 't-attr' : m[4] ? 't-tag' : 't-kw';
+    frag.append(h('span', { class: cls, text: m[0] }));
+    last = m.index + m[0].length;
+  }
+  frag.append(src.slice(last));
+  el.replaceChildren(frag);
+}
+
+const tablist = $('#tablist'), snippet = $('#snippet'), tabFoot = $('#tabFoot');
+const names = Object.keys(SNIPPETS);
+let current = 'HTML';
+const tabs = names.map((n, i) => {
+  const t = h('button', { type: 'button', role: 'tab', id: `tab-${n}`, 'aria-controls': 'snippet', 'aria-selected': 'false', tabindex: '-1', text: n });
+  t.addEventListener('click', () => selectTab(n));
+  t.addEventListener('keydown', (e) => {
+    const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    let j = d ? (i + d + names.length) % names.length : e.key === 'Home' ? 0 : e.key === 'End' ? names.length - 1 : null;
+    if (j == null) return;
+    e.preventDefault(); selectTab(names[j]); tabs[j].focus();
+  });
+  return t;
+});
+const copySnippet = h('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Copy snippet', text: 'Copy' });
+copySnippet.addEventListener('click', () => copy(SNIPPETS[current].code, `Copied the ${current} snippet`));
+tablist.append(...tabs, copySnippet);
+function selectTab(n) {
+  current = n;
+  tabs.forEach((t) => { const on = t.textContent === n; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; });
+  snippet.setAttribute('aria-labelledby', `tab-${n}`);
+  highlight(snippet, SNIPPETS[n].code);
+  tabFoot.textContent = SNIPPETS[n].foot;
+}
+selectTab('HTML');
+
+// ─── device table ───────────────────────────────────────────────────────────
+const KIND = { phone: 'Phones', foldable: 'Foldables', tablet: 'Tablets', watch: 'Watches', laptop: 'Laptops', desktop: 'Desktops', browser: 'Browsers' };
+const kinds = [...new Set(DEVICES.map((d) => d.kind))].sort((a, b) => Object.keys(KIND).indexOf(a) - Object.keys(KIND).indexOf(b));
+const filtersEl = $('#filters'), rowsEl = $('#devRows');
+let filter = 'phone';
+const filterBtns = [...kinds, 'all'].map((k) => {
+  const count = k === 'all' ? DEVICES.length : DEVICES.filter((d) => d.kind === k).length;
+  const b = h('button', { type: 'button', class: 'filter', role: 'radio', 'aria-checked': 'false', tabindex: '-1', 'data-k': k }, KIND[k] ?? (k === 'all' ? 'All' : k), h('span', { text: String(count) }));
+  b.addEventListener('click', () => setFilter(k));
+  return b;
+});
+filtersEl.append(...filterBtns);
+filtersEl.addEventListener('keydown', (e) => {
+  const i = filterBtns.indexOf(document.activeElement);
+  const d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+  if (i < 0 || !d) return;
+  e.preventDefault();
+  const j = (i + d + filterBtns.length) % filterBtns.length;
+  filterBtns[j].click(); filterBtns[j].focus();
+});
+function setFilter(k) {
+  filter = k;
+  filterBtns.forEach((b) => { const on = b.dataset.k === k; b.setAttribute('aria-checked', String(on)); b.tabIndex = on ? 0 : -1; });
+  rowsEl.replaceChildren(...DEVICES.filter((d) => k === 'all' || d.kind === k).map((d) => {
+    const tryBtn = h('button', { type: 'button', class: 'try', 'aria-label': `Load ${d.name} in the playground`, text: 'Try ↑' });
+    tryBtn.addEventListener('click', () => loadDevice(d.id));
+    return h('tr', {},
+      h('td', {}, d.name),
+      h('td', { class: 'col-id' }, h('code', { text: d.id })),
+      h('td', { class: 'num' }, `${d.screen.w}`, h('span', { class: 'x', text: '×' }), `${d.screen.h}`),
+      h('td', { class: 'num col-dpr' }, d.dpr ? `${d.dpr}×` : '—'),
+      h('td', { class: 'col-fin' }, h('div', { class: 'sws' }, (d.colors ?? []).slice(0, 6).map(([n, c]) => h('i', { style: `background:${c}`, title: n })))),
+      h('td', {}, tryBtn));
+  }));
+}
+setFilter(filter);
+$('#devCount').textContent = $('#devCount2').textContent = String(DEVICES.length);
+
+// ─── api exports snippet, filled from the live registry ─────────────────────
+const px = getDevice('pixel');
+highlight($('#exportsCode'), `import { listDevices, getDevice, defineDevice } from 'bezelkit';
+
+listDevices().length;       // ${DEVICES.length}
+getDevice('pixel').screen;  // { w: ${px.screen.w}, h: ${px.screen.h}, radius: ${px.screen.radius} }
+
+defineDevice({
+  id: 'kiosk', name: 'Kiosk', kind: 'tablet',
+  screen: { w: 1080, h: 1920, radius: 0 }, bezel: 40, rim: 6,
+});`);
+document.querySelectorAll('pre.mini[data-hl]:not(#exportsCode)').forEach((el) => highlight(el, el.textContent));
+
+// ─── utilities ──────────────────────────────────────────────────────────────
+let toastTimer = 0;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 1600);
+}
+async function copy(text, msg = 'Copied') {
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const ta = h('textarea', { style: 'position:fixed;opacity:0' }); ta.value = text; document.body.append(ta); ta.select();
+    try { document.execCommand('copy'); } catch {} ta.remove();
+  }
+  toast(msg);
+}
+document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => copy(b.dataset.copy, `Copied: ${b.dataset.copy.length > 40 ? b.dataset.copy.slice(0, 38) + '…' : b.dataset.copy}`)));
+const nav = $('#nav');
+addEventListener('scroll', () => nav.classList.toggle('stuck', scrollY > 8), { passive: true });
+
+// boot the playground
+live.append(demoApp());
+update();
+</script>
+</body>
+</html>
