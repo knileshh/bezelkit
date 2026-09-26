@@ -13,10 +13,6 @@
 .hx-kick { display: flex; align-items: center; gap: 10px; margin: 0 0 24px; font: 500 12.5px/1 var(--mono); color: var(--dim); }
 .hx-kick i { width: 7px; height: 7px; border-radius: 50%; background: rgb(var(--warm)); }
 .hx-title { margin: 0 0 24px; font-weight: 800; font-stretch: 112%; font-size: clamp(40px, 4.6vw, 76px); line-height: .95; letter-spacing: -.043em; text-wrap: balance; }
-.hx-word { display: inline-grid; color: rgb(var(--warm)); white-space: nowrap; }
-.hx-word > span { grid-area: 1 / 1; }
-.hx-word > span:not(:first-child) { opacity: 0; visibility: hidden; }
-.hx-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .hx-sub { max-width: 38ch; margin: 0 0 34px; color: var(--dim); font-size: clamp(16px, 1.3vw, 19.5px); line-height: 1.48; text-wrap: pretty; }
 .hx-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .hx-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 50px; padding: 0 20px; border-radius: 99px; border: 1px solid transparent; font: 600 15.5px var(--display); letter-spacing: -.005em; text-decoration: none; cursor: pointer; transition: background .2s, border-color .2s, color .2s, transform .25s var(--ease, ease); }

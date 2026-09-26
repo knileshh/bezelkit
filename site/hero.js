@@ -180,8 +180,6 @@ const CAST = [
   { key: 'watch', id: 'apple-watch-ultra', color: null, attrs: {}, box: [0.2, 0.2, 0.2, 0.2], shot: (d) => render(d.screen.w, d.screen.h, 2, drawWatch) },
 ];
 for (const c of CAST) c.d = getDevice(c.id);
-// The headline's last word follows the device on stage.
-const WORD = { iphone: 'iPhone', pixel: 'Pixel', ipad: 'iPad', mac: 'MacBook', watch: 'Watch' };
 
 const codeTokens = (c) => [['p', '<'], ['t', 'bezel-device'], ...[['device', c.id], ...Object.entries(c.attrs)].flatMap(([k, v]) => [['', ' '], ['a', k], ['p', '="'], ['s', v], ['p', '"']]), ['p', '>']];
 const codeChars = (c) => codeTokens(c).flatMap(([cls, s]) => [...s].map((ch) => [cls, ch]));
@@ -204,8 +202,8 @@ hero.innerHTML = `
 <div class="hx${RM ? ' hx-rm' : ''}">
   <div class="hx-copy">
     <p class="hx-kick"><i></i>&lt;bezel-device&gt; · <span class="hx-os">open source · </span>zero dependencies</p>
-    <h1 class="hx-title" id="heroTitle">Drop in a screenshot.<br>Get a perfect mockup for <span class="hx-sr">any device.</span><span class="hx-word" aria-hidden="true">${RM ? '<span>any device.</span>' : CAST.map((c) => `<span>${WORD[c.key]}.</span>`).join('')}</span></h1>
-    <p class="hx-sub">bezelkit puts your screenshot inside a realistic phone, tablet, laptop or watch, and makes it fit. Nothing stretched, nothing cropped, nothing hidden under the notch. One HTML tag, ${count} devices, free.</p>
+    <h1 class="hx-title" id="heroTitle">Screenshot in.<br>Mockup out.</h1>
+    <p class="hx-sub">Drop a screenshot into any phone, tablet, laptop or watch. It fits perfectly. One HTML tag, ${count} devices, free.</p>
     <div class="hx-actions">
       <a class="hx-btn hx-primary" href="#play">Try it with your screenshot<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3.5 8.5 8 13l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       <button class="hx-btn hx-npm" type="button" aria-label="Copy the install command: npm i bezelkit"><span class="hx-npm-t"><b>$</b> npm i bezelkit</span><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.25" y="5.25" width="8" height="8" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 3.2V3a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 3v5A1.5 1.5 0 0 0 4 9.5h.3" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
@@ -453,16 +451,6 @@ function build(gsap) {
   tl.fromTo(chip, { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.35, immediateRender: false }, S + 0.4);
   type(CAST[0], S + 0.4, 40);
 
-  // headline word: stacked spans, swapped with tweens only (so scrubbing the timeline stays correct)
-  const words = [...hero.querySelectorAll('.hx-word > span')];
-  let wi = 0;
-  const word = (i, at) => {
-    if (!words[i] || i === wi) return;
-    tl.to(words[wi], { autoAlpha: 0, yPercent: -55, duration: 0.22, ease: 'power2.in' }, at);
-    tl.fromTo(words[i], { autoAlpha: 0, yPercent: 55 }, { autoAlpha: 1, yPercent: 0, duration: 0.42, ease: 'back.out(1.8)', immediateRender: false }, at + 0.12);
-    wi = i;
-  };
-
   // 4 · the same app, through other real frames
   let t = S + 2.1;
   for (let i = 1; i < CAST.length; i++) {
@@ -474,7 +462,6 @@ function build(gsap) {
     dimIn(dimsOf(c.key), t + 0.55);
     show(cap(c.key), t + 0.35);
     type(c, t + 0.1);
-    word(i, t + 0.2);
     t += c.key === 'mac' ? 1.45 : 1.3;
   }
   // out, and loop
@@ -482,7 +469,6 @@ function build(gsap) {
   tl.to(shots[CAST.length - 1], { autoAlpha: 0, scale: 0.96, duration: 0.4, ease: 'power2.in' }, t);
   hide([cap(last), chip], t, 0.3);
   tl.to(glowOk, { autoAlpha: 0, duration: 0.4 }, t);
-  word(0, t + 0.15);
   tl.set({}, {}, t + 0.6);
 
   // play only while the hero is on screen and the tab is visible
