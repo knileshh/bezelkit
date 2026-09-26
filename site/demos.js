@@ -122,145 +122,44 @@ const once = (el, type, ms) => new Promise((r) => {
   el.addEventListener(type, () => { clearTimeout(t); r(); }, { once: true });
 });
 
-// ─── story: how fit=auto thinks ───
-const story = {
-  el: document.getElementById('storyDevice'), wrap: document.getElementById('stageWrap'), ghost: document.getElementById('ghost'),
-  label: document.getElementById('ghostLabel'), note: document.getElementById('ghostNote'),
-  top: document.getElementById('bandTop'), bottom: document.getElementById('bandBottom'), verdict: document.getElementById('verdict'),
-  step: null, detail: null, loop: 0, wait: 0,
-};
-const STEPS = {
-  match: () => shot(402, 874),
-  long: () => shot(402, 874 * 2.8, { variant: 'long' }),
-  tall: () => shot(402, 402 / 0.4),
-  wide: () => shot(402, 402 * 16 / 9),
-};
-const VERDICT_BG = { cover: '#2e7d4f', scroll: '#2f5fa7', top: '#b5471f', contain: '#6b4fa0', pad: '#1d1a16' };
-const SAFE_HTML = `<div style="min-height:100%;box-sizing:border-box;padding:14px 18px;background:#fffaf3;font:15px/1.45 system-ui,sans-serif;color:#231d17">
-  <div style="display:flex;justify-content:space-between;align-items:center"><b style="font:400 32px Georgia,serif">Inbox</b><span style="padding:2px 10px;border-radius:999px;background:#d2522b;color:#fff;font-weight:600">3</span></div>
-  ${['Your order shipped', 'Sam shared “Week plan”', 'Receipt from Mealwise', 'Weekly digest', 'Security alert', 'New comment', 'Invoice #2291']
-    .map((t, i) => `<div style="margin-top:10px;padding:12px 14px;background:#fff;border:1px solid #eadfce;border-radius:12px"><b>${t}</b><div style="color:#8a7f72;font-size:13px">${i + 1}h ago</div></div>`).join('')}
-</div>`;
-
-function cell(i, label, value, digits = 2, suffix = '') {
-  document.getElementById(`l${i}`).textContent = label;
-  const el = document.getElementById(`v${i}`);
-  if (typeof value !== 'number') { el.textContent = value; return; }
-  const from = parseFloat(el.textContent) || 0, t0 = performance.now();
-  const tick = (t) => {
-    const k = reduceMotion ? 1 : Math.min(1, (t - t0) / 600), e = 1 - (1 - k) ** 3;
-    el.textContent = (from + (value - from) * e).toFixed(digits) + suffix;
-    if (k < 1) requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
+// ─── fit modes: four live phones ───
+const MODES = [
+  ['Same shape', 'Fills the screen edge to edge.', () => shot(402, 874)],
+  ['Much taller', 'Full-page captures scroll inside the screen.', () => shot(402, 874 * 2.8, { variant: 'long' })],
+  ['A bit taller', 'Pinned to the top, so the footer is trimmed.', () => shot(402, 402 / 0.4)],
+  ['Wider', 'Letterboxed with colours sampled from its edges.', () => shot(402, 402 * 16 / 9)],
+];
+const VERDICT = { cover: 'cover', scroll: 'scroll', top: 'top', contain: 'letterbox' };
+const modesEl = document.getElementById('fitModes');
+const scrollers = [];
+for (const [title, line, src] of MODES) {
+  const card = document.createElement('figure');
+  card.className = 'mode';
+  card.innerHTML = `<div class="mode-shot"><bezel-device device="iphone-17-pro" shadow="none"></bezel-device></div>
+    <figcaption><span class="mode-fit">fit=auto → …</span><b>${title}</b><span>${line}</span><small></small></figcaption>`;
+  const el = card.querySelector('bezel-device');
+  el.addEventListener('bezel-fit', (e) => {
+    const { fit, media, mismatch } = e.detail;
+    card.querySelector('.mode-fit').textContent = `fit=auto → ${VERDICT[fit] ?? fit}`;
+    card.dataset.fit = fit;
+    card.querySelector('small').textContent = `${media.w}×${media.h} · ${Math.abs((mismatch - 1) * 100).toFixed(0)}% off`;
+    if (fit === 'scroll') scrollers.push(el);
+  });
+  el.setAttribute('src', src());
+  modesEl.append(card);
 }
-function setVerdict(text, key) { story.verdict.textContent = text; story.verdict.style.background = VERDICT_BG[key]; }
-function screenBox() {
-  const scr = story.el.shadowRoot.querySelector('.screen').getBoundingClientRect(), w = story.wrap.getBoundingClientRect();
-  return { x: scr.left - w.left, y: scr.top - w.top, W: scr.width, H: scr.height };
-}
-function band(el, g, top, h, html, cls = '') {
-  el.className = `band v1-on ${cls}`;
-  Object.assign(el.style, { left: `${g.x}px`, width: `${g.W}px`, top: `${top}px`, height: `${Math.max(h, 0)}px` });
-  el.firstElementChild.innerHTML = html;
-}
-function stopLoop() { cancelAnimationFrame(story.loop); clearTimeout(story.wait); story.ghost.classList.remove('v1-live'); }
-
-function renderStory() {
-  stopLoop();
-  const { ghost } = story;
-  story.top.className = story.bottom.className = 'band';
-  if (story.step === 'safe') {
-    ghost.style.opacity = 0;
-    const g = screenBox(), spec = story.el.spec, s = g.W / spec.screen.w;
-    band(story.top, g, g.y, spec.safe.top * s, `--bezel-safe-top · ${spec.safe.top}px`);
-    band(story.bottom, g, g.y + g.H - spec.safe.bottom * s, spec.safe.bottom * s, `${spec.safe.bottom}px`);
-    document.getElementById('op0').textContent = '·';
-    document.getElementById('op1').textContent = '→';
-    cell(0, 'safe top', spec.safe.top, 0, 'px');
-    cell(1, 'safe bottom', spec.safe.bottom, 0, 'px');
-    cell(2, 'content box', `${spec.screen.w}×${spec.screen.h - spec.safe.top - spec.safe.bottom}`);
-    setVerdict('safe-area: pad', 'pad');
-    return;
+// Let the "scroll" phone show that it scrolls, only while it is on screen.
+let modesOn = false, t0 = 0;
+function scrollTick(t) {
+  if (!modesOn) return;
+  t0 ||= t;
+  for (const el of scrollers) {
+    const m = el.shadowRoot.querySelector('.media');
+    if (m) m.scrollTop = ((1 - Math.cos(((t - t0) / 7000) * Math.PI * 2)) / 2) * (m.scrollHeight - m.clientHeight);
   }
-  const d = story.detail;
-  if (!d) return;
-  const g = screenBox(), s = g.W / d.screen.w, imgH = g.W / d.mediaRatio;
-  const top = d.fit === 'cover' || d.fit === 'contain' ? g.y + (g.H - imgH) / 2 : g.y;
-  Object.assign(ghost.style, { left: `${g.x}px`, width: `${g.W}px`, top: `${top}px`, height: `${imgH}px`, opacity: 1 });
-  ghost.style.setProperty('--sy', `${g.y - top}px`);
-  ghost.style.setProperty('--sh', `${g.H}px`);
-  ghost.style.setProperty('--hatch', d.fit === 'scroll' ? 'rgba(47,95,167,.35)' : 'rgba(210,82,43,.4)');
-  story.label.textContent = `your image · ${d.media.w}×${d.media.h}`;
-  story.note.textContent = d.fit === 'top' ? `bottom ${Math.round((1 - g.H / imgH) * 100)}% trimmed` : d.fit === 'scroll' ? '↕ scrolls inside the screen' : '';
-  document.getElementById('op0').textContent = '÷';
-  document.getElementById('op1').textContent = '=';
-  cell(0, 'image', d.mediaRatio, 3);
-  cell(1, 'screen', d.screenRatio, 3);
-  cell(2, 'mismatch', d.mismatch, 2);
-  setVerdict(`fit: ${d.fit}`, d.fit);
-
-  if (d.fit === 'contain') {
-    const cs = getComputedStyle(story.el.shadowRoot.querySelector('.media'));
-    const ct = cs.getPropertyValue('--_lb-top').trim() || '#000', cb = cs.getPropertyValue('--_lb-bottom').trim() || '#000';
-    band(story.top, g, g.y, top - g.y, `<i style="background:${ct}"></i>sampled top`, 'lb');
-    band(story.bottom, g, top + imgH, g.y + g.H - top - imgH, `<i style="background:${cb}"></i>sampled bottom`, 'lb');
-  }
-  if (d.fit === 'scroll' && !reduceMotion) {
-    // Let the ghost finish its transition, then drive the real scroll and the outline together.
-    story.wait = setTimeout(() => {
-      const media = story.el.shadowRoot.querySelector('.media');
-      ghost.classList.add('v1-live');
-      const t0 = performance.now();
-      const tick = (t) => {
-        const max = media.scrollHeight - media.clientHeight;
-        const st = ((1 - Math.cos(((t - t0) / 8000) * Math.PI * 2)) / 2) * max;
-        media.scrollTop = st;
-        ghost.style.top = `${top - st * s}px`;
-        ghost.style.setProperty('--sy', `${g.y - top + st * s}px`);
-        story.loop = requestAnimationFrame(tick);
-      };
-      story.loop = requestAnimationFrame(tick);
-    }, 850);
-  }
+  requestAnimationFrame(scrollTick);
 }
-
-function activate(step) {
-  if (step === story.step) return;
-  story.step = step;
-  story.detail = null;
-  stopLoop();
-  document.querySelectorAll('.step').forEach((el) => el.classList.toggle('active', el.dataset.step === step));
-  const el = story.el;
-  const media = el.shadowRoot.querySelector('.media');
-  if (media) media.scrollTop = 0;
-  if (step === 'safe') {
-    el.removeAttribute('src');
-    el.setAttribute('safe-area', 'pad');
-    el.setAttribute('chrome', 'on');
-    el.innerHTML = SAFE_HTML;
-    frame().then(() => story.step === 'safe' && renderStory());
-  } else {
-    el.replaceChildren();
-    el.removeAttribute('safe-area');
-    el.removeAttribute('chrome');
-    el.setAttribute('src', STEPS[step]());
-  }
-}
-story.el.addEventListener('bezel-fit', (e) => {
-  const prev = story.detail;
-  const same = prev && prev.fit === e.detail.fit && prev.media.w === e.detail.media.w && prev.media.h === e.detail.media.h;
-  if (story.step === 'safe' || same) return;
-  story.detail = e.detail;
-  renderStory();
-});
-const stepObserver = new IntersectionObserver((entries) => {
-  for (const en of entries) if (en.isIntersecting) activate(en.target.dataset.step);
-}, { rootMargin: '-48% 0px -48% 0px' });
-document.querySelectorAll('.step').forEach((el) => stepObserver.observe(el));
-new ResizeObserver(() => story.step && requestAnimationFrame(renderStory)).observe(story.wrap);
-new IntersectionObserver(([en]) => { if (!en.isIntersecting) stopLoop(); else if (story.step) renderStory(); }).observe(document.getElementById('storyStage'));
-activate('match');
+if (!reduceMotion) new IntersectionObserver(([en]) => { modesOn = en.isIntersecting; if (modesOn) requestAnimationFrame(scrollTick); }).observe(modesEl);
 
 // ─── playground ───
 const pg = document.getElementById('pg');
@@ -370,26 +269,36 @@ document.querySelectorAll('[data-copy]').forEach((b) => (b.onclick = () => { nav
 renderColors();
 apply();
 
-// ─── gallery ───
+// ─── gallery: tabs by kind, one horizontal strip ───
 const gallery = document.getElementById('gallery');
-const groups = [['phone', 'Phones', 'v1-phone'], ['foldable', 'Foldables', 'v1-tablet'], ['tablet', 'Tablets', 'v1-tablet'], ['watch', 'Watches', 'watch'], [['laptop', 'desktop'], 'Laptops & desktops', 'wide'], ['browser', 'Browser windows', 'wide']];
+const TABS = [['phone', 'Phones'], ['foldable', 'Foldables'], ['tablet', 'Tablets'], ['laptop', 'Laptops'], ['desktop', 'Desktops'], ['watch', 'Watches'], ['browser', 'Browsers']];
 const io = new IntersectionObserver((entries) => {
   for (const en of entries) {
     if (!en.isIntersecting) continue;
     const el = en.target; io.unobserve(el);
     el.setAttribute('src', sampleFor(getDevice(el.getAttribute('device'))));
   }
-}, { rootMargin: '400px' });
-for (const [kinds, label, cls] of groups) {
-  const list = devices.filter((d) => [].concat(kinds).includes(d.kind));
-  const h = document.createElement('h3'); h.className = 'kind'; h.textContent = label;
-  const grid = document.createElement('div'); grid.className = `grid ${cls}`;
-  for (const d of list) {
+}, { rootMargin: '200px' });
+function showKind(kind) {
+  document.querySelectorAll('#galleryTabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.kind === kind)));
+  gallery.dataset.kind = kind;
+  gallery.replaceChildren(...devices.filter((d) => d.kind === kind).map((d) => {
     const tile = document.createElement('button'); tile.className = 'tile';
-    tile.innerHTML = `<div class="shot"><bezel-device device="${d.id}" ${d.kind === 'browser' ? 'url="mealwise.app"' : ''}></bezel-device></div><div class="name">${d.name}</div><div class="meta">${d.id} · ${d.screen.w}×${d.screen.h}${d.dpr ? ` @${d.dpr}x` : ''}</div>`;
+    tile.innerHTML = `<div class="shot"><bezel-device device="${d.id}" ${d.kind === 'browser' ? 'url="mealwise.app"' : ''}></bezel-device></div><div class="name">${d.name}</div><div class="meta">${d.screen.w}×${d.screen.h}${d.dpr ? ` @${d.dpr}x` : ''}</div>`;
     tile.onclick = () => { state.device = d.id; state.color = null; sel.value = d.id; renderColors(); apply(); document.getElementById('play').scrollIntoView(); };
     io.observe(tile.querySelector('bezel-device'));
-    grid.append(tile);
-  }
-  gallery.append(h, grid);
+    return tile;
+  }));
+  gallery.scrollLeft = 0;
 }
+const tabsEl = document.getElementById('galleryTabs');
+for (const [kind, label] of TABS) {
+  const n = devices.filter((d) => d.kind === kind).length;
+  if (!n) continue;
+  const b = document.createElement('button');
+  b.setAttribute('role', 'tab'); b.dataset.kind = kind;
+  b.innerHTML = `${label} <span>${n}</span>`;
+  b.onclick = () => showKind(kind);
+  tabsEl.append(b);
+}
+showKind('phone');

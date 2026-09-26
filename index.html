@@ -167,31 +167,9 @@
     <div class="v1-intro"><div class="kick ok">Try it</div></div>
     <div class="v1-wrap">
   <section id="how">
-    <h2>How <code style="font-size:.8em">fit="auto"</code> thinks</h2>
-    <p class="sub">Scroll through the steps. The dashed outline is your image and the frame is the screen. bezelkit compares their shapes and picks the strategy that loses the least.</p>
-    <div class="story">
-      <div class="story-stage" id="storyStage">
-        <div class="v1-readout">
-          <div><span id="l0">image</span><b id="v0">0.460</b></div><div class="op" id="op0">÷</div>
-          <div><span id="l1">screen</span><b id="v1">0.460</b></div><div class="op" id="op1">=</div>
-          <div><span id="l2">mismatch</span><b id="v2">1.00</b></div>
-          <div class="verdict" id="verdict">fit: cover</div>
-        </div>
-        <div class="stage-wrap" id="stageWrap">
-          <bezel-device id="storyDevice" device="iphone-17-pro"></bezel-device>
-          <div class="ghost" id="ghost"><div class="ghost-fill"></div><div class="ghost-border"></div><span class="ghost-label" id="ghostLabel"></span><span class="ghost-note" id="ghostNote"></span></div>
-          <div class="band" id="bandTop"><span></span></div>
-          <div class="band" id="bandBottom"><span></span></div>
-        </div>
-      </div>
-      <div class="steps">
-        <article class="step" data-step="match"><span class="num">01 · SAME SHAPE</span><h3>Matches within 4%: cover</h3><p>A 1206×2622 screenshot on a 402×874 screen. The shapes agree, so it fills the screen edge to edge and loses at most a few pixels.</p></article>
-        <article class="step" data-step="long"><span class="num">02 · MUCH TALLER</span><h3>A full-page capture: scroll</h3><p>This one is nearly three screens long. Cropping would throw most of it away, so bezelkit keeps the width and lets the screen scroll, the way the real phone would.</p></article>
-        <article class="step" data-step="tall"><span class="num">03 · A LITTLE TALLER</span><h3>Up to 15% taller: pin to top</h3><p>Headers usually matter more than footers, so the image is anchored at the top and the bottom is trimmed. If the tab bar matters, set <code>fit="contain"</code>.</p></article>
-        <article class="step" data-step="wide"><span class="num">04 · WIDER</span><h3>From an older phone: letterbox</h3><p>A 16:9 screenshot on a 19.5:9 screen. It is centred instead of stretched, and the empty bands are painted with colours sampled from the image's own top and bottom rows.</p></article>
-        <article class="step" data-step="safe"><span class="num">05 · LIVE HTML</span><h3>Your markup: safe areas</h3><p>Slotted HTML and iframes are padded clear of the Dynamic Island and home indicator, with a status bar drawn in. For full-bleed layouts, use <code>safe-area="none"</code> and read <code>--bezel-safe-top</code> yourself.</p></article>
-      </div>
-    </div>
+    <h2>Four ways to fit, picked for you</h2>
+    <p class="sub">bezelkit compares your image's shape with the device's real screen and uses whichever strategy loses the least. These are live frames, not pictures.</p>
+    <div class="modes" id="fitModes"></div>
   </section>
   <section id="play">
     <h2>Playground</h2>
@@ -222,29 +200,25 @@
     </div>
   </section>
   <section id="devices">
-    <h2>Devices</h2>
-    <p class="sub">Every frame is drawn in CSS at the device's real CSS-pixel viewport, so it stays sharp at any size. Click any device to open it in the playground.</p>
-    <div id="gallery"></div>
+    <h2>41 frames and counting</h2>
+    <p class="sub">Each one is drawn in CSS at the device's real viewport, so it stays sharp at any size. Pick a device to try it in the playground.</p>
+    <div class="tabs" id="galleryTabs" role="tablist" aria-label="Device type"></div>
+    <div class="strip" id="gallery" role="tabpanel"></div>
   </section>
   <section id="docs">
     <h2>API</h2>
-    <p class="sub">A single element works in plain HTML, React 19, Vue, Svelte, Astro, MDX and Webflow embeds. It scales to the width you give it (or fits inside both width and height if you set both).</p>
+    <p class="sub">One element for plain HTML, React 19, Vue, Svelte and Astro. Give it a width and it scales; give it a width and height and it fits inside both. The full reference is in the <a href="https://github.com/knileshh/bezelkit#readme">README</a>.</p>
     <table>
       <thead><tr><th>Attribute</th><th>Values</th><th>What it does</th></tr></thead>
       <tbody>
-        <tr><td><code>device</code></td><td><code>iphone-17-pro</code> … see gallery</td><td>Which frame to render. Short aliases work too: <code>iphone</code>, <code>android</code>, <code>ipad</code>, <code>macbook</code>, <code>watch</code>, <code>browser</code>.</td></tr>
-        <tr><td><code>src</code></td><td>image · video · URL</td><td>Content type is detected from the extension. URLs are embedded as a live iframe at the device's true viewport. Leave it out to slot your own HTML.</td></tr>
-        <tr><td><code>fit</code></td><td><code>auto</code> <code>cover</code> <code>top</code> <code>contain</code> <code>scroll</code> <code>fill</code> <code>none</code></td><td><code>auto</code> compares the image's shape with the screen: if they match (±4%) it covers, if the image is much taller it scrolls, if it's a bit taller it pins to the top, and if it's wider it letterboxes with sampled edge colours.</td></tr>
-        <tr><td><code>color</code></td><td>name or CSS colour</td><td>Official finish names (<code>deep-blue</code>, <code>cosmic orange</code>) or any CSS colour.</td></tr>
-        <tr><td><code>orientation</code></td><td><code>portrait</code> <code>landscape</code></td><td>Phones and tablets. Content rotates with the device, so it stays upright.</td></tr>
-        <tr><td><code>chrome</code></td><td><code>auto</code> <code>on</code> <code>off</code></td><td>Draws a status bar and home indicator. With <code>auto</code> they're on for HTML and iframes and off for screenshots, which already have their own.</td></tr>
-        <tr><td><code>safe-area</code></td><td><code>auto</code> <code>pad</code> <code>none</code></td><td><code>pad</code> keeps content clear of the notch and home indicator. Slotted HTML also gets <code>--bezel-safe-top</code>/<code>-bottom</code> CSS variables.</td></tr>
-        <tr><td><code>theme</code></td><td><code>light</code> <code>dark</code></td><td>Status bar ink and browser toolbar colours.</td></tr>
-        <tr><td><code>url</code> · <code>viewport</code></td><td><code>acme.dev</code> · <code>1440x900</code></td><td>For browser frames: the address-bar text and the window size.</td></tr>
-        <tr><td><code>glare</code> · <code>shadow</code></td><td>boolean · <code>none</code></td><td>Adds a subtle screen reflection; <code>shadow="none"</code> turns off the drop shadow.</td></tr>
+        <tr><td><code>device</code></td><td><code>iphone-17-pro</code> … see above</td><td>Which frame to render.</td></tr>
+        <tr><td><code>src</code></td><td>image · video · URL</td><td>Type is detected from the extension; URLs become a live iframe at the true viewport. Omit it to slot your own HTML.</td></tr>
+        <tr><td><code>fit</code></td><td><code>auto</code> <code>cover</code> <code>top</code> <code>contain</code> <code>scroll</code> <code>fill</code></td><td><code>auto</code> picks for you, as shown above.</td></tr>
+        <tr><td><code>color</code> · <code>orientation</code></td><td>finish name · <code>landscape</code></td><td>Official finishes or any CSS colour; content rotates with the device.</td></tr>
+        <tr><td><code>side</code> · <code>variant</code> · <code>folded</code></td><td><code>back</code> <code>both</code> · <code>deck</code> <code>3d</code> · boolean</td><td>Back panels and stacked shots, 3D laptops and desktops, and foldables. <code>flip()</code>, <code>fold()</code> and <code>open()</code> animate them.</td></tr>
+        <tr><td><code>chrome</code> · <code>safe-area</code></td><td><code>auto</code> <code>on</code> <code>off</code> · <code>pad</code> <code>none</code></td><td>Status bar and home indicator, and keeping live HTML clear of the notch.</td></tr>
       </tbody>
     </table>
-    <p class="sub" style="margin-top:22px">Events: <code>bezel-fit</code> fires with <code>{ fit, mediaRatio, screenRatio, mismatch }</code> once media loads, so you can warn authors about screenshots from the wrong device. Styling hooks: <code>::part(screen)</code>, <code>::part(frame)</code>, <code>--bezel-screen-bg</code>. Custom devices: <code>defineDevice({ id, screen: { w, h, radius }, … })</code>.</p>
   </section>
     </div>
   </div>
