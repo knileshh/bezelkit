@@ -1,0 +1,29 @@
+# bezelkit
+
+> bezelkit is a zero-dependency web component, `<bezel-device>`, that draws accurate device frames (iPhone, Pixel, Galaxy, foldables, iPad, MacBook, iMac, Apple Watch, browser windows) in pure CSS and fits a screenshot, video, live URL or HTML into the screen correctly — never stretched, cropped blindly or hidden under the notch. Screens use each device's real CSS viewport. MIT licensed.
+
+Load it once, then use the tag:
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/bezelkit@0/dist/bezelkit.js"></script>
+<bezel-device device="iphone-17-pro" src="screenshot.png" alt="Home screen"></bezel-device>
+```
+
+Key rules: match `device` to the screenshot's native pixel size (see the device tables), leave `fit="auto"`, always set `alt`, give the element a width.
+
+## Docs
+
+- [Full reference for LLMs](https://bezelkit.dev/llms-full.txt): every attribute, method, event, the fit algorithm, recipes, framework notes, limitations and all device ids with native resolutions. Start here.
+- [README](https://github.com/knileshh/bezelkit#readme): human-oriented overview.
+- [devices.json](https://bezelkit.dev/devices.json): machine-readable device list (id, kind, viewport, DPR, native pixels, finish names).
+- [TypeScript types](https://bezelkit.dev/index.d.ts): element, attributes, events and `defineDevice` spec.
+
+## Examples
+
+- [Playground](https://bezelkit.dev/#play): try any device with your own screenshot.
+- [Foldables](https://bezelkit.dev/examples/foldables.html), [back panels and flip](https://bezelkit.dev/examples/back.html), [3D laptops](https://bezelkit.dev/examples/laptops-3d.html), [state matrix](https://bezelkit.dev/examples/states.html).
+
+## Optional
+
+- [Source: component](https://github.com/knileshh/bezelkit/blob/main/src/bezel.js)
+- [Source: device registry](https://github.com/knileshh/bezelkit/blob/main/src/devices.js)

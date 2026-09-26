@@ -14,13 +14,21 @@
   "main": "./src/bezel.js",
   "module": "./src/bezel.js",
   "exports": {
-    ".": "./src/bezel.js",
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./src/bezel.js"
+    },
     "./devices": "./src/devices.js",
-    "./bundle": "./dist/bezelkit.js"
+    "./bundle": "./dist/bezelkit.js",
+    "./devices.json": "./devices.json"
   },
   "files": [
     "src",
     "dist",
+    "index.d.ts",
+    "devices.json",
+    "llms.txt",
+    "llms-full.txt",
     "README.md",
     "LICENSE"
   ],
@@ -29,8 +37,8 @@
   ],
   "scripts": {
     "dev": "python -m http.server 8766",
-    "build": "node scripts/build.mjs",
-    "prepublishOnly": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs && node scripts/gen-docs.mjs",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "mockup",
@@ -45,5 +53,6 @@
   ],
   "license": "MIT",
   "jsdelivr": "./dist/bezelkit.js",
-  "unpkg": "./dist/bezelkit.js"
+  "unpkg": "./dist/bezelkit.js",
+  "types": "./index.d.ts"
 }

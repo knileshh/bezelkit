@@ -1,0 +1,1357 @@
+{
+  "version": "0.1.0",
+  "generated": "2026-09-26",
+  "devices": [
+    {
+      "id": "iphone-18-pro-max",
+      "name": "iPhone 18 Pro Max",
+      "brand": "Apple",
+      "kind": "phone",
+      "year": 2026,
+      "viewport": {
+        "w": 440,
+        "h": 956
+      },
+      "dpr": 3,
+      "native": {
+        "w": 1320,
+        "h": 2868
+      },
+      "colors": [
+        {
+          "name": "Burgundy",
+          "value": "burgundy"
+        },
+        {
+          "name": "Glacier",
+          "value": "glacier"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        },
+        {
+          "name": "Black",
+          "value": "black"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "iphone-18-pro",
+      "name": "iPhone 18 Pro",
+      "brand": "Apple",
+      "kind": "phone",
+      "year": 2026,
+      "viewport": {
+        "w": 402,
+        "h": 874
+      },
+      "dpr": 3,
+      "native": {
+        "w": 1206,
+        "h": 2622
+      },
+      "colors": [
+        {
+          "name": "Burgundy",
+          "value": "burgundy"
+        },
+        {
+          "name": "Glacier",
+          "value": "glacier"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        },
+        {
+          "name": "Black",
+          "value": "black"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "iphone-17-pro-max",
+      "name": "iPhone 17 Pro Max",
+      "brand": "Apple",
+      "kind": "phone",
+      "year": 2025,
+      "viewport": {
+        "w": 440,
+        "h": 956
+      },
+      "dpr": 3,
+      "native": {
+        "w": 1320,
+        "h": 2868
+      },
+      "colors": [
+        {
+          "name": "Cosmic Orange",
+          "value": "cosmic-orange"
+        },
+        {
+          "name": "Deep Blue",
+          "value": "deep-blue"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "iphone-17-pro",
+      "name": "iPhone 17 Pro",
+      "brand": "Apple",
+      "kind": "phone",
+      "year": 2025,
+      "viewport": {
+        "w": 402,
+        "h": 874
+      },
+      "dpr": 3,
+      "native": {
+        "w": 1206,
+        "h": 2622
+      },
+      "colors": [
+        {
+          "name": "Deep Blue",
+          "value": "deep-blue"
+        },
+        {
+          "name": "Cosmic Orange",
+          "value": "cosmic-orange"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "iphone-air",
+      "name": "iPhone Air",
+      "brand": "Apple",
+      "kind": "phone",
+      "year": 2025,
+      "viewport": {
+        "w": 420,
+        "h": 912
+      },
+      "dpr": 3,
+      "native": {
+        "w": 1260,
+        "h": 2736
+      },
+      "colors": [
+        {
+          "name": "Sky Blue",
+          "value": "sky-blue"
+        },
+        {
+          "name": "Light Gold",
+          "value": "light-gold"
+        },
+        {
+          "name": "Cloud White",
+          "value": "cloud-white"
+        },
+        {
+          "name": "Space Black",
+          "value": "space-black"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "iphone-17",
+      "name": "iPhone 17",
+      "brand": "Apple",
+      "kind": "phone",
+      "year": 2025,
+      "viewport": {
+        "w": 402,
+        "h": 874
+      },
+      "dpr": 3,
+      "native": {
+        "w": 1206,
+        "h": 2622
+      },
+      "colors": [
+        {
+          "name": "Lavender",
+          "value": "lavender"
+        },
+        {
+          "name": "Sage",
+          "value": "sage"
+        },
+        {
+          "name": "Mist Blue",
+          "value": "mist-blue"
+        },
+        {
+          "name": "White",
+          "value": "white"
+        },
+        {
+          "name": "Black",
+          "value": "black"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "iphone-17e",
+      "name": "iPhone 17e",
+      "brand": "Apple",
+      "kind": "phone",
+      "year": 2026,
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "dpr": 3,
+      "native": {
+        "w": 1170,
+        "h": 2532
+      },
+      "colors": [
+        {
+          "name": "Black",
+          "value": "black"
+        },
+        {
+          "name": "White",
+          "value": "white"
+        },
+        {
+          "name": "Soft Pink",
+          "value": "soft-pink"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "iphone-16e",
+      "name": "iPhone 16e",
+      "brand": "Apple",
+      "kind": "phone",
+      "year": 2025,
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "dpr": 3,
+      "native": {
+        "w": 1170,
+        "h": 2532
+      },
+      "colors": [
+        {
+          "name": "Black",
+          "value": "black"
+        },
+        {
+          "name": "White",
+          "value": "white"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "iphone-se",
+      "name": "iPhone SE (3rd gen)",
+      "brand": "Apple",
+      "kind": "phone",
+      "year": 2022,
+      "viewport": {
+        "w": 375,
+        "h": 667
+      },
+      "dpr": 2,
+      "native": {
+        "w": 750,
+        "h": 1334
+      },
+      "colors": [
+        {
+          "name": "Midnight",
+          "value": "midnight"
+        },
+        {
+          "name": "Starlight",
+          "value": "starlight"
+        },
+        {
+          "name": "(PRODUCT)RED",
+          "value": "product-red"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "pixel-11-pro",
+      "name": "Pixel 11 Pro",
+      "brand": "Google",
+      "kind": "phone",
+      "year": 2026,
+      "viewport": {
+        "w": 410,
+        "h": 914
+      },
+      "dpr": 3.12,
+      "native": {
+        "w": 1279,
+        "h": 2852
+      },
+      "colors": [
+        {
+          "name": "Obsidian",
+          "value": "obsidian"
+        },
+        {
+          "name": "Fog",
+          "value": "fog"
+        },
+        {
+          "name": "Canyon",
+          "value": "canyon"
+        },
+        {
+          "name": "Olive",
+          "value": "olive"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "pixel-11",
+      "name": "Pixel 11",
+      "brand": "Google",
+      "kind": "phone",
+      "year": 2026,
+      "viewport": {
+        "w": 412,
+        "h": 924
+      },
+      "dpr": 2.625,
+      "native": {
+        "w": 1082,
+        "h": 2426
+      },
+      "colors": [
+        {
+          "name": "Obsidian",
+          "value": "obsidian"
+        },
+        {
+          "name": "Frost",
+          "value": "frost"
+        },
+        {
+          "name": "Pistachio",
+          "value": "pistachio"
+        },
+        {
+          "name": "Hibiscus",
+          "value": "hibiscus"
+        }
+      ]
+    },
+    {
+      "id": "pixel-10-pro",
+      "name": "Pixel 10 Pro",
+      "brand": "Google",
+      "kind": "phone",
+      "year": 2025,
+      "viewport": {
+        "w": 410,
+        "h": 914
+      },
+      "dpr": 3.12,
+      "native": {
+        "w": 1279,
+        "h": 2852
+      },
+      "colors": [
+        {
+          "name": "Obsidian",
+          "value": "obsidian"
+        },
+        {
+          "name": "Porcelain",
+          "value": "porcelain"
+        },
+        {
+          "name": "Moonstone",
+          "value": "moonstone"
+        },
+        {
+          "name": "Jade",
+          "value": "jade"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "galaxy-s26-ultra",
+      "name": "Galaxy S26 Ultra",
+      "brand": "Samsung",
+      "kind": "phone",
+      "year": 2026,
+      "viewport": {
+        "w": 384,
+        "h": 832
+      },
+      "dpr": 2.8125,
+      "native": {
+        "w": 1080,
+        "h": 2340
+      },
+      "colors": [
+        {
+          "name": "Black",
+          "value": "black"
+        },
+        {
+          "name": "Cobalt Violet",
+          "value": "cobalt-violet"
+        },
+        {
+          "name": "Sky Blue",
+          "value": "sky-blue"
+        },
+        {
+          "name": "White",
+          "value": "white"
+        },
+        {
+          "name": "Silver Shadow",
+          "value": "silver-shadow"
+        },
+        {
+          "name": "Pink Gold",
+          "value": "pink-gold"
+        }
+      ]
+    },
+    {
+      "id": "galaxy-s26",
+      "name": "Galaxy S26",
+      "brand": "Samsung",
+      "kind": "phone",
+      "year": 2026,
+      "viewport": {
+        "w": 360,
+        "h": 780
+      },
+      "dpr": 3,
+      "native": {
+        "w": 1080,
+        "h": 2340
+      },
+      "colors": [
+        {
+          "name": "Cobalt Violet",
+          "value": "cobalt-violet"
+        },
+        {
+          "name": "Sky Blue",
+          "value": "sky-blue"
+        },
+        {
+          "name": "Black",
+          "value": "black"
+        },
+        {
+          "name": "White",
+          "value": "white"
+        },
+        {
+          "name": "Silver Shadow",
+          "value": "silver-shadow"
+        },
+        {
+          "name": "Pink Gold",
+          "value": "pink-gold"
+        }
+      ]
+    },
+    {
+      "id": "galaxy-s25-ultra",
+      "name": "Galaxy S25 Ultra",
+      "brand": "Samsung",
+      "kind": "phone",
+      "year": 2025,
+      "viewport": {
+        "w": 384,
+        "h": 832
+      },
+      "dpr": 2.8125,
+      "native": {
+        "w": 1080,
+        "h": 2340
+      },
+      "colors": [
+        {
+          "name": "Titanium Silverblue",
+          "value": "titanium-silverblue"
+        },
+        {
+          "name": "Titanium Black",
+          "value": "titanium-black"
+        },
+        {
+          "name": "Titanium Gray",
+          "value": "titanium-gray"
+        },
+        {
+          "name": "Titanium Whitesilver",
+          "value": "titanium-whitesilver"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "galaxy-s25",
+      "name": "Galaxy S25",
+      "brand": "Samsung",
+      "kind": "phone",
+      "year": 2025,
+      "viewport": {
+        "w": 360,
+        "h": 780
+      },
+      "dpr": 3,
+      "native": {
+        "w": 1080,
+        "h": 2340
+      },
+      "colors": [
+        {
+          "name": "Icyblue",
+          "value": "icyblue"
+        },
+        {
+          "name": "Navy",
+          "value": "navy"
+        },
+        {
+          "name": "Mint",
+          "value": "mint"
+        },
+        {
+          "name": "Silver Shadow",
+          "value": "silver-shadow"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "android-generic",
+      "name": "Android (generic)",
+      "brand": "Android",
+      "kind": "phone",
+      "viewport": {
+        "w": 360,
+        "h": 800
+      },
+      "dpr": 3,
+      "native": {
+        "w": 1080,
+        "h": 2400
+      },
+      "colors": [
+        {
+          "name": "Graphite",
+          "value": "graphite"
+        },
+        {
+          "name": "Blue",
+          "value": "blue"
+        },
+        {
+          "name": "White",
+          "value": "white"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "galaxy-z-fold7",
+      "name": "Galaxy Z Fold7",
+      "brand": "Samsung",
+      "kind": "foldable",
+      "year": 2025,
+      "viewport": {
+        "w": 750,
+        "h": 832
+      },
+      "dpr": 2.625,
+      "native": {
+        "w": 1969,
+        "h": 2184
+      },
+      "cover": {
+        "w": 411,
+        "h": 960
+      },
+      "colors": [
+        {
+          "name": "Blue Shadow",
+          "value": "blue-shadow"
+        },
+        {
+          "name": "Silver Shadow",
+          "value": "silver-shadow"
+        },
+        {
+          "name": "Jetblack",
+          "value": "jetblack"
+        },
+        {
+          "name": "Mint",
+          "value": "mint"
+        }
+      ]
+    },
+    {
+      "id": "galaxy-z-flip7",
+      "name": "Galaxy Z Flip7",
+      "brand": "Samsung",
+      "kind": "foldable",
+      "year": 2025,
+      "viewport": {
+        "w": 411,
+        "h": 960
+      },
+      "dpr": 2.625,
+      "native": {
+        "w": 1079,
+        "h": 2520
+      },
+      "cover": {
+        "w": 361,
+        "h": 399
+      },
+      "colors": [
+        {
+          "name": "Blue Shadow",
+          "value": "blue-shadow"
+        },
+        {
+          "name": "Jetblack",
+          "value": "jetblack"
+        },
+        {
+          "name": "Coralred",
+          "value": "coralred"
+        },
+        {
+          "name": "Mint",
+          "value": "mint"
+        }
+      ]
+    },
+    {
+      "id": "pixel-10-pro-fold",
+      "name": "Pixel 10 Pro Fold",
+      "brand": "Google",
+      "kind": "foldable",
+      "year": 2025,
+      "viewport": {
+        "w": 791,
+        "h": 820
+      },
+      "dpr": 2.625,
+      "native": {
+        "w": 2076,
+        "h": 2153
+      },
+      "cover": {
+        "w": 411,
+        "h": 901
+      },
+      "colors": [
+        {
+          "name": "Moonstone",
+          "value": "moonstone"
+        },
+        {
+          "name": "Jade",
+          "value": "jade"
+        }
+      ]
+    },
+    {
+      "id": "iphone-duo",
+      "name": "iPhone Duo",
+      "brand": "Apple",
+      "kind": "foldable",
+      "year": 2026,
+      "viewport": {
+        "w": 890,
+        "h": 626
+      },
+      "dpr": 3,
+      "native": {
+        "w": 2670,
+        "h": 1878
+      },
+      "cover": {
+        "w": 466,
+        "h": 678
+      },
+      "colors": [
+        {
+          "name": "Night Sky",
+          "value": "night-sky"
+        },
+        {
+          "name": "Star White",
+          "value": "star-white"
+        }
+      ]
+    },
+    {
+      "id": "ipad-pro-13",
+      "name": "iPad Pro 13″ (M5)",
+      "brand": "Apple",
+      "kind": "tablet",
+      "year": 2025,
+      "viewport": {
+        "w": 1032,
+        "h": 1376
+      },
+      "dpr": 2,
+      "native": {
+        "w": 2064,
+        "h": 2752
+      },
+      "colors": [
+        {
+          "name": "Space Black",
+          "value": "space-black"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "ipad-pro-11",
+      "name": "iPad Pro 11″ (M5)",
+      "brand": "Apple",
+      "kind": "tablet",
+      "year": 2025,
+      "viewport": {
+        "w": 834,
+        "h": 1210
+      },
+      "dpr": 2,
+      "native": {
+        "w": 1668,
+        "h": 2420
+      },
+      "colors": [
+        {
+          "name": "Space Black",
+          "value": "space-black"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "ipad-air-13",
+      "name": "iPad Air 13″ (M4)",
+      "brand": "Apple",
+      "kind": "tablet",
+      "year": 2026,
+      "viewport": {
+        "w": 1024,
+        "h": 1366
+      },
+      "dpr": 2,
+      "native": {
+        "w": 2048,
+        "h": 2732
+      },
+      "colors": [
+        {
+          "name": "Space Gray",
+          "value": "space-gray"
+        },
+        {
+          "name": "Blue",
+          "value": "blue"
+        },
+        {
+          "name": "Purple",
+          "value": "purple"
+        },
+        {
+          "name": "Starlight",
+          "value": "starlight"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "ipad-air-11",
+      "name": "iPad Air 11″ (M4)",
+      "brand": "Apple",
+      "kind": "tablet",
+      "year": 2026,
+      "viewport": {
+        "w": 820,
+        "h": 1180
+      },
+      "dpr": 2,
+      "native": {
+        "w": 1640,
+        "h": 2360
+      },
+      "colors": [
+        {
+          "name": "Space Gray",
+          "value": "space-gray"
+        },
+        {
+          "name": "Blue",
+          "value": "blue"
+        },
+        {
+          "name": "Purple",
+          "value": "purple"
+        },
+        {
+          "name": "Starlight",
+          "value": "starlight"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "ipad-mini",
+      "name": "iPad mini (A17 Pro)",
+      "brand": "Apple",
+      "kind": "tablet",
+      "year": 2024,
+      "viewport": {
+        "w": 744,
+        "h": 1133
+      },
+      "dpr": 2,
+      "native": {
+        "w": 1488,
+        "h": 2266
+      },
+      "colors": [
+        {
+          "name": "Space Gray",
+          "value": "space-gray"
+        },
+        {
+          "name": "Blue",
+          "value": "blue"
+        },
+        {
+          "name": "Purple",
+          "value": "purple"
+        },
+        {
+          "name": "Starlight",
+          "value": "starlight"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "galaxy-tab-s11",
+      "name": "Galaxy Tab S11",
+      "brand": "Samsung",
+      "kind": "tablet",
+      "year": 2025,
+      "viewport": {
+        "w": 800,
+        "h": 1280
+      },
+      "dpr": 2,
+      "native": {
+        "w": 1600,
+        "h": 2560
+      },
+      "colors": [
+        {
+          "name": "Gray",
+          "value": "gray"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        }
+      ]
+    },
+    {
+      "id": "galaxy-tab-s10-plus",
+      "name": "Galaxy Tab S10+",
+      "brand": "Samsung",
+      "kind": "tablet",
+      "year": 2024,
+      "viewport": {
+        "w": 800,
+        "h": 1280
+      },
+      "dpr": 2.19,
+      "native": {
+        "w": 1752,
+        "h": 2803
+      },
+      "colors": [
+        {
+          "name": "Moonstone Gray",
+          "value": "moonstone-gray"
+        },
+        {
+          "name": "Platinum Silver",
+          "value": "platinum-silver"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "apple-watch-ultra",
+      "name": "Apple Watch Ultra 4",
+      "brand": "Apple",
+      "kind": "watch",
+      "year": 2026,
+      "viewport": {
+        "w": 211,
+        "h": 257
+      },
+      "dpr": 2,
+      "native": {
+        "w": 422,
+        "h": 514
+      },
+      "colors": [
+        {
+          "name": "Natural Titanium",
+          "value": "natural-titanium"
+        },
+        {
+          "name": "Black Titanium",
+          "value": "black-titanium"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "apple-watch-series-12",
+      "name": "Apple Watch Series 12 (46mm)",
+      "brand": "Apple",
+      "kind": "watch",
+      "year": 2026,
+      "viewport": {
+        "w": 208,
+        "h": 248
+      },
+      "dpr": 2,
+      "native": {
+        "w": 416,
+        "h": 496
+      },
+      "colors": [
+        {
+          "name": "Black",
+          "value": "black"
+        },
+        {
+          "name": "Dark Bronze",
+          "value": "dark-bronze"
+        },
+        {
+          "name": "Light Gold",
+          "value": "light-gold"
+        },
+        {
+          "name": "Space Gray",
+          "value": "space-gray"
+        },
+        {
+          "name": "Natural",
+          "value": "natural"
+        },
+        {
+          "name": "Radiant Gold",
+          "value": "radiant-gold"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "apple-watch-series-11",
+      "name": "Apple Watch Series 11 (46mm)",
+      "brand": "Apple",
+      "kind": "watch",
+      "year": 2025,
+      "viewport": {
+        "w": 208,
+        "h": 248
+      },
+      "dpr": 2,
+      "native": {
+        "w": 416,
+        "h": 496
+      },
+      "colors": [
+        {
+          "name": "Jet Black",
+          "value": "jet-black"
+        },
+        {
+          "name": "Rose Gold",
+          "value": "rose-gold"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        },
+        {
+          "name": "Space Gray",
+          "value": "space-gray"
+        }
+      ],
+      "back": true
+    },
+    {
+      "id": "macbook-pro-14",
+      "name": "MacBook Pro 14″",
+      "brand": "Apple",
+      "kind": "laptop",
+      "year": 2026,
+      "viewport": {
+        "w": 1512,
+        "h": 982
+      },
+      "dpr": 2,
+      "native": {
+        "w": 3024,
+        "h": 1964
+      },
+      "colors": [
+        {
+          "name": "Space Black",
+          "value": "space-black"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        }
+      ],
+      "back": true,
+      "variants": [
+        "flat",
+        "deck",
+        "3d"
+      ]
+    },
+    {
+      "id": "macbook-pro-16",
+      "name": "MacBook Pro 16″",
+      "brand": "Apple",
+      "kind": "laptop",
+      "year": 2026,
+      "viewport": {
+        "w": 1728,
+        "h": 1117
+      },
+      "dpr": 2,
+      "native": {
+        "w": 3456,
+        "h": 2234
+      },
+      "colors": [
+        {
+          "name": "Space Black",
+          "value": "space-black"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        }
+      ],
+      "back": true,
+      "variants": [
+        "flat",
+        "deck",
+        "3d"
+      ]
+    },
+    {
+      "id": "macbook-air-13",
+      "name": "MacBook Air 13″",
+      "brand": "Apple",
+      "kind": "laptop",
+      "year": 2026,
+      "viewport": {
+        "w": 1470,
+        "h": 956
+      },
+      "dpr": 2,
+      "native": {
+        "w": 2940,
+        "h": 1912
+      },
+      "colors": [
+        {
+          "name": "Sky Blue",
+          "value": "sky-blue"
+        },
+        {
+          "name": "Midnight",
+          "value": "midnight"
+        },
+        {
+          "name": "Starlight",
+          "value": "starlight"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        }
+      ],
+      "back": true,
+      "variants": [
+        "flat",
+        "deck",
+        "3d"
+      ]
+    },
+    {
+      "id": "macbook-air-15",
+      "name": "MacBook Air 15″",
+      "brand": "Apple",
+      "kind": "laptop",
+      "year": 2026,
+      "viewport": {
+        "w": 1710,
+        "h": 1107
+      },
+      "dpr": 2,
+      "native": {
+        "w": 3420,
+        "h": 2214
+      },
+      "colors": [
+        {
+          "name": "Sky Blue",
+          "value": "sky-blue"
+        },
+        {
+          "name": "Midnight",
+          "value": "midnight"
+        },
+        {
+          "name": "Starlight",
+          "value": "starlight"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        }
+      ],
+      "back": true,
+      "variants": [
+        "flat",
+        "deck",
+        "3d"
+      ]
+    },
+    {
+      "id": "laptop",
+      "name": "Laptop (generic, 1080p @125%)",
+      "brand": "Windows",
+      "kind": "laptop",
+      "viewport": {
+        "w": 1536,
+        "h": 864
+      },
+      "dpr": 1.25,
+      "native": {
+        "w": 1920,
+        "h": 1080
+      },
+      "colors": [
+        {
+          "name": "Graphite",
+          "value": "graphite"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        }
+      ],
+      "back": true,
+      "variants": [
+        "flat",
+        "deck",
+        "3d"
+      ]
+    },
+    {
+      "id": "imac-24",
+      "name": "iMac 24″",
+      "brand": "Apple",
+      "kind": "desktop",
+      "year": 2024,
+      "viewport": {
+        "w": 2240,
+        "h": 1260
+      },
+      "dpr": 2,
+      "native": {
+        "w": 4480,
+        "h": 2520
+      },
+      "colors": [
+        {
+          "name": "Blue",
+          "value": "blue"
+        },
+        {
+          "name": "Purple",
+          "value": "purple"
+        },
+        {
+          "name": "Pink",
+          "value": "pink"
+        },
+        {
+          "name": "Orange",
+          "value": "orange"
+        },
+        {
+          "name": "Yellow",
+          "value": "yellow"
+        },
+        {
+          "name": "Green",
+          "value": "green"
+        },
+        {
+          "name": "Silver",
+          "value": "silver"
+        }
+      ],
+      "back": true,
+      "variants": [
+        "flat",
+        "deck",
+        "3d"
+      ]
+    },
+    {
+      "id": "studio-display",
+      "name": "Studio Display",
+      "brand": "Apple",
+      "kind": "desktop",
+      "year": 2026,
+      "viewport": {
+        "w": 2560,
+        "h": 1440
+      },
+      "dpr": 2,
+      "native": {
+        "w": 5120,
+        "h": 2880
+      },
+      "colors": [
+        {
+          "name": "Silver",
+          "value": "silver"
+        }
+      ],
+      "back": true,
+      "variants": [
+        "flat",
+        "deck",
+        "3d"
+      ]
+    },
+    {
+      "id": "studio-display-xdr",
+      "name": "Studio Display XDR",
+      "brand": "Apple",
+      "kind": "desktop",
+      "year": 2026,
+      "viewport": {
+        "w": 2560,
+        "h": 1440
+      },
+      "dpr": 2,
+      "native": {
+        "w": 5120,
+        "h": 2880
+      },
+      "colors": [
+        {
+          "name": "Silver",
+          "value": "silver"
+        }
+      ],
+      "back": true,
+      "variants": [
+        "flat",
+        "deck",
+        "3d"
+      ]
+    },
+    {
+      "id": "browser-chrome",
+      "name": "Browser (Chrome-style)",
+      "brand": "Web",
+      "kind": "browser",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "colors": [
+        {
+          "name": "Light",
+          "value": "light"
+        }
+      ]
+    },
+    {
+      "id": "browser-safari",
+      "name": "Browser (Safari-style)",
+      "brand": "Web",
+      "kind": "browser",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "colors": [
+        {
+          "name": "Light",
+          "value": "light"
+        }
+      ]
+    }
+  ]
+}

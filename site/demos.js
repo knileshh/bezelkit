@@ -302,3 +302,13 @@ for (const [kind, label] of TABS) {
   tabsEl.append(b);
 }
 showKind('phone');
+
+// ─── "copy a prompt" for AI assistants ───
+document.getElementById('copyAiPrompt')?.addEventListener('click', (e) => {
+  const prompt = `Use bezelkit (https://bezelkit.dev) to show my screenshots in device frames. Read https://bezelkit.dev/llms-full.txt first and follow its "Rules for assistants". Pick each device by matching the screenshot's pixel size to the device table, keep fit="auto", set alt text, and load the component once from the CDN (or npm i bezelkit if this project uses a bundler).
+
+My screenshots: `;
+  navigator.clipboard.writeText(prompt);
+  e.target.textContent = 'Copied. Paste it into your assistant';
+  setTimeout(() => (e.target.textContent = 'Copy a ready-made prompt'), 2200);
+});

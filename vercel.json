@@ -1,0 +1,8 @@
+{
+  "cleanUrls": false,
+  "headers": [
+    { "source": "/(.*)\.d\.ts", "headers": [{ "key": "Content-Type", "value": "text/plain; charset=utf-8" }] },
+    { "source": "/llms(.*)\.txt", "headers": [{ "key": "Content-Type", "value": "text/plain; charset=utf-8" }, { "key": "Access-Control-Allow-Origin", "value": "*" }] },
+    { "source": "/devices.json", "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }] }
+  ]
+}

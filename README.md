@@ -36,6 +36,10 @@ Most mockups on the web look wrong for the same few reasons:
 
 The gap bezelkit fills: **correct content fitting + real viewports + every device class + framework-agnostic embedding.**
 
+## Using with AI assistants
+
+Point Claude, ChatGPT, Cursor or any coding agent at **[bezelkit.dev/llms-full.txt](https://bezelkit.dev/llms-full.txt)**. It is generated from the source and has everything needed to use bezelkit correctly: every attribute, the fit rules, framework notes, limitations, and all devices with the native pixel size of their screenshots, so the assistant can pick the right frame for each image. Also available: [`llms.txt`](https://bezelkit.dev/llms.txt) (index, per [llmstxt.org](https://llmstxt.org)), [`devices.json`](https://bezelkit.dev/devices.json) (machine-readable registry) and `index.d.ts` (TypeScript types, shipped in the package).
+
 ## Attributes
 
 | Attribute | Values | Notes |

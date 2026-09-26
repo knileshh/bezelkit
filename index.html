@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
 <link rel="canonical" href="https://bezelkit.dev/">
+<link rel="alternate" type="text/plain" href="./llms.txt" title="bezelkit docs for LLMs">
 <meta property="og:title" content="bezelkit — device frames that actually fit">
 <meta property="og:url" content="https://bezelkit.dev/">
 <meta property="og:description" content="Mockups that stretch, crop and hide your screenshots, fixed. One zero-dependency web component for 40+ devices.">
@@ -207,6 +208,13 @@
   </section>
   <section id="docs">
     <h2>API</h2>
+    <div class="ai-box">
+      <div>
+        <b>Using an AI assistant?</b>
+        <p>Point it at <a href="./llms-full.txt"><code>bezelkit.dev/llms-full.txt</code></a>. It has every attribute, the fit rules, framework notes and all 41 devices with their screenshot resolutions, so Claude, ChatGPT or Cursor can wire it up for you.</p>
+      </div>
+      <button type="button" id="copyAiPrompt">Copy a ready-made prompt</button>
+    </div>
     <p class="sub">One element for plain HTML, React 19, Vue, Svelte and Astro. Give it a width and it scales; give it a width and height and it fits inside both. The full reference is in the <a href="https://github.com/knileshh/bezelkit#readme">README</a>.</p>
     <table>
       <thead><tr><th>Attribute</th><th>Values</th><th>What it does</th></tr></thead>
