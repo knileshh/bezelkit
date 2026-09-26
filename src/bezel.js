@@ -280,47 +280,184 @@ const BUILDERS = { phone: buildHandheld, tablet: buildHandheld, watch: buildHand
 // mirrored, so a rotateY(180deg) turn lands the outline exactly on the front's. Camera geometry
 // lives in each device's `back` entry (see devices.js); coordinates are px from the body's
 // top-left corner as seen from behind.
+//
+// Lighting: every back shares one key light, a softbox up and to the left. Speculars sit at KEY,
+// chamfers and bevels are lit on their top-left edges and shaded on their bottom-right ones, and
+// raised parts cast their shadow down and slightly right (CAST). Lenses, flash, LiDAR, mic and sensors
+// are classed divs styled by BACK_CSS from two custom properties (--d diameter, --r ring metal), so
+// their many gradient layers are written once per shadow root, not once per element.
 
 const SIDES = ['front', 'back', 'both'];
+const KEY = '22% 10%';
+const CAST = [0.3, 1];
+const px = (v) => `${+v.toFixed(2)}px`;
+const cast = (z, a, spread = 0) => `${px(z * CAST[0])} ${px(z * CAST[1])} ${px(z * 1.4)} ${px(-z * spread)} rgba(0,0,0,${a})`;
+const dz = (k) => `calc(var(--d) * ${k})`;
+
+const BACK_CSS = `
+.back .bclip { overflow: hidden; }
+.back .bclip > *, .back .lens > i, .back .flash > i, .back .lidar > i { position: absolute; box-sizing: border-box; }
+.back .lens, .back .lens > i, .back .lens > i::before, .back .lens > i::after, .back .flash, .back .flash > i,
+.back .lidar, .back .lidar > i, .back .mic, .back .sensor { border-radius: 50%; }
+.back .lens > i::before, .back .lens > i::after { content: ''; position: absolute; }
+.back .lens {
+  --hi: color-mix(in oklab, var(--r), white 48%); --lo: color-mix(in oklab, var(--r), black 52%);
+  background:
+    radial-gradient(closest-side, transparent 78%, rgba(255,255,255,.34) 80.5%, transparent 85% 91%, rgba(0,0,0,.32) 99%),
+    conic-gradient(from -45deg, var(--hi), var(--r) 12%, var(--lo) 25%, var(--r) 38%, color-mix(in oklab, var(--r), white 30%) 50%, var(--r) 62%, var(--lo) 75%, var(--r) 88%, var(--hi));
+  box-shadow: ${dz(0.025)} ${dz(0.07)} ${dz(0.09)} rgba(0,0,0,.42), 0 0 0 ${dz(0.008)} var(--lo),
+    inset ${dz(0.012)} ${dz(0.018)} ${dz(0.014)} rgba(255,255,255,.5), inset ${dz(-0.012)} ${dz(-0.018)} ${dz(0.018)} rgba(0,0,0,.4);
+}
+.back .lens > i {
+  inset: 11%;
+  background: radial-gradient(closest-side, #050608 0 20%, #2a3040 21.5%, #0a0b10 24% 37%, #20232d 38.5%, #08090c 41% 56%, #1c1e25 57.5%, #09090b 60% 80%, #17181c 83%, #030304 88%);
+  box-shadow: inset 0 0 0 ${dz(0.012)} #000, inset ${dz(0.01)} ${dz(0.05)} ${dz(0.08)} rgba(0,0,0,.85);
+}
+.back .lens > i::after {
+  inset: 30%;
+  background: radial-gradient(circle at 36% 32%, rgba(120,150,255,.55) 0 8%, transparent 26%), radial-gradient(circle at 66% 70%, rgba(165,90,230,.4) 0 10%, transparent 32%), radial-gradient(closest-side, #16203a 0 30%, #070912 66%, #000);
+  box-shadow: 0 0 0 ${dz(0.006)} rgba(140,150,185,.35);
+}
+.back .lens > i::before {
+  inset: 0; z-index: 1;
+  background:
+    radial-gradient(circle at 31% 27%, rgba(255,255,255,.95) 0 1.3%, rgba(255,255,255,.35) 2.6%, transparent 5%),
+    radial-gradient(ellipse 62% 40% at 32% 24%, rgba(170,190,255,.2), transparent 70%),
+    radial-gradient(ellipse 80% 55% at 30% 18%, rgba(255,255,255,.07), transparent 66%),
+    radial-gradient(ellipse 50% 32% at 70% 80%, rgba(180,100,240,.16), transparent 72%),
+    radial-gradient(closest-side, transparent 90%, rgba(255,255,255,.07) 97%, transparent);
+}
+.back .flash, .back .lidar {
+  background: color-mix(in oklab, var(--r), black 38%);
+  box-shadow: inset 0 ${dz(0.04)} ${dz(0.05)} rgba(0,0,0,.55), 0 ${dz(0.03)} 0 rgba(255,255,255,.28), 0 ${dz(-0.02)} 0 rgba(0,0,0,.2);
+}
+.back .flash > i {
+  inset: 9%;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255,255,255,.95) 0 5%, rgba(255,255,255,0) 16%),
+    radial-gradient(circle, rgba(140,110,50,.2) 0 22%, transparent 32%) 0 0 / ${dz(0.11)} ${dz(0.11)},
+    radial-gradient(closest-side, #fffbf1, #f5ead0 55%, #e3d3ab 85%, #c9b88e);
+  box-shadow: inset 0 ${dz(0.06)} ${dz(0.08)} rgba(80,60,20,.35);
+}
+.back .lidar > i {
+  inset: 8%;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255,255,255,.6) 0 3%, transparent 9%),
+    radial-gradient(ellipse 60% 40% at 34% 26%, rgba(160,175,220,.14), transparent 70%),
+    radial-gradient(closest-side, transparent 54%, #0b0b0e 62%, #17181c 86%, #050506 96%),
+    radial-gradient(circle, rgba(150,160,200,.3) 0 30%, transparent 45%) 0 0 / ${dz(0.09)} ${dz(0.09)},
+    #0a0a0c;
+  box-shadow: inset 0 ${dz(0.04)} ${dz(0.06)} rgba(0,0,0,.8);
+}
+.back .mic {
+  background: radial-gradient(closest-side at 50% 60%, #000 0 50%, #151517);
+  box-shadow: inset 0 ${dz(0.2)} ${dz(0.25)} #000, 0 ${dz(0.12)} 0 rgba(255,255,255,.3), 0 ${dz(-0.1)} 0 rgba(0,0,0,.25);
+}
+.back .sensor {
+  background: radial-gradient(circle at 34% 30%, rgba(255,255,255,.45) 0 5%, transparent 14%), radial-gradient(closest-side, #1f2026 0 50%, #0c0c0f 72%, #34353c 84%, #0a0a0c 96%);
+  box-shadow: inset 0 ${dz(0.06)} ${dz(0.08)} rgba(0,0,0,.7), 0 ${dz(0.04)} 0 rgba(255,255,255,.12);
+}
+`;
+
 const FINISH = {
   glass: (c) => `linear-gradient(160deg, ${lighten(c, 9)} 0%, ${c} 42%, ${darken(c, 7)} 100%)`,
   gloss: (c) => `linear-gradient(160deg, ${lighten(c, 22)} 0%, ${c} 30%, ${darken(c, 12)} 72%, ${lighten(c, 6)} 100%)`,
-  aluminium: (c) => `linear-gradient(135deg, ${lighten(c, 16)} 0%, ${c} 35%, ${darken(c, 9)} 75%, ${lighten(c, 4)} 100%)`,
+  aluminium: (c) => `linear-gradient(160deg, ${lighten(c, 12)} 0%, ${c} 38%, ${darken(c, 8)} 100%)`,
   titanium: (c) => `linear-gradient(135deg, ${lighten(c, 14)} 0%, ${darken(c, 5)} 45%, ${lighten(c, 7)} 100%)`,
   polished: metal,
   dark: () => 'radial-gradient(120% 90% at 30% 20%, #34353b 0%, #111114 55%, #050506 100%)',
 };
-const SHEEN = { glass: 0.1, gloss: 0.24, aluminium: 0.08, titanium: 0.1, polished: 0.14, dark: 0.12 };
-const RAISED = '0 1px 1.5px rgba(0,0,0,.3), 0 6px 14px -6px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.3), inset 0 -1px 1px rgba(0,0,0,.18)';
+// [broad soft highlight toward the key, reflection band]: matte finishes get one soft falloff,
+// glossy ones a crisp softbox band as well.
+const SHEEN = { glass: [0.14, 0.06], gloss: [0.26, 0.24], aluminium: [0.15, 0.045], titanium: [0.14, 0.06], polished: [0.2, 0.14], dark: [0.12, 0.1] };
 const finish = (f, c) => (FINISH[f] ?? FINISH.glass)(c);
-const sheen = (f) => { const a = SHEEN[f] ?? 0.1; return `linear-gradient(115deg, rgba(255,255,255,${a}) 0%, rgba(255,255,255,${a * 0.3}) 28%, transparent 46%, rgba(255,255,255,${a * 0.35}) 74%, transparent 90%)`; };
+// Inset matte glass (the Pro's Ceramic Shield window): flatter than the metal around it.
+const satin = (c) => `linear-gradient(160deg, ${lighten(c, 4)} 0%, ${c} 40%, ${darken(c, 6)} 100%)`;
+function sheen(f) {
+  const [a, b] = SHEEN[f] ?? SHEEN.glass;
+  const band = f === 'gloss' || f === 'polished'
+    ? `linear-gradient(112deg, transparent 20%, rgba(255,255,255,${b}) 26% 31%, rgba(255,255,255,${b * 0.2}) 35%, transparent 42% 70%, rgba(255,255,255,${b * 0.35}) 75%, transparent 82%)`
+    : `linear-gradient(112deg, transparent 28%, rgba(255,255,255,${b}) 45%, transparent 63%)`;
+  return `radial-gradient(140% 75% at ${KEY}, rgba(255,255,255,${a}), rgba(255,255,255,${a * 0.3}) 40%, transparent 70%), ${band}, linear-gradient(to bottom, transparent 55%, rgba(0,0,0,.07))`;
+}
+// The back rolling over into the sides: lit along the top-left edge, shaded along the bottom-right.
+const roll = (s, a = 1) => `inset ${px(s * 0.55)} ${px(s * 0.7)} ${px(s * 1.1)} ${px(-s * 0.45)} rgba(255,255,255,${0.28 * a}), ` +
+  `inset ${px(-s * 0.5)} ${px(-s * 0.8)} ${px(s * 1.5)} ${px(-s * 0.45)} rgba(0,0,0,${0.22 * a}), inset 0 0 ${px(s * 0.5)} rgba(0,0,0,${0.1 * a})`;
 const backTint = (d, color) => d.colors.find(([n]) => n === color.name)?.[3] ?? color.frame;
 
-// Raised module (plateau, bar, bump) or flush window; { x, y, w, h, r, tone?, fill?, flat? }.
-function plate(p, c, x0, y0, fallback) {
+// Raised module (plateau, bar, bump), flush window or domed crystal, in body coordinates:
+// { x, y, w, h, r, tone?, fill?, flat?, z?, edge?: 'polished', dome?, rings? }. Drawn inside a
+// body-shaped clip so cast shadows never spill past the silhouette.
+function plate(p, c, fallback) {
   const fill = p.fill ?? finish(p.tone ?? fallback, c);
   const r = typeof p.r === 'number' ? `${p.r}px` : p.r ?? '0';
-  return div('plate', `left:${x0 + p.x}px;top:${y0 + p.y}px;width:${p.w}px;height:${p.h}px;border-radius:${r};background:${fill};box-shadow:${p.flat ? 'inset 0 0 0 1px rgba(0,0,0,.07), inset 0 1px 2px rgba(0,0,0,.1)' : RAISED}`);
+  const at = `left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px;border-radius:${r}`;
+  if (p.flat) { // flush inset panel: a fine dark seam, the aluminium lip lit on its far side
+    return div('window', `${at};background:radial-gradient(90% 60% at ${KEY}, rgba(255,255,255,.05), transparent 70%), ${fill};box-shadow:0 0 0 .75px ${darken(c, 34)}, 0 0 0 1.6px rgba(255,255,255,.16), inset .75px 1px 1.25px rgba(0,0,0,.16), inset -.5px -.75px .5px rgba(255,255,255,.12)`);
+  }
+  const dark = p.tone === 'dark', z = p.z ?? (dark ? 2 : 5), e = (k) => px(z * k);
+  if (p.dome) { // glossy convex crystal: softbox reflection up-left, dark falloff, a thin rim light down-right
+    const rings = p.rings ? `repeating-radial-gradient(circle, rgba(255,255,255,.045) 0 .8px, transparent .8px ${p.rings}px), ` : '';
+    return div('plate', `${at};background:radial-gradient(ellipse 36% 22% at 33% 23%, rgba(255,255,255,${p.rings ? 0.14 : 0.24}), rgba(255,255,255,.05) 55%, transparent 76%), ${rings}radial-gradient(closest-side at 44% 40%, #34353b, #17171a 58%, #08080a 90%, #121215);` +
+      `box-shadow:inset -.75px -1px 0 rgba(255,255,255,.14), inset ${e(0.2)} ${e(0.3)} ${e(0.4)} ${e(-0.1)} rgba(255,255,255,.16), inset ${e(-0.2)} ${e(-0.35)} ${e(0.5)} ${e(-0.1)} rgba(0,0,0,.6), 0 0 0 .75px #000, ${cast(z * 0.5, 0.4)}, ${cast(z, 0.25, 0.2)}`);
+  }
+  const polish = p.edge === 'polished' ? `, inset 0 0 0 ${e(0.25)} ${lighten(c, 50)}, inset 0 0 0 ${e(0.45)} ${lighten(c, 12)}` : '';
+  // Top-to-bottom: the polished roll on the lower edge, the lit and shaded chamfers, then outside the
+  // plate a hairline seam, a tight contact shadow and a soft cast shadow onto the body.
+  const bs = `inset 0 -.75px 0 rgba(255,255,255,${dark ? 0.12 : 0.34}), ` +
+    `inset ${e(0.2)} ${e(0.26)} ${e(0.3)} ${e(-0.06)} rgba(255,255,255,${dark ? 0.2 : 0.42}), ` +
+    `inset ${e(-0.16)} ${e(-0.3)} ${e(0.4)} ${e(-0.06)} rgba(0,0,0,${dark ? 0.55 : 0.24})${polish}, ` +
+    `0 0 0 .6px ${darken(c, 45)}, ${cast(z * 0.3, 0.38)}, ${cast(z, 0.36, 0.2)}, ${cast(z * 2.2, 0.14, 0.3)}`;
+  const spec = dark ? 0.08 : polish ? 0.2 : 0.14;
+  return div('plate', `${at};background:radial-gradient(80% 90% at ${KEY}, rgba(255,255,255,${spec}), transparent 72%), ${fill};box-shadow:${bs}`);
 }
 
 // One element of a camera module, centred on (x, y); { x, y, d, kind: lens|flash|lidar|sensor|mic }.
 function part({ x, y, d = 16, kind = 'lens' }, x0, y0, c) {
-  const at = `left:${x0 + x - d / 2}px;top:${y0 + y - d / 2}px;width:${d}px;height:${d}px;border-radius:50%`;
-  switch (kind) {
-    case 'flash': return div('flash', `${at};background:radial-gradient(circle, #fbf8ef 0 34%, #e6dfcc 56%, #c2baa5 74%, ${darken(c, 22)} 80%, ${darken(c, 40)} 100%)`);
-    case 'lidar': return div('lidar', `${at};background:radial-gradient(circle at 42% 38%, #34353c 0 16%, #0d0d10 60%, ${darken(c, 25)} 68%, ${darken(c, 45)} 100%)`);
-    case 'sensor': return div('sensor', `${at};background:radial-gradient(circle at 44% 40%, #2c2d34 0 34%, #131317 56%, #3a3b42 68%, #101013 100%)`);
-    case 'mic': return div('mic', `${at};background:#060607;box-shadow:inset 0 1px 1px rgba(0,0,0,.8), 0 1px 0 rgba(255,255,255,.18)`);
-    default: {
-      const g = d * 0.5;
-      return div('lens', `${at};background:radial-gradient(circle, #0a0b0e 0 69%, #2a2b30 71%, ${lighten(c, 30)} 75%, ${c} 86%, ${darken(c, 30)} 97%);box-shadow:0 2px 5px rgba(0,0,0,.35), 0 0 0 .5px ${darken(c, 40)}`,
-        `<div style="position:absolute;left:${(d - g) / 2}px;top:${(d - g) / 2}px;width:${g}px;height:${g}px;border-radius:50%;background:radial-gradient(circle at 36% 32%, rgba(170,195,255,.55) 0 7%, transparent 16%), radial-gradient(circle at 64% 68%, rgba(150,95,230,.32) 0 9%, transparent 24%), radial-gradient(circle, #1b2030 0 16%, #07080c 46%, #000 72%, #1a1b20 100%)"></div>`);
-    }
-  }
+  const at = `left:${x0 + x - d / 2}px;top:${y0 + y - d / 2}px;width:${d}px;height:${d}px;--d:${d}px;--r:${c}`;
+  return kind === 'sensor' || kind === 'mic' ? div(kind, at) : div(kind === 'flash' || kind === 'lidar' ? kind : 'lens', at, '<i></i>');
 }
 
-function camera(cam, c, ring, x0, y0, fallback) {
-  return (cam.plates ?? []).map((p) => plate(p, c, x0, y0, fallback)).join('') + (cam.parts ?? []).map((p) => part(p, x0, y0, ring)).join('');
+// Plates go in a body-shaped clip (x0, y0, bw, bh, br); parts are drawn later, over the rim shading.
+function camera(cam, c, ring, [x0, y0, bw, bh, br], fallback) {
+  const plates = (cam.plates ?? []).map((p) => plate(p, c, fallback)).join('');
+  return {
+    plates: plates ? div('bclip', `left:${x0}px;top:${y0}px;width:${bw}px;height:${bh}px;border-radius:${br}px`, plates) : '',
+    parts: (cam.parts ?? []).map((p) => part(p, x0, y0, ring)).join(''),
+  };
+}
+
+// Side buttons seen from behind: a rounded profile across the protrusion (dark seam at the body, lit
+// where it faces the key light) and a soft cast shadow. The flush Camera Control keeps the front look.
+function backButton(b, x0, y0, bw, c) {
+  if (b.flush) return button(b, x0, y0, bw, 0, c);
+  const t = b.w ?? 3, top = b.side === 'top', L = b.side === 'left', base = b.color ?? c;
+  const r = b.crown ? Math.min(t, 4) : t, e = b.crown ? r : Math.min(b.len / 2, t * 2.5);
+  const along = top ? 'to right' : 'to bottom';
+  const prof = `linear-gradient(${top ? 'to top' : L ? 'to left' : 'to right'}, ${darken(base, 45)} 0, ${darken(base, 8)} 28%, ${lighten(base, top || L ? 34 : 16)} 56%, ${base} 76%, ${darken(base, 32)} 100%)`;
+  const knurl = b.crown ? `repeating-linear-gradient(${along}, rgba(0,0,0,.3) 0 1.2px, rgba(255,255,255,.14) 1.2px 2.6px), ` : '';
+  const bg = `linear-gradient(${along}, rgba(255,255,255,.25), transparent 22% 78%, rgba(0,0,0,.22)), ${knurl}${prof}`;
+  const shadow = cast(t * 0.6, 0.3);
+  if (top) return div('btn', `left:${x0 + b.at}px;top:${y0 - t}px;width:${b.len}px;height:${t + 1}px;border-radius:${e}px ${e}px 0 0 / ${r}px ${r}px 0 0;background:${bg};box-shadow:${shadow}`);
+  const radius = L ? `${r}px 0 0 ${r}px / ${e}px 0 0 ${e}px` : `0 ${r}px ${r}px 0 / 0 ${e}px ${e}px 0`;
+  return div('btn', `left:${L ? x0 - t : x0 + bw - 1}px;top:${y0 + b.at}px;width:${t + 1}px;height:${b.len}px;border-radius:${radius};background:${bg};box-shadow:${shadow}`);
+}
+
+// rimShade's tube bands, with its top-lit/bottom-dark overlay folded into the same ring (offset insets)
+// so nothing washes over the panel inside it.
+function backRim(x, y, w, h, r, rim, c) {
+  const band = (f, col) => `inset 0 0 0 ${px(rim * f)} ${col}`;
+  return div('rimband', `left:${x}px;top:${y}px;width:${w}px;height:${h}px;border-radius:${r}px;box-shadow:inset 0 ${px(rim * 0.5)} ${px(rim * 0.5)} ${px(-rim * 0.1)} rgba(255,255,255,.2), inset 0 ${px(-rim * 0.5)} ${px(rim * 0.5)} ${px(-rim * 0.1)} rgba(0,0,0,.2), ` +
+    [band(0.15, darken(c, 55)), band(0.3, lighten(c, 25)), band(0.45, lighten(c, 50)), band(0.65, lighten(c, 14)), band(0.85, darken(c, 16))].join(', '));
+}
+
+// Watch band slots across the top and bottom of the case, each with its release button inboard.
+function bandSlots(s, x0, y0, bw, bh, c) {
+  const w = s.w ?? bw * 0.58, h = s.h ?? bh * 0.03, y = s.y ?? bh * 0.028, x = x0 + (bw - w) / 2;
+  const bw2 = s.button ?? w * 0.3, bh2 = h * 0.8, gap = h * 0.7;
+  const slot = (top) => div('slot', `left:${x}px;top:${top}px;width:${w}px;height:${h}px;border-radius:${h / 2}px;background:linear-gradient(to right, rgba(0,0,0,.5), transparent 12% 88%, rgba(0,0,0,.5)), linear-gradient(#020203, #0e0e10 60%, #26262a);box-shadow:inset 0 ${px(h * 0.25)} ${px(h * 0.3)} #000, 0 .75px 0 rgba(255,255,255,.3), 0 -.5px 0 rgba(0,0,0,.3)`);
+  const btn = (top) => div('release', `left:${x0 + (bw - bw2) / 2}px;top:${top}px;width:${bw2}px;height:${bh2}px;border-radius:${bh2 / 2}px;background:linear-gradient(${lighten(c, 22)}, ${c} 55%, ${darken(c, 18)});box-shadow:0 0 0 .75px ${darken(c, 45)}, inset 0 .75px 0 rgba(255,255,255,.4), ${cast(1.5, 0.3)}`);
+  return slot(y0 + y) + btn(y0 + y + h + gap) + slot(y0 + bh - y - h) + btn(y0 + bh - y - h - gap - bh2);
 }
 
 // Neutral placeholder only: brand logos are trademarks and are never drawn.
@@ -332,7 +469,7 @@ function defaultCamera(kind, bw, bh) {
   const m = Math.min(bw, bh);
   if (kind === 'watch') {
     const D = m * 0.74, cx = bw / 2, cy = bh / 2;
-    return { plates: [{ x: cx - D / 2, y: cy - D / 2, w: D, h: D, r: '50%', tone: 'dark' }], parts: [{ x: cx, y: cy, d: D * 0.2, kind: 'sensor' }] };
+    return { plates: [{ x: cx - D / 2, y: cy - D / 2, w: D, h: D, r: '50%', tone: 'dark', dome: true, z: 6 }], parts: [{ x: cx, y: cy, d: D * 0.2, kind: 'sensor' }] };
   }
   const d = Math.max(m * (kind === 'tablet' ? 0.055 : 0.16), 18);
   return { parts: [{ x: d, y: d, d }, { x: d * 2.1, y: d * 0.8, d: d * 0.28, kind: 'flash' }] };
@@ -347,14 +484,18 @@ function backHandheld(d, color, screen, logo) {
   const spec = d.back ?? {}, fin = spec.finish ?? 'glass', c = backTint(d, color);
   const swap = { left: 'right', right: 'left' };
   const inner = `left:${x0 + rim}px;top:${y0 + rim}px;width:${bw - rim * 2}px;height:${bh - rim * 2}px;border-radius:${Math.max(br - rim, 0)}px`;
+  const s = Math.max(rim, Math.min(bw, bh) * 0.018); // edge roll width
 
-  let f = (d.buttons ?? []).map((b) => button(swap[b.side] ? { ...b, side: swap[b.side] } : { ...b, at: bw - b.at - b.len }, x0, y0, bw, bh, color.frame)).join('');
+  let f = (d.buttons ?? []).map((b) => backButton(swap[b.side] ? { ...b, side: swap[b.side] } : { ...b, at: bw - b.at - b.len }, x0, y0, bw, color.frame)).join('');
   f += div('body', `left:${x0}px;top:${y0}px;width:${bw}px;height:${bh}px;border-radius:${br}px;background:${metal(color.frame)}`);
-  f += rimShade(x0, y0, bw, bh, br, rim, color.frame);
-  f += div('panel', `${inner};background:${finish(fin, c)}`);
-  if (spec.window) f += plate({ flat: true, ...spec.window }, c, x0, y0, 'glass');
+  f += div('panel', `${inner};background:${finish(fin, c)};box-shadow:${roll(s)}`);
+  if (spec.window) f += div('bclip', `left:${x0}px;top:${y0}px;width:${bw}px;height:${bh}px`, plate({ flat: true, fill: satin(c), ...spec.window }, c, 'glass'));
   f += div('sheen', `${inner};background:${sheen(fin)}`);
-  f += camera(spec.camera ?? defaultCamera(d.kind, bw, bh), c, color.frame, x0, y0, fin);
+  const cam = camera(spec.camera ?? defaultCamera(d.kind, bw, bh), c, color.frame, [x0, y0, bw, bh, br], fin);
+  // The rim is shaded after the plates, so a full-width plateau rolls over the sides like the body does.
+  f += cam.plates + backRim(x0, y0, bw, bh, br, rim, color.frame);
+  if (d.kind === 'watch') f += bandSlots(spec.slots ?? {}, x0, y0, bw, bh, color.frame);
+  f += cam.parts;
   return f + logoMark(logo, x0 + bw / 2, y0 + (spec.logo?.y ?? bh / 2), Math.min(bw, bh) * 0.11, c);
 }
 
@@ -365,12 +506,16 @@ function backLaptop(d, color, screen, logo) {
   const ov = d.base?.overhang ?? Math.round(lw * 0.07), bh = d.base?.h ?? 18, W = lw + ov * 2;
   const fin = d.back?.finish ?? 'aluminium', c = backTint(d, color);
   const lid = `left:${ov}px;top:0;width:${lw}px;height:${lh}px;border-radius:${lr}px ${lr}px 6px 6px`;
+  const hw = lw * 0.86, hh = Math.max(bh * 0.85, 12);
 
   // From behind the lid is nearest, so the base's rear edge sits under it.
-  let f = div('body', `left:0;top:${lh - 1}px;width:${W}px;height:${bh + 1}px;border-radius:3px 3px ${W * 0.045}px ${W * 0.045}px / 3px 3px ${bh * 0.9}px ${bh * 0.9}px;background:linear-gradient(to bottom, ${darken(c, 14)}, ${darken(c, 34)})`);
+  let f = div('body', `left:0;top:${lh - 1}px;width:${W}px;height:${bh + 1}px;border-radius:3px 3px ${W * 0.045}px ${W * 0.045}px / 3px 3px ${bh * 0.9}px ${bh * 0.9}px;background:linear-gradient(to bottom, ${darken(c, 30)}, ${darken(c, 8)} 30%, ${darken(c, 20)} 75%, ${darken(c, 45)})`);
   f += div('body', `${lid};background:${finish(fin, c)}`);
-  f += div('sheen', `${lid};background:${sheen(fin)}`);
-  f += div('hinge', `left:${ov + lw * 0.1}px;top:${lh - 9}px;width:${lw * 0.8}px;height:9px;border-radius:0 0 5px 5px;background:linear-gradient(${darken(c, 40)}, ${darken(c, 58)})`);
+  // Anisotropic sheen: a finely brushed surface stretches the softbox's reflection across the grain into
+  // a tall soft streak, over a broad falloff. No fine line texture: it aliases into moiré once scaled down.
+  f += div('sheen', `${lid};background:radial-gradient(20% 90% at 30% 22%, rgba(255,255,255,.13), rgba(255,255,255,.04) 50%, transparent 76%), radial-gradient(120% 60% at ${KEY}, rgba(255,255,255,.09), transparent 70%), linear-gradient(to bottom, rgba(255,255,255,.06), transparent 10% 62%, rgba(0,0,0,.1) 90%, rgba(0,0,0,.2));box-shadow:${roll(lw * 0.006)}, inset 0 1px 0 rgba(255,255,255,.3)`);
+  // Hinge barrel along the lid's lower edge, a shade darker than the lid.
+  f += div('hinge', `left:${ov + (lw - hw) / 2}px;top:${lh - hh * 0.55}px;width:${hw}px;height:${hh}px;border-radius:${hh / 2}px;background:linear-gradient(to bottom, ${darken(c, 55)} 0, ${darken(c, 30)} 22%, ${darken(c, 6)} 48%, ${darken(c, 24)} 74%, ${darken(c, 55)});box-shadow:0 0 0 .75px ${darken(c, 60)}, ${cast(hh * 0.3, 0.3)}`);
   return f + logoMark(logo, ov + lw / 2, d.back?.logo?.y ?? lh / 2, lh * 0.1, c);
 }
 
@@ -381,15 +526,24 @@ function backDesktop(d, color, screen, logo) {
   const bw = w + bz.l + bz.r + rim * 2, bh = h + bz.t + bz.b + chin + rim * 2;
   const fin = d.back?.finish ?? 'aluminium', c = backTint(d, color);
   const top = d.back?.stand ?? bh * 0.45; // where the stand meets the back
+  const sx = (bw - sw) / 2, sr = sw * 0.04, cap = sw * 0.09;
+  const all = `left:0;top:0;width:${bw}px;height:${bh}px;border-radius:${br}px`;
 
-  let f = div('body', `left:0;top:0;width:${bw}px;height:${bh}px;border-radius:${br}px;background:${finish(fin, c)}`);
-  f += div('sheen', `left:0;top:0;width:${bw}px;height:${bh}px;border-radius:${br}px;background:${sheen(fin)}`);
-  f += div('neck', `left:${(bw - sw) / 2}px;top:${top}px;width:${sw}px;height:${bh + sh - top}px;border-radius:${sw * 0.04}px ${sw * 0.04}px 0 0;background:linear-gradient(to bottom, rgba(0,0,0,.18), transparent 8%), ${plateEdges(c)};box-shadow:0 6px 18px -6px rgba(0,0,0,.35)`);
-  f += div('body', `left:${(bw - sw) / 2}px;top:${bh + sh}px;width:${sw}px;height:${foot}px;border-radius:0 0 4px 4px;background:${standFoot(c)}`);
+  let f = div('body', `${all};background:${finish(fin, c)};box-shadow:${roll(bw * 0.006)}`);
+  f += div('sheen', `${all};background:${sheen(fin)}`);
+  // The stand leans back from its hinge, so it shades the back beside and below the joint (clipped to the body).
+  f += div('bclip', all, div('standshadow', `left:${sx}px;top:${top}px;width:${sw}px;height:${bh}px;border-radius:${sr}px;box-shadow:${cast(sw * 0.08, 0.38, 0.05)}, 0 0 ${px(sw * 0.03)} rgba(0,0,0,.24)`));
+  f += div('neck', `left:${sx}px;top:${top}px;width:${sw}px;height:${bh + sh - top}px;border-radius:${sr}px ${sr}px 0 0;background:linear-gradient(to bottom, rgba(0,0,0,.22), transparent ${cap * 1.8}px, transparent 55%, rgba(255,255,255,.1) 92%, rgba(0,0,0,.06)), linear-gradient(to right, ${lighten(c, 16)} 0, ${lighten(c, 7)} 5%, ${lighten(c, 4)} 50%, ${darken(c, 2)} 94%, ${darken(c, 16)});box-shadow:inset ${px(sw * 0.005)} 0 0 ${lighten(c, 26)}, inset ${px(-sw * 0.005)} 0 0 ${darken(c, 24)}`);
+  // Hinge cap where the plate enters the back: a rounded barrel with a lit top edge.
+  f += div('hinge', `left:${sx}px;top:${top}px;width:${sw}px;height:${cap}px;border-radius:${sr}px ${sr}px ${cap * 0.3}px ${cap * 0.3}px;background:linear-gradient(to bottom, ${lighten(c, 30)}, ${lighten(c, 8)} 30%, ${darken(c, 6)} 70%, ${darken(c, 28)});box-shadow:0 0 0 .75px ${darken(c, 35)}, 0 ${px(cap * 0.12)} ${px(cap * 0.2)} rgba(0,0,0,.22)`);
+  f += div('body', `left:${sx}px;top:${bh + sh}px;width:${sw}px;height:${foot}px;border-radius:0 0 4px 4px;background:${standFoot(c)}`);
   return f + logoMark(logo, bw / 2, d.back?.logo?.y ?? bh * 0.27, bh * 0.09, c);
 }
 
-const BACKS = { phone: backHandheld, tablet: backHandheld, watch: backHandheld, laptop: backLaptop, desktop: backDesktop };
+// Every back builder's markup starts with the shared stylesheet (a <style> anywhere in a shadow root
+// applies to the whole root; identical sheets are shared by the engine).
+const withCss = (fn) => (...a) => `<style>${BACK_CSS}</style>${fn(...a)}`;
+const BACKS = { phone: withCss(backHandheld), tablet: withCss(backHandheld), watch: withCss(backHandheld), laptop: withCss(backLaptop), desktop: withCss(backDesktop) };
 
 // Transforms for each face. `turn(a, back)` is the flip keyframe at angle a (deg), pivoting on the
 // centre and scaled so the near edge never pokes out of the box under perspective.

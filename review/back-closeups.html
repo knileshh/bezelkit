@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>bezelkit — back close-ups</title>
+<script type="module" src="../src/bezel.js"></script>
+<style>
+  body { margin: 0; padding: 24px; background: var(--bg, #ececee); font: 12px ui-monospace, monospace; color: #555; }
+  .row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-end; }
+  figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  bezel-device { height: var(--h, 600px); width: auto; }
+  .w bezel-device { width: var(--w, 200px); height: auto; }
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<script type="module">
+  // ?d=iphone-17-pro:deep-blue,iphone-air:space-black&h=600  or  &w=200 for width-sized thumbnails
+  // &side=back|both, &bg=%23111, &logo=dot
+  const q = new URLSearchParams(location.search);
+  const list = (q.get('d') ?? 'iphone-17-pro:deep-blue,iphone-17-pro:cosmic-orange,iphone-17-pro:silver').split(',');
+  if (q.get('bg')) document.body.style.setProperty('--bg', q.get('bg'));
+  if (q.get('h')) document.body.style.setProperty('--h', `${q.get('h')}px`);
+  if (q.get('w')) { document.body.style.setProperty('--w', `${q.get('w')}px`); document.body.classList.add('w'); }
+  const side = q.get('side') ?? 'back', logo = q.get('logo');
+  document.getElementById('row').innerHTML = list.map((s) => {
+    const [id, color] = s.split(':');
+    return `<figure><bezel-device device="${id}" side="${side}"${color ? ` color="${color}"` : ''}${logo ? ` logo="${logo}"` : ''}><div style="height:100%;background:linear-gradient(160deg,#8fb3e0,#2c4f7c)"></div></bezel-device><span>${s}</span></figure>`;
+  }).join('');
+</script>
+</body>
+</html>
