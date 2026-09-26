@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bezelkit — laptops &amp; desktops: flat, deck, 3d</title>
+<script type="module" src="../src/bezel.js"></script>
+<style>
+  body { margin: 0; padding: 32px; background: #f4efe7; font: 13px/1.4 system-ui, sans-serif; color: #1d1a16; }
+  h1 { font: 400 32px Georgia, serif; margin: 0 0 6px; }
+  h2 { font: 400 22px Georgia, serif; margin: 40px 0 14px; }
+  p.lede { margin: 0 0 20px; color: #6f675d; max-width: 70ch; }
+  code { font: 12px ui-monospace, monospace; background: #ebe3d6; padding: 1px 5px; border-radius: 4px; }
+  .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .grid.six { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  figure { margin: 0; background: #fbf8f3; border: 1px solid #e3dbcf; border-radius: 12px; padding: 16px; }
+  figcaption { margin-top: 10px; font-family: ui-monospace, monospace; font-size: 12px; color: #6f675d; }
+  .h { height: 230px; } .h bezel-device { height: 100%; }
+  .hero { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
+  .hero .h { height: 460px; }
+  .controls { display: flex; flex-direction: column; gap: 10px; justify-content: center; }
+  button { font: 600 13px system-ui; padding: 9px 16px; border-radius: 999px; border: 1px solid #cdbfa9; background: #fff; cursor: pointer; }
+  button:hover { background: #f6efe4; }
+  output { font: 12px ui-monospace, monospace; color: #6f675d; }
+  .row-label { grid-column: 1 / -1; font: 600 12px ui-monospace, monospace; color: #9a8f80; margin: 6px 0 -8px; }
+</style>
+</head>
+<body>
+<h1>Laptops &amp; desktops in depth</h1>
+<p class="lede"><code>variant="flat"</code> is the default and unchanged. <code>variant="deck"</code> is the 2.5D “open laptop seen slightly from above” look.
+<code>variant="3d"</code> is real CSS 3D with <code>rotate-x</code>/<code>rotate-y</code>, <code>lid-angle</code>, <code>interactive</code> and <code>el.open()</code>/<code>el.close()</code>. The screen layer is live in every variant.</p>
+
+<div class="hero">
+  <figure><div class="h"><bezel-device id="hero" device="macbook-pro-14" variant="3d" interactive rotate-x="16" rotate-y="-24" class="shot"></bezel-device></div>
+    <figcaption>macbook-pro-14 · variant=3d · interactive (drag the body) · canvas screenshot</figcaption></figure>
+  <figure class="controls">
+    <button id="open">Open lid</button><button id="close">Close lid</button><button id="toggle">Toggle (await)</button>
+    <button id="reset">Reset camera</button>
+    <output id="readout">—</output>
+    <p style="margin:0;color:#6f675d">The host box already reserves room for every drag angle and the whole lid sweep, so nothing clips or re-flows while it moves. With <code>prefers-reduced-motion</code> the lid snaps and flings don't coast.</p>
+  </figure>
+</div>
+
+<h2>Every laptop and desktop: flat · deck · 3d · 3d from the side</h2>
+<div class="grid" id="matrix"></div>
+
+<h2>Camera angles (<code>rotate-x</code>, <code>rotate-y</code>)</h2>
+<div class="grid six" id="angles"></div>
+
+<h2>Lid angle</h2>
+<div class="grid" id="lids"></div>
+
+<h2>Live screens in 3D</h2>
+<div class="grid three">
+  <figure><div class="h" style="height:300px"><bezel-device device="macbook-air-13" color="midnight" variant="3d" rotate-y="-30" src="embed-demo.html"></bezel-device></div><figcaption>iframe on the lid (true 1470×956 viewport)</figcaption></figure>
+  <figure><div class="h" style="height:300px"><bezel-device device="imac-24" color="blue" variant="3d" rotate-y="32" interactive>
+    <div style="height:100%;background:linear-gradient(135deg,#1e3a5f,#4b79a1);color:#fff;font:600 64px system-ui;display:grid;place-items:center">Slotted HTML</div>
+  </bezel-device></div><figcaption>imac-24 · slot · interactive (drag the stand)</figcaption></figure>
+  <figure><div class="h" style="height:300px"><bezel-device device="macbook-pro-16" color="silver" variant="deck" src="embed-demo.html" glare></bezel-device></div><figcaption>macbook-pro-16 · deck · iframe · glare</figcaption></figure>
+</div>
+
+<script type="module">
+  const DEVICES = [['macbook-pro-14'], ['macbook-pro-16', 'silver'], ['macbook-air-13', 'sky-blue'], ['macbook-air-15', 'midnight'], ['laptop'], ['imac-24', 'orange'], ['imac-24', 'green'], ['studio-display']];
+  const fig = (attrs, caption) => `<figure><div class="h"><bezel-device class="shot" ${attrs}></bezel-device></div><figcaption>${caption}</figcaption></figure>`;
+  const matrix = document.getElementById('matrix');
+  for (const [id, color] of DEVICES) {
+    const c = color ? ` color="${color}"` : '';
+    matrix.insertAdjacentHTML('beforeend', `<div class="row-label">${id}${color ? ` · ${color}` : ''}</div>` +
+      fig(`device="${id}"${c}`, 'flat (default)') + fig(`device="${id}"${c} variant="deck"`, 'deck') +
+      fig(`device="${id}"${c} variant="3d"`, '3d (defaults)') + fig(`device="${id}"${c} variant="3d" rotate-x="8" rotate-y="58"`, '3d · rotate-x=8 rotate-y=58'));
+  }
+  const angles = document.getElementById('angles');
+  for (const [rx, ry] of [[0, 0], [12, -40], [34, -18], [22, 62], [70, 0], [18, 160]]) {
+    angles.insertAdjacentHTML('beforeend', fig(`device="macbook-air-15" color="starlight" variant="3d" rotate-x="${rx}" rotate-y="${ry}"`, `rx=${rx} ry=${ry}`));
+  }
+  const lids = document.getElementById('lids');
+  for (const a of [0, 60, 105, 130]) lids.insertAdjacentHTML('beforeend', fig(`device="macbook-pro-14" variant="3d" lid-angle="${a}" rotate-y="-35"`, `lid-angle=${a}`));
+
+  // Canvas "screenshots" sized to the screen of whatever device they land in.
+  function draw(w, h, hue) {
+    const c = Object.assign(document.createElement('canvas'), { width: w, height: h });
+    const g = c.getContext('2d');
+    const bg = g.createLinearGradient(0, 0, w, h);
+    bg.addColorStop(0, `hsl(${hue} 70% 62%)`); bg.addColorStop(1, `hsl(${hue + 60} 75% 38%)`);
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(0, 0, w, h * 0.035);
+    g.fillStyle = '#fff'; g.font = `700 ${w / 18}px system-ui`; g.fillText('Ship it in 3D.', w * 0.07, h * 0.3);
+    g.font = `400 ${w / 50}px system-ui`; g.globalAlpha = 0.85; g.fillText('Canvas-generated screen content, pixel-mapped to the display.', w * 0.07, h * 0.38); g.globalAlpha = 1;
+    for (let i = 0; i < 3; i++) {
+      g.fillStyle = 'rgba(255,255,255,.18)'; g.beginPath(); g.roundRect(w * (0.07 + i * 0.29), h * 0.5, w * 0.26, h * 0.36, w * 0.012); g.fill();
+      g.fillStyle = 'rgba(255,255,255,.9)'; g.fillRect(w * (0.09 + i * 0.29), h * 0.55, w * 0.12, h * 0.02);
+    }
+    return c.toDataURL('image/jpeg', 0.9);
+  }
+  await customElements.whenDefined('bezel-device');
+  let hue = 200;
+  for (const el of document.querySelectorAll('bezel-device.shot')) {
+    const { w, h } = el.spec.screen; // full panel: screenshots aren't inset for the menu bar
+    el.src = draw(w, h, (hue += 23) % 360);
+  }
+
+  const hero = document.getElementById('hero'), out = document.getElementById('readout');
+  const show = () => { const p = hero.pose; out.value = `rotateX ${p.rotateX.toFixed(1)}° · rotateY ${p.rotateY.toFixed(1)}° · lid ${p.lidAngle.toFixed(0)}°`; requestAnimationFrame(show); };
+  show();
+  document.getElementById('open').onclick = () => hero.open();
+  document.getElementById('close').onclick = () => hero.close();
+  document.getElementById('toggle').onclick = async () => { await (hero.pose.lidAngle > 0 ? hero.close() : hero.open()); console.log('lid settled at', hero.pose.lidAngle); };
+  document.getElementById('reset').onclick = () => hero.setAttribute('rotate-y', '-24');
+  hero.addEventListener('bezel-lid', (e) => console.log('bezel-lid', JSON.stringify(e.detail)));
+</script>
+</body>
+</html>

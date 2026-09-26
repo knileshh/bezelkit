@@ -63,6 +63,22 @@ Every attribute is also a property (`el.safeArea = 'pad'`).
 - Give it a width **and** a height and it fits inside that box, centred.
 - In CSS Grid, use `minmax(0, 1fr)` columns. Plain `1fr` means `minmax(auto, 1fr)`, so the grid sizes columns from the element's aspect ratio instead of shrinking them.
 
+### Depth: laptops and desktops
+
+```html
+<bezel-device device="macbook-pro-14" variant="deck" src="shot.png"></bezel-device>
+<bezel-device device="imac-24" variant="3d" rotate-x="12" rotate-y="-30" interactive src="shot.png"></bezel-device>
+```
+
+| Attribute | Values | Notes |
+|---|---|---|
+| `variant` | `flat` (default) `deck` `3d` | `deck`: 2.5D, lid front-on over a keyboard deck in perspective, thick front edge, contact shadow (iMac/Studio Display: stand + foot in perspective). `3d`: real CSS 3D solids |
+| `rotate-x`, `rotate-y` | degrees | `3d` camera. Defaults 18 / −28 (laptops), 10 / −28 (desktops) |
+| `lid-angle` | 0–135, default 105 | `3d` laptops. `0` is closed |
+| `interactive` | boolean | `3d`: drag the body to orbit, with inertia. Drags that start on a live screen (HTML, iframe) go to the screen |
+
+`el.open()` / `el.close()` swing a `3d` lid between 0 and `lid-angle` and return a Promise; `bezel-lid` fires with `{ angle, open }` when it settles. `el.pose` reports the live `{ rotateX, rotateY, lidAngle }`. With `prefers-reduced-motion` the lid snaps and flings don't coast. The screen stays live in every variant, and the host box already covers the whole lid sweep (and, with `interactive`, every reachable angle), so nothing clips or re-flows while it moves. See `examples/laptops-3d.html`.
+
 ## Custom devices
 
 ```js

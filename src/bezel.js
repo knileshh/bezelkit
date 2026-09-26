@@ -203,6 +203,258 @@ function buildBrowser(d, _color, screen, { theme, url }) {
 
 const BUILDERS = { phone: buildHandheld, tablet: buildHandheld, watch: buildHandheld, laptop: buildLaptop, desktop: buildDesktop, browser: buildBrowser };
 
+// ─── solid variants: variant="deck" (2.5D) and variant="3d" ────────────────
+// Laptops and desktops only; "flat" (the default) is the builders above, untouched.
+// Units match the screen px; real proportions live in each device's `solid` spec.
+
+// Pushed rather than written into the ATTRS literal so parallel edits to that line merge cleanly.
+ATTRS.push('variant', 'rotate-x', 'rotate-y', 'lid-angle', 'interactive');
+
+const SOLID_CSS = `
+.s3 > *, .f3 > * { position: absolute; box-sizing: border-box; }
+.s3 > i, .f3 > i { background: linear-gradient(#2a2a2e, #161619); box-shadow: 0 1px 1px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.09); }
+:host([shadow="none"]) .shadow3 { display: none; }
+.device.v3d, .v3d .frame, .g3 { transform-style: preserve-3d; }
+.v3d .frame, .g3, .f3, .v3d .screen { transform-origin: 0 0; }
+.g3, .f3 { position: absolute; left: 0; top: 0; }
+.f3, .v3d .screen { backface-visibility: hidden; }
+:host([interactive]:not([interactive="false"])) .v3d { cursor: grab; }
+:host([variant="3d"][interactive]:not([interactive="false"])) { touch-action: pan-y; }
+.v3d.grabbing { cursor: grabbing; }
+`;
+
+const RX_RANGE = [-15, 75]; // tilt clamp while dragging
+const rad = (a) => (a * Math.PI) / 180;
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const num = (v, def) => (v == null || v === '' || !Number.isFinite(+v) ? def : +v);
+const reducedMotion = () => !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const rotX = ([x, y, z], a) => { const c = Math.cos(rad(a)), s = Math.sin(rad(a)); return [x, y * c - z * s, y * s + z * c]; };
+const rotY = ([x, y, z], a) => { const c = Math.cos(rad(a)), s = Math.sin(rad(a)); return [x * c + z * s, y, -x * s + z * c]; };
+const box8 = (x0, x1, y0, y1, z0, z1) => [x0, x1].flatMap((x) => [y0, y1].flatMap((y) => [z0, z1].map((z) => [x, y, z])));
+
+function readPose(el, kind) {
+  const a = (n) => el.getAttribute(n), laptop = kind === 'laptop';
+  return {
+    rx: clamp(num(a('rotate-x'), laptop ? 18 : 10), -90, 90),
+    ry: num(a('rotate-y'), -28),
+    lidMax: laptop ? clamp(num(a('lid-angle'), 105), 0, 135) : 0,
+    interactive: el.hasAttribute('interactive') && a('interactive') !== 'false',
+  };
+}
+
+const laptopSolid = (d, lw) => ({ lid: 22, base: 44, depth: Math.round(lw * 0.7), pro: false, ...d.solid });
+function desktopSolid(d, bw) {
+  const s = d.solid ?? {}, f = s.foot ?? {};
+  return { t: s.t ?? 40, lift: s.lift ?? (d.stand?.h ?? 360) + 16, fw: f.w ?? d.stand?.w ?? 440, fd: f.d ?? Math.round(bw * 0.27), ft: f.t ?? 22 };
+}
+
+// A plan (w × depth) drawn upright, then tipped back about its top edge so it reads as a horizontal
+// surface seen from slightly above. k = how much wider the near edge looks than the far edge.
+function tip(depth, k, a = 79) {
+  const s = Math.sin(rad(a)), c = Math.cos(rad(a)), P = (depth * s * k) / (k - 1);
+  return {
+    tf: `perspective(${P}px) rotateX(${a}deg)`,
+    proj: (v) => (v * c * P) / (P - v * s), // projected y of plan row v
+  };
+}
+
+// Keyboard deck: full-height function row, inverted-T arrows, trackpad; `pro` adds the black
+// well and speaker grilles of the 14/16″ MacBook Pro. Keys are <i> so the look lives in CSS.
+const KEYROWS = [[1.5, ...Array(12).fill(1), 1], [...Array(13).fill(1), 1.5], [1.5, ...Array(13).fill(1)],
+  [1.8, ...Array(11).fill(1), 1.7], [2.3, ...Array(10).fill(1), 2.2], [1, 1, 1, 1.25, 5, 1.25, 1, -1, -2, -1]];
+function deckSurface(w, D, c, pro) {
+  const kw = w * 0.86, u = kw / 14.5, g = u * 0.14, kx = (w - kw) / 2, ky = D * 0.055, kh = 6 * u, hh = (u - g) / 2 - g / 4;
+  const key = (x, y, a, b) => `<i style="left:${x}px;top:${y}px;width:${a}px;height:${b}px;border-radius:${u * 0.12}px"></i>`;
+  let s = div('well', `left:${kx - g}px;top:${ky - g}px;width:${kw + g * 2}px;height:${kh + g * 2}px;border-radius:${u * 0.22}px;background:${pro ? '#060607' : darken(c, 14)};box-shadow:inset 0 2px 3px rgba(0,0,0,.4)`);
+  KEYROWS.forEach((row, i) => {
+    let x = kx;
+    const y = ky + i * u + g / 2;
+    for (const k of row) {
+      if (k > 0) s += key(x + g / 2, y, k * u - g, u - g);
+      else s += (k === -2 ? key(x + g / 2, y, u - g, hh) : '') + key(x + g / 2, y + hh + g / 2, u - g, hh);
+      x += k > 0 ? k * u : u;
+    }
+  });
+  if (pro) {
+    const gw = kx * 0.5, dot = 'radial-gradient(circle, rgba(0,0,0,.6) 0 1.6px, transparent 2.2px) 0 0 / 7px 7px';
+    s += div('grille', `left:${(kx - gw) / 2}px;top:${ky}px;width:${gw}px;height:${kh}px;background:${dot}`);
+    s += div('grille', `left:${w - (kx + gw) / 2}px;top:${ky}px;width:${gw}px;height:${kh}px;background:${dot}`);
+  }
+  const tw = w * 0.46, ty = ky + kh + D * 0.035;
+  s += div('trackpad', `left:${(w - tw) / 2}px;top:${ty}px;width:${tw}px;height:${D * 0.94 - ty}px;border-radius:${u * 0.28}px;background:linear-gradient(${lighten(c, 5)}, ${c});box-shadow:inset 0 0 0 1.5px ${darken(c, 14)}, inset 0 2px 0 ${lighten(c, 12)}`);
+  return s;
+}
+
+// A horizontal slab (w × depth plan, t thick, plan corner radius R) seen from slightly above:
+// the tipped plan is the top, a flat band under its near edge is the front face. Sides are
+// out of view, as they are for a centred camera.
+function deckSlab(left, top, w, depth, k, R, t, c, topBg, inner = '') {
+  const T = tip(depth, k), dh = T.proj(depth), rv = dh - T.proj(depth - R), rk = R * k;
+  const html = div('front', `left:${left + (w - w * k) / 2}px;top:${top + dh - rv}px;width:${w * k}px;height:${t + rv}px;border-radius:0 0 ${rk}px ${rk}px / 0 0 ${rv}px ${rv}px;background:linear-gradient(${lighten(c, 30)} ${rv}px, ${lighten(c, 8)} ${rv + t * 0.3}px, ${darken(c, 18)} ${rv + t * 0.8}px, ${darken(c, 40)})`) +
+    div('s3', `left:${left}px;top:${top}px;width:${w}px;height:${depth}px;border-radius:10px 10px ${R}px ${R}px;transform-origin:50% 0;transform:${T.tf};background:${topBg}`, inner);
+  return { html, dh };
+}
+
+function buildLaptopDeck(d, color, screen) {
+  const { w, h } = screen;
+  const r = d.screen.radius ?? 0;
+  const bz = box(d.bezel ?? 14), rim = d.rim ?? 2, lr = d.lidRadius ?? 18;
+  const lw = w + bz.l + bz.r + rim * 2, lh = h + bz.t + bz.b + rim * 2;
+  const ov = d.base?.overhang ?? Math.round(lw * 0.07), S = laptopSolid(d, lw);
+  const c = color.frame, W = lw + ov * 2, D = S.depth, ft = S.base, y0 = lh - 6;
+  const base = deckSlab(ov, y0, lw, D, W / lw, lr * 1.8, ft, c, `linear-gradient(${darken(c, 12)}, ${c} 9%, ${lighten(c, 7)})`,
+    deckSurface(lw, D, c, S.pro) +
+    div('hinge', `left:0;top:0;width:${lw}px;height:${D * 0.07}px;border-radius:10px 10px 0 0;background:linear-gradient(rgba(0,0,0,.4), transparent)`) +
+    div('scoop', `left:${lw * 0.44}px;top:${D * 0.975}px;width:${lw * 0.12}px;height:${D * 0.025}px;border-radius:50% 50% 0 0 / 100% 100% 0 0;background:linear-gradient(${darken(c, 34)}, ${darken(c, 12)})`));
+  const fy = y0 + base.dh;
+
+  let f = div('shadow3', `left:${W * 0.02}px;top:${fy + ft * 0.5}px;width:${W * 0.96}px;height:${ft}px;border-radius:50%;background:rgba(0,0,0,.55);filter:blur(${ft * 0.4}px)`);
+  f += base.html;
+  f += div('body', `left:${ov}px;top:0;width:${lw}px;height:${lh}px;border-radius:${lr}px ${lr}px 6px 6px;background:${metal(c)}`);
+  f += div('glass', `left:${ov + rim}px;top:${rim}px;width:${lw - rim * 2}px;height:${lh - rim * 2}px;border-radius:${lr - rim}px ${lr - rim}px 4px 4px;background:${color.front}`);
+  f += bezelCamera(d.cutout, ov + rim, rim, lw - rim * 2, lh - rim * 2, bz);
+  return { W, H: fy + ft + 6, frame: f, screen: { x: ov + rim + bz.l, y: rim + bz.t, w, h, radius: `${r}px ${r}px 0 0` }, cutout: screenCutout(d.cutout, w) };
+}
+
+function buildDesktopDeck(d, color, screen) {
+  const { w, h } = screen;
+  const bz = box(d.bezel ?? 34), rim = d.rim ?? 0, chin = d.chin ?? 0, br = 26;
+  const bw = w + bz.l + bz.r + rim * 2, glassH = h + bz.t + bz.b, bh = glassH + rim * 2 + chin;
+  const c = color.frame, S = desktopSolid(d, bw), { fw, fd, ft } = S, k = 1.12;
+  const tt = Math.max(4, Math.round(S.t * 0.2)), fx = (bw - fw) / 2, floor = tt + bh + S.lift, ny = tt + bh - 40;
+  const fy = floor - ft - tip(fd, k).proj(fd);
+  const foot = deckSlab(fx, fy, fw, fd, k, fw * 0.07, ft, c, `linear-gradient(${darken(c, 16)}, ${c} 30%, ${lighten(c, 10)})`);
+
+  let f = div('shadow3', `left:${fx - fw * 0.06}px;top:${floor - ft * 1.3}px;width:${fw * k * 1.07}px;height:${ft * 2.2}px;border-radius:50%;background:rgba(0,0,0,.5);filter:blur(${ft * 0.6}px)`);
+  f += div('neck', `left:${fx}px;top:${ny}px;width:${fw}px;height:${fy - ny + 4}px;background:linear-gradient(rgba(0,0,0,.3), transparent 30%, transparent calc(100% - 22px), rgba(255,255,255,.3) calc(100% - 8px), rgba(0,0,0,.1)), linear-gradient(to right, ${darken(c, 18)}, ${c} 3%, ${lighten(c, 6)} 50%, ${c} 97%, ${darken(c, 18)})`);
+  f += foot.html;
+  // A copy of the display raised by its (foreshortened) thickness shows the top edge.
+  f += div('edge', `left:0;top:0;width:${bw}px;height:${bh}px;border-radius:${br}px;background:linear-gradient(${lighten(c, 26)}, ${darken(c, 8)} ${tt * 2}px)`);
+  f += div('body', `left:0;top:${tt}px;width:${bw}px;height:${bh}px;border-radius:${br}px;background:${chin ? c : metal(c)}`);
+  f += div('glass', `left:${rim}px;top:${tt + rim}px;width:${bw - rim * 2}px;height:${glassH}px;border-radius:${chin ? `${br - rim}px ${br - rim}px 0 0` : `${br - rim}px`};background:${color.front}`);
+  f += bezelCamera(d.cutout, rim, tt + rim, bw - rim * 2, glassH, bz);
+  return { W: bw, H: floor + 6, frame: f, screen: { x: rim + bz.l, y: tt + rim + bz.t, w, h, radius: '0' }, cutout: '' };
+}
+
+// True 3D. Model space: x right, y down, z toward the viewer (CSS axes). Faces are flat divs
+// centred on the origin and placed by transforms; .frame carries the camera and the live .screen
+// layer gets the same camera plus the transform of the face it sits on, so it is never re-created.
+const face = (cls, w, h, tf, style, inner = '') =>
+  `<div class="f3 ${cls}" style="width:${w}px;height:${h}px;transform:${tf} translate(${-w / 2}px,${-h / 2}px);${style}">${inner}</div>`;
+const g3 = (tf, inner, cls = '') => `<div class="g3 ${cls}" style="transform:${tf}">${inner}</div>`;
+const shade = (c, t) => (t >= 0 ? lighten(c, Math.round(t * 24)) : darken(c, Math.round(-t * 34)));
+
+// Rounded-rectangle extrusion w × h × t centred on the origin, front face at z = +t/2.
+// Edges are strips around the outline (4 per corner arc), shaded by how much they face `light`
+// (an in-plane angle: -90 = the slab's top edge).
+function slab(w, h, t, r, o) {
+  const R = Math.min(r, w / 2, h / 2), hx = w / 2 - R, hy = h / 2 - R, light = o.light ?? -90;
+  const strip = (x, y, phi, len) => face('edge', len + 0.8, t, `translate3d(${x}px,${y}px,0) rotateZ(${phi + 90}deg) rotateX(90deg)`, `background:${shade(o.edge, Math.cos(rad(phi - light)))}`);
+  let s = face('front', w, h, `translateZ(${t / 2}px)`, `border-radius:${R}px;background:${o.front}`, o.inner ?? '');
+  s += face('back', w, h, `rotateY(180deg) translateZ(${t / 2}px)`, `border-radius:${R}px;background:${o.back}`, o.backInner ?? '');
+  if (hx > 0) s += strip(0, -h / 2, -90, hx * 2) + strip(0, h / 2, 90, hx * 2);
+  if (hy > 0) s += strip(w / 2, 0, 0, hy * 2) + strip(-w / 2, 0, 180, hy * 2);
+  if (R > 0) {
+    const n = 4, seg = 2 * R * Math.tan(Math.PI / (4 * n));
+    for (const [cx, cy, a0] of [[hx, -hy, -90], [hx, hy, 0], [-hx, hy, 90], [-hx, -hy, 180]]) {
+      for (let i = 0; i < n; i++) {
+        const phi = a0 + ((i + 0.5) * 90) / n;
+        s += strip(cx + R * Math.cos(rad(phi)), cy + R * Math.sin(rad(phi)), phi, seg);
+      }
+    }
+  }
+  return s;
+}
+
+// Fit the projected model in a box. Covers the whole lid sweep (0…lid-angle) so open()/close()
+// never clip, and with `interactive` every reachable camera angle so dragging never re-lays out.
+function camera3d(points, P, pose) {
+  const m = pose.lidMax;
+  const all = [...new Set(m ? [0, m / 3, (m * 2) / 3, Math.min(90, m), m] : [0])].flatMap(points);
+  const lo = [0, 1, 2].map((i) => Math.min(...all.map((p) => p[i])));
+  const hi = [0, 1, 2].map((i) => Math.max(...all.map((p) => p[i])));
+  const c = lo.map((v, i) => (v + hi[i]) / 2);
+  const cams = [];
+  if (pose.interactive) for (let rx = RX_RANGE[0]; rx <= RX_RANGE[1]; rx += 15) for (let ry = -180; ry < 180; ry += 15) cams.push([rx, ry]);
+  else cams.push([pose.rx, pose.ry]);
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const [rx, ry] of cams) {
+    for (const p of all) {
+      const q = rotX(rotY([p[0] - c[0], p[1] - c[1], p[2] - c[2]], ry), -rx), f = P / (P - q[2]);
+      x0 = Math.min(x0, q[0] * f); x1 = Math.max(x1, q[0] * f); y0 = Math.min(y0, q[1] * f); y1 = Math.max(y1, q[1] * f);
+    }
+  }
+  const pad = Math.max(x1 - x0, y1 - y0) * 0.025;
+  return { W: x1 - x0 + pad * 2, H: y1 - y0 + pad * 2, ox: pad - x0, oy: pad - y0, c, P };
+}
+
+function buildLaptop3d(d, color, screen, { pose }) {
+  const { w, h } = screen;
+  const r = d.screen.radius ?? 0;
+  const bz = box(d.bezel ?? 14), rim = d.rim ?? 2, lr = d.lidRadius ?? 18;
+  const lw = w + bz.l + bz.r + rim * 2, lh = h + bz.t + bz.b + rim * 2;
+  const S = laptopSolid(d, lw), c = color.frame, D = S.depth, Tb = S.base, Tl = S.lid, gap = 2;
+  // The real lid is as deep as the base; the part below the flat drawing is its hinge-side chin.
+  const ld = Math.max(lh, D - 6), gh = lh - rim * 2 + (ld - lh) * 0.55;
+  // Lid modelled upright (screen face at z = 0, bottom edge on the hinge), then swung about the hinge.
+  const lid = (a) => `translate3d(0,${-gap}px,0) rotateX(${a - 90}deg)`;
+  const points = (a) => [...box8(-lw / 2, lw / 2, 0, Tb, 0, D),
+    ...box8(-lw / 2, lw / 2, -ld, 0, -Tl, 0).map((p) => { const q = rotX(p, a - 90); return [q[0], q[1] - gap, q[2]]; })];
+  const cam = camera3d(points, Math.max(lw, D) * 3, pose);
+
+  let f = face('shadow3', lw * 1.14, D * 1.22, `translate3d(0,${Tb + 1}px,${D / 2}px) rotateX(90deg)`, 'background:radial-gradient(closest-side, rgba(0,0,0,.45), rgba(0,0,0,.2) 55%, transparent)');
+  f += g3(`translate3d(0,${Tb / 2}px,${D / 2}px) rotateX(90deg)`, slab(lw, D, Tb, lr, {
+    front: `linear-gradient(${darken(c, 6)}, ${c} 12%, ${lighten(c, 6)})`, inner: deckSurface(lw, D, c, S.pro),
+    back: darken(c, 22), edge: c, light: 90,
+    backInner: [0.1, 0.9].flatMap((x) => [0.1, 0.9].map((y) => div('foot', `left:${lw * x - 22}px;top:${D * y - 22}px;width:44px;height:44px;border-radius:50%;background:#18181a`))).join(''),
+  }));
+  f += g3(lid(pose.lidMax), g3(`translate3d(0,${-ld / 2}px,${-Tl / 2}px)`, slab(lw, ld, Tl, lr, {
+    front: metal(c), edge: c, light: -90,
+    inner: div('glass', `left:${rim}px;top:${rim}px;width:${lw - rim * 2}px;height:${gh}px;border-radius:${lr - rim}px ${lr - rim}px 6px 6px;background:${color.front}`) + bezelCamera(d.cutout, rim, rim, lw - rim * 2, gh, bz),
+    back: `linear-gradient(200deg, ${lighten(c, 16)}, ${c} 45%, ${darken(c, 10)})`,
+  })), 'lid3');
+  return {
+    W: cam.W, H: cam.H, frame: f, screen: { x: 0, y: 0, w, h, radius: `${r}px ${r}px 0 0` }, cutout: screenCutout(d.cutout, w),
+    three: { ...cam, lid, screen: (a) => `${lid(a)} translate3d(${-lw / 2 + rim + bz.l}px,${-ld + rim + bz.t}px,1px)` },
+  };
+}
+
+function buildDesktop3d(d, color, screen, { pose }) {
+  const { w, h } = screen;
+  const bz = box(d.bezel ?? 34), rim = d.rim ?? 0, chin = d.chin ?? 0, br = 26;
+  const bw = w + bz.l + bz.r + rim * 2, glassH = h + bz.t + bz.b, bh = glassH + rim * 2 + chin;
+  const c = color.frame, S = desktopSolid(d, bw), { fw, fd, ft } = S, Td = S.t, F = S.lift;
+  const zf = Math.round(fd * 0.06); // the foot's front edge pokes out just past the glass
+  // Neck: a plate from the back of the foot up to the middle of the display's back. It stops just
+  // behind the back face: intersecting planes make Chrome's depth sort leave specks.
+  const nb = [F - ft - ft * 0.3, zf - fd + ft * 1.5], nt = [-bh * 0.42, -Td - ft / 2 - 1];
+  const ny = nb[0] - nt[0], nz = nt[1] - nb[1], tilt = (Math.atan2(nz, ny) * 180) / Math.PI;
+  const points = () => [...box8(-bw / 2, bw / 2, -bh, 0, -Td, 0), ...box8(-fw / 2, fw / 2, F - ft, F, zf - fd, zf)];
+  const cam = camera3d(points, bw * 3, pose);
+
+  let f = face('shadow3', fw * 1.5, fd * 1.3, `translate3d(0,${F + 1}px,${zf - fd / 2}px) rotateX(90deg)`, 'background:radial-gradient(closest-side, rgba(0,0,0,.4), rgba(0,0,0,.16) 55%, transparent)');
+  f += g3(`translate3d(0,${(nb[0] + nt[0]) / 2}px,${(nb[1] + nt[1]) / 2}px) rotateX(${-tilt}deg)`, slab(fw, Math.hypot(ny, nz), ft, 0, {
+    front: `linear-gradient(${darken(c, 12)}, ${lighten(c, 8)})`, back: darken(c, 8), edge: c, light: -90,
+  }));
+  f += g3(`translate3d(0,${F - ft / 2}px,${zf - fd / 2}px) rotateX(90deg)`, slab(fw, fd, ft, fw * 0.07, {
+    front: `linear-gradient(${darken(c, 10)}, ${lighten(c, 8)})`, back: darken(c, 25), edge: c, light: 90,
+  }));
+  f += g3(`translate3d(0,${-bh / 2}px,${-Td / 2}px)`, slab(bw, bh, Td, br, {
+    front: chin ? c : metal(c), edge: c, light: -90,
+    inner: div('glass', `left:${rim}px;top:${rim}px;width:${bw - rim * 2}px;height:${glassH}px;border-radius:${chin ? `${br - rim}px ${br - rim}px 0 0` : `${br - rim}px`};background:${color.front}`) + bezelCamera(d.cutout, rim, rim, bw - rim * 2, glassH, bz),
+    back: `linear-gradient(200deg, ${lighten(c, 14)}, ${c} 50%, ${darken(c, 8)})`,
+  }));
+  return {
+    W: cam.W, H: cam.H, frame: f, screen: { x: 0, y: 0, w, h, radius: '0' }, cutout: '',
+    three: { ...cam, lid: null, screen: () => `translate3d(${-bw / 2 + rim + bz.l}px,${-bh + rim + bz.t}px,1px)` },
+  };
+}
+
+const VARIANTS = {
+  laptop: { deck: buildLaptopDeck, '3d': buildLaptop3d },
+  desktop: { deck: buildDesktopDeck, '3d': buildDesktop3d },
+};
+
 // ─── status bar & home indicator (logical, upright coordinates) ────────────
 
 function statusBar(d, lw, safe, theme) {
@@ -294,11 +546,13 @@ export class BezelDevice extends HTMLElement {
   #fit = 'cover';
   #queued = false;
   #ro = null;
+  // variant="3d" state: live camera/lid (drag and open()/close() change these without re-rendering)
+  #three = null; #lidEl = null; #rx = 0; #ry = 0; #lid = 0; #lidMax = null; #poseKey = ''; #anim = null; #spin = null;
 
   constructor() {
     super();
     const root = this.attachShadow({ mode: 'open' });
-    root.innerHTML = `<style>${STYLES}</style><style></style>
+    root.innerHTML = `<style>${STYLES}${SOLID_CSS}</style><style></style>
       <div class="stage" part="stage"><div class="device" part="device">
         <div class="frame" part="frame" aria-hidden="true"></div>
         <div class="screen" part="screen">
@@ -310,6 +564,7 @@ export class BezelDevice extends HTMLElement {
     this.#dyn = root.querySelectorAll('style')[1];
     this.#stage = q('.stage'); this.#device = q('.device'); this.#frame = q('.frame'); this.#screen = q('.screen');
     this.#content = q('.content'); this.#media = q('.media'); this.#chrome = q('.chrome'); this.#cutout = q('.cutout');
+    this.addEventListener('pointerdown', (e) => this.#grab(e));
   }
 
   connectedCallback() {
@@ -318,9 +573,10 @@ export class BezelDevice extends HTMLElement {
     this.#ro.observe(this);
   }
 
-  disconnectedCallback() { this.#ro?.disconnect(); }
+  disconnectedCallback() { this.#ro?.disconnect(); this.#spin?.stop(); }
 
-  attributeChangedCallback() {
+  attributeChangedCallback(name) {
+    if (name === 'rotate-x' || name === 'rotate-y') this.#poseKey = ''; // re-aim a dragged camera
     if (!this.isConnected || this.#queued) return;
     this.#queued = true;
     queueMicrotask(() => { this.#queued = false; this.#render(); });
@@ -332,6 +588,12 @@ export class BezelDevice extends HTMLElement {
   get resolvedFit() { return this.#fit; }
   /** Screen size in CSS px, in the current orientation (the space your content gets). */
   get screenSize() { return { ...this.#box }; }
+  /** Live camera and lid angles of variant="3d" (they drift from the attributes while dragging/animating). */
+  get pose() { return { rotateX: this.#rx, rotateY: this.#ry, lidAngle: this.#lid }; }
+  /** Swing a variant="3d" laptop lid open to `lid-angle`. Resolves when it settles. */
+  open() { return this.#swing(this.#lidMax ?? 105); }
+  /** Swing a variant="3d" laptop lid shut. Resolves when it settles. */
+  close() { return this.#swing(0); }
 
   #render() {
     const d = this.spec;
@@ -345,7 +607,8 @@ export class BezelDevice extends HTMLElement {
     const vp = /^(\d+)\s*[x×]\s*(\d+)$/i.exec(attr('viewport') ?? '');
     if (vp && d.kind === 'browser') screen = { w: +vp[1], h: +vp[2] };
 
-    const L = BUILDERS[d.kind](d, color, screen, { theme, url: attr('url') });
+    const pose = readPose(this, d.kind);
+    const L = (VARIANTS[d.kind]?.[attr('variant')] ?? BUILDERS[d.kind])(d, color, screen, { theme, url: attr('url'), pose });
     const [lw, lh] = landscape ? [screen.h, screen.w] : [screen.w, screen.h];
     const [TW, TH] = landscape ? [L.H, L.W] : [L.W, L.H];
     this.#size = { W: TW, H: TH };
@@ -383,6 +646,7 @@ export class BezelDevice extends HTMLElement {
     // iOS/Android hide the status bar in landscape; the home indicator stays.
     this.#chrome.innerHTML = chromeOn ? (rotatesChrome ? '' : statusBar(d, lw, safe, theme)) + homeIndicator(d, lw, lh, theme) : '';
     this.#cutout.innerHTML = L.cutout;
+    this.#solid(L.three, pose);
 
     this.#renderMedia(src);
     this.#applyFit();
@@ -457,6 +721,95 @@ export class BezelDevice extends HTMLElement {
         detail: { requested: req, fit, media: { ...media }, screen: { ...this.#box }, mediaRatio, screenRatio, mismatch: mediaRatio / screenRatio },
       }));
     }
+  }
+
+  // ── variant="3d": camera, lid and drag ──
+  #solid(three, pose) {
+    const key = `${pose.rx}|${pose.ry}`;
+    if (key !== this.#poseKey || !pose.interactive) { this.#poseKey = key; this.#rx = pose.rx; this.#ry = pose.ry; }
+    if (pose.lidMax !== this.#lidMax) { this.#lidMax = pose.lidMax; if (!this.#anim) this.#lid = pose.lidMax; }
+    if (!three) this.#spin?.stop();
+    this.#three = three ?? null;
+    this.#lidEl = this.#frame.querySelector('.lid3');
+    this.#pose();
+  }
+
+  #pose() {
+    const t = this.#three, dv = this.#device;
+    dv.classList.toggle('v3d', !!t);
+    if (!t) {
+      if (dv.style.perspective) this.#frame.style.transform = this.#screen.style.transform = dv.style.perspective = dv.style.perspectiveOrigin = '';
+      return;
+    }
+    const cam = `translate3d(${t.ox}px,${t.oy}px,0) rotateX(${-this.#rx}deg) rotateY(${this.#ry}deg) translate3d(${-t.c[0]}px,${-t.c[1]}px,${-t.c[2]}px)`;
+    Object.assign(dv.style, { perspective: `${t.P}px`, perspectiveOrigin: `${t.ox}px ${t.oy}px` });
+    this.#frame.style.transform = cam;
+    this.#screen.style.transform = `${cam} ${t.screen(this.#lid)}`;
+    if (this.#lidEl && t.lid) this.#lidEl.style.transform = t.lid(this.#lid);
+  }
+
+  #swing(to) {
+    this.#anim?.end();
+    const from = this.#lid, lidded = !!this.#three?.lid;
+    const settle = () => this.dispatchEvent(new CustomEvent('bezel-lid', { bubbles: true, detail: { angle: this.#lid, open: this.#lid > 0 } }));
+    if (!lidded || reducedMotion() || from === to || !this.isConnected) {
+      this.#lid = to; this.#pose(); settle();
+      return Promise.resolve();
+    }
+    return new Promise((resolve) => {
+      const t0 = performance.now(), dur = 280 + Math.abs(to - from) * 7;
+      const a = { raf: 0, end: () => { cancelAnimationFrame(a.raf); if (this.#anim === a) this.#anim = null; resolve(); } };
+      const step = (now) => {
+        const p = Math.min((now - t0) / dur, 1), e = p < 0.5 ? 4 * p ** 3 : 1 - (-2 * p + 2) ** 3 / 2;
+        this.#lid = from + (to - from) * e; this.#pose();
+        if (p < 1) a.raf = requestAnimationFrame(step); else { a.end(); settle(); }
+      };
+      this.#anim = a; a.raf = requestAnimationFrame(step);
+    });
+  }
+
+  #grab(e) {
+    const on = this.getAttribute('interactive');
+    if (!this.#three || on == null || on === 'false' || e.button > 0) return;
+    // Leave live screens (slotted HTML, iframes) usable: drag from the body, not the glass.
+    if ((this.#kind === 'slot' || this.#kind === 'iframe') && e.composedPath().includes(this.#screen)) return;
+    e.preventDefault();
+    this.#spin?.stop();
+    try { this.setPointerCapture(e.pointerId); } catch {} // synthetic events have no live pointer
+    this.#device.classList.add('grabbing');
+    const k = 0.4; // deg per CSS px
+    let lx = e.clientX, ly = e.clientY, lt = e.timeStamp, vx = 0, vy = 0;
+    const move = (ev) => {
+      const dt = Math.max(ev.timeStamp - lt, 1), dx = (ev.clientX - lx) * k, dy = (ev.clientY - ly) * k;
+      lx = ev.clientX; ly = ev.clientY; lt = ev.timeStamp;
+      vx = 0.7 * (dx / dt) + 0.3 * vx; vy = 0.7 * (dy / dt) + 0.3 * vy;
+      this.#turn(dx, dy);
+    };
+    const up = (ev) => {
+      for (const [n, fn] of [['pointermove', move], ['pointerup', up], ['pointercancel', up]]) this.removeEventListener(n, fn);
+      this.#device.classList.remove('grabbing');
+      if (ev.type === 'pointerup' && ev.timeStamp - lt < 80 && !reducedMotion()) this.#coast(vx, vy);
+    };
+    for (const [n, fn] of [['pointermove', move], ['pointerup', up], ['pointercancel', up]]) this.addEventListener(n, fn);
+  }
+
+  #turn(dx, dy) {
+    this.#ry = (((this.#ry + dx + 180) % 360) + 360) % 360 - 180;
+    this.#rx = clamp(this.#rx + dy, ...RX_RANGE);
+    this.#pose();
+  }
+
+  // Inertia after a fling: velocity in deg/ms decays ~6% per 16 ms frame.
+  #coast(vx, vy) {
+    let last = performance.now();
+    const spin = { raf: 0, stop: () => { cancelAnimationFrame(spin.raf); if (this.#spin === spin) this.#spin = null; } };
+    const step = (now) => {
+      const dt = Math.min(now - last, 48), f = 0.94 ** (dt / 16);
+      last = now; vx *= f; vy *= f;
+      this.#turn(vx * dt, vy * dt);
+      if (Math.hypot(vx, vy) > 0.004) spin.raf = requestAnimationFrame(step); else spin.stop();
+    };
+    this.#spin = spin; spin.raf = requestAnimationFrame(step);
   }
 
   #scale() {
