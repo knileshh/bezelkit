@@ -18,6 +18,10 @@
 //   home     'indicator'|'pill'|'button'|null
 //   buttons  [{ side: 'left'|'right'|'top', at, len, w?, flush?, crown?, color? }]
 //   colors   [[name, frameColor, frontColor?, backColor?], ...]  first entry is the default
+//   solid    depth for variant="deck" | "3d" (laptops, desktops), in the same px as the screen:
+//            laptop  { lid, base, depth, pro? }      lid/base thickness, base depth;
+//                                                    pro = black keyboard well + speaker grilles
+//            desktop { t, lift, foot: { w, d, t } }  display thickness, floor-to-display gap, foot plate
 //   back     { finish, camera, window?, logo?, stand? }   the rear, for side="back" / "both"
 //     finish  'glass' (matte) | 'gloss' | 'aluminium' | 'titanium' | 'polished'
 //     camera  { plates: [{ x, y, w, h, r, tone?, fill? }], parts: [{ x, y, d, kind? }] }
@@ -415,6 +419,8 @@ defineDevice({
   screen: { w: 1512, h: 982, radius: 10 }, bezel: { t: 14, r: 14, b: 18, l: 14 }, rim: 3, lidRadius: 22,
   cutout: { type: 'mac-notch', w: 186, h: 32 }, statusBar: 'macos', safe: { top: 37, bottom: 0 },
   base: { overhang: 110, h: 22 },
+  // 312.6 × 221.2 × 15.5 mm at 5 px/mm (1512 px ↔ 302 mm panel); lid ≈ 4.9 mm, base ≈ 10.6 mm
+  solid: { lid: 25, base: 53, depth: 1106, pro: true },
   colors: [['Space Black', '#2e2f32'], ['Silver', '#d4d6d8']],
   back: { finish: 'aluminium' },
 });
@@ -424,6 +430,8 @@ defineDevice({
   screen: { w: 1728, h: 1117, radius: 10 }, bezel: { t: 14, r: 14, b: 18, l: 14 }, rim: 3, lidRadius: 22,
   cutout: { type: 'mac-notch', w: 190, h: 32 }, statusBar: 'macos', safe: { top: 37, bottom: 0 },
   base: { overhang: 120, h: 24 },
+  // 355.7 × 248.1 × 16.8 mm at 5 px/mm; lid ≈ 5 mm, base ≈ 11.8 mm
+  solid: { lid: 25, base: 59, depth: 1240, pro: true },
   colors: [['Space Black', '#2e2f32'], ['Silver', '#d4d6d8']],
   back: { finish: 'aluminium' },
 });
@@ -433,6 +441,8 @@ defineDevice({
   screen: { w: 1470, h: 956, radius: 10 }, bezel: { t: 14, r: 16, b: 20, l: 16 }, rim: 3, lidRadius: 20,
   cutout: { type: 'mac-notch', w: 186, h: 32 }, statusBar: 'macos', safe: { top: 37, bottom: 0 },
   base: { overhang: 100, h: 18 },
+  // 304.1 × 215 × 11.3 mm at 5.06 px/mm; lid ≈ 3.9 mm, base ≈ 7.4 mm
+  solid: { lid: 20, base: 37, depth: 1088 },
   colors: [['Sky Blue', '#c5d3df'], ['Midnight', '#2e3440'], ['Starlight', '#e3dccf'], ['Silver', '#d6d7d9']],
   back: { finish: 'aluminium' },
 });
@@ -442,6 +452,8 @@ defineDevice({
   screen: { w: 1710, h: 1107, radius: 10 }, bezel: { t: 14, r: 16, b: 20, l: 16 }, rim: 3, lidRadius: 20,
   cutout: { type: 'mac-notch', w: 190, h: 32 }, statusBar: 'macos', safe: { top: 37, bottom: 0 },
   base: { overhang: 115, h: 19 },
+  // 340.4 × 237.6 × 11.5 mm at 5.24 px/mm; lid ≈ 3.9 mm, base ≈ 7.6 mm
+  solid: { lid: 20, base: 40, depth: 1245 },
   colors: [['Sky Blue', '#c5d3df'], ['Midnight', '#2e3440'], ['Starlight', '#e3dccf'], ['Silver', '#d6d7d9']],
   back: { finish: 'aluminium' },
 });
@@ -451,6 +463,8 @@ defineDevice({
   screen: { w: 1536, h: 864, radius: 0 }, bezel: { t: 20, r: 12, b: 30, l: 12 }, rim: 2, lidRadius: 10,
   cutout: { type: 'camera', side: 'top', d: 6 }, statusBar: null, safe: { top: 0, bottom: 0 },
   base: { overhang: 90, h: 18 },
+  // typical 15.6″ ultrabook, ~350 × 235 × 18 mm at 4.46 px/mm
+  solid: { lid: 27, base: 54, depth: 1050 },
   colors: [['Graphite', '#44474d'], ['Silver', '#c9ccd1']],
   back: { finish: 'aluminium' },
 });
@@ -458,6 +472,8 @@ defineDevice({
 defineDevice({
   id: 'imac-24', name: 'iMac 24″', brand: 'Apple', kind: 'desktop', year: 2024, dpr: 2,
   screen: { w: 2240, h: 1260, radius: 0 }, bezel: 34, rim: 0, chin: 180, stand: { w: 460, h: 360 },
+  // 547 × 461 mm, 11.5 mm thin, stand 130 × 147 mm, at 4.29 px/mm (2240 px ↔ 522 mm panel)
+  solid: { t: 49, lift: 450, foot: { w: 558, d: 630, t: 22 } },
   cutout: { type: 'camera', side: 'top', d: 8 }, statusBar: 'macos', safe: { top: 24, bottom: 0 },
   colors: [
     ['Blue', '#a9c3db', '#f3f3f1', '#5d8fc0'], ['Green', '#b6cdb3', '#f3f3f1', '#5f9670'], ['Pink', '#ecc0bd', '#f3f3f1', '#df8a8a'],
@@ -469,6 +485,8 @@ defineDevice({
 defineDevice({
   id: 'studio-display', name: 'Studio Display', brand: 'Apple', kind: 'desktop', year: 2022, dpr: 2,
   screen: { w: 2560, h: 1440, radius: 0 }, bezel: 36, rim: 6, chin: 0, stand: { w: 520, h: 420 },
+  // 623 × 478 mm, tilt-stand depth 168 mm, body ~31 mm deep (VESA spec), at 4.29 px/mm
+  solid: { t: 133, lift: 500, foot: { w: 600, d: 720, t: 26 } },
   cutout: { type: 'camera', side: 'top', d: 8 }, statusBar: 'macos', safe: { top: 24, bottom: 0 },
   colors: [['Silver', '#cfd1d3']],
   back: { finish: 'aluminium', stand: 700 },
