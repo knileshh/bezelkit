@@ -62,7 +62,7 @@ The gap bezelkit fills: **correct content fitting + real viewports + every devic
 
 Every attribute is also a property (`el.safeArea = 'pad'`).
 
-**Read-only properties:** `spec` (the device object), `resolvedFit`, `screenSize`.
+**Read-only properties:** `spec` (the device object), `resolvedFit`, `screenSize`, `hingeAngle` (foldables).
 
 **Method:** `el.flip(side?)` turns the device over with an 800 ms 3D turn and returns a Promise that resolves with the new side. With no argument it toggles between `front` and `back`. Setting `side` directly animates the same way. Calling it again mid-turn reverses the turn. With `prefers-reduced-motion`, the side switches instantly.
 
