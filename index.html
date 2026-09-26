@@ -41,8 +41,70 @@
   .install { display: inline-flex; align-items: center; gap: 12px; background: var(--code); color: #f4efe7; padding: 12px 16px; border-radius: 10px; font: 14px var(--mono); }
   .install button { all: unset; cursor: pointer; opacity: .6; font: 12px var(--sans); }
   .install button:hover { opacity: 1; }
-  .hero-devices { position: relative; height: 520px; }
-  .hero-devices bezel-device { position: absolute; }
+  /* hero: morphing device */
+  .typed { display: inline-block; margin: 0 0 22px; padding: 12px 16px; font: 15px/1.5 var(--mono); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  .typed .tok-tag { color: #b5471f; } .typed .tok-attr { color: #4d7a3a; } .typed .tok-str { color: #8a5a00; }
+  .caret { display: inline-block; width: 2px; height: 1.1em; margin-left: 1px; vertical-align: -3px; background: var(--accent); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .morph { position: relative; height: 560px; perspective: 1400px; }
+  .morph-tilt { position: absolute; inset: 0 0 76px; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .3s ease-out; transform-style: preserve-3d; }
+  .morph-float { position: absolute; inset: 0; animation: float 7s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translateY(-10px); } }
+  .morph-float bezel-device { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  .morph-meta { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .chip { padding: 6px 12px; font: 12.5px var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; }
+  .chip b { color: var(--ink); font-weight: 600; }
+  .dots { display: flex; gap: 6px; }
+  .dots button { position: relative; width: 26px; height: 5px; padding: 0; border: 0; border-radius: 3px; background: #e3dbcf; cursor: pointer; overflow: hidden; }
+  .dots button[aria-current=true]::after { content: ""; position: absolute; inset: 0; background: var(--accent); transform-origin: left; animation: fillbar var(--hold) linear forwards; }
+  .dots.paused button[aria-current=true]::after { animation: none; }
+  @keyframes fillbar { from { transform: scaleX(0); } }
+
+  /* marquee */
+  .marquee { overflow: hidden; padding: 16px 0; border-top: 1px solid var(--line); -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  .marquee-track { display: flex; gap: 34px; width: max-content; animation: marquee 70s linear infinite; }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+  .marquee span { font-size: 13.5px; color: var(--muted); white-space: nowrap; }
+  .marquee span b { margin-left: 7px; font: 600 12.5px var(--mono); color: var(--ink); }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+
+  /* story: how fit=auto thinks */
+  .story { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 56px; }
+  .story-stage { position: sticky; top: 3vh; height: 94vh; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+  .readout { position: relative; z-index: 5; display: flex; align-items: center; gap: 14px; padding: 10px 16px; font: 12px var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  .readout b { display: block; font: 600 20px var(--mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+  .readout .op { font-size: 18px; }
+  .verdict { margin-left: auto; padding: 8px 12px; font: 600 13px var(--mono); color: #fff; background: var(--ink); border-radius: 8px; transition: background .4s; white-space: nowrap; }
+  .stage-wrap { position: relative; flex: 1; min-height: 0; margin: 34px 0 44px; clip-path: inset(-34px -100vw -44px -100vw); }
+  .stage-wrap bezel-device { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  .ghost { position: absolute; z-index: 2; pointer-events: none; opacity: 0; transition: top .8s cubic-bezier(.2,.8,.2,1), height .8s cubic-bezier(.2,.8,.2,1), left .8s, width .8s, opacity .4s; }
+  .ghost.live { transition: opacity .4s; }
+  .ghost-fill { position: absolute; inset: 0; background: repeating-linear-gradient(135deg, var(--hatch, rgba(210,82,43,.4)) 0 6px, transparent 6px 12px);
+    -webkit-mask: linear-gradient(#000 0 0) 0 0 / 100% 100% no-repeat, linear-gradient(#000 0 0) 0 var(--sy, 0px) / 100% var(--sh, 0px) no-repeat; -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) 0 0 / 100% 100% no-repeat exclude, linear-gradient(#000 0 0) 0 var(--sy, 0px) / 100% var(--sh, 0px) no-repeat; }
+  .ghost-border { position: absolute; inset: -3px; border: 2px dashed var(--accent); border-radius: 10px; }
+  .ghost-label { position: absolute; left: -3px; top: -30px; padding: 4px 8px; font: 600 11.5px var(--mono); color: #fff; background: var(--accent); border-radius: 6px; white-space: nowrap; }
+  .ghost-note { position: absolute; left: 50%; top: calc(var(--sy, 0px) + var(--sh, 0px) + 14px); transform: translateX(-50%); padding: 4px 9px; font: 600 11.5px var(--mono); color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 6px; white-space: nowrap; }
+  .ghost-note:empty { display: none; }
+  .band { position: absolute; z-index: 2; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; outline: 1.5px solid var(--accent); background: repeating-linear-gradient(135deg, rgba(210,82,43,.35) 0 6px, rgba(210,82,43,.1) 6px 12px); transition: opacity .5s, top .6s, height .6s; }
+  .band.on { opacity: 1; animation: pulse 2.4s ease-in-out infinite; }
+  .band.lb { outline-style: dashed; background: none; }
+  .band span { position: absolute; left: calc(100% + 18px); top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; padding: 3px 8px; font: 600 11px var(--mono); color: #fff; background: var(--accent); border-radius: 5px; white-space: nowrap; }
+  .band span::before { content: ""; position: absolute; right: 100%; top: 50%; width: 14px; border-top: 1.5px solid var(--accent); }
+  .band i { width: 12px; height: 12px; border-radius: 3px; border: 1px solid #fff; }
+  @keyframes pulse { 50% { outline-color: rgba(210,82,43,.35); } }
+  .steps { padding: 18vh 0 34vh; }
+  .step { min-height: 76vh; display: flex; flex-direction: column; justify-content: center; opacity: .25; transition: opacity .45s; }
+  .step.active { opacity: 1; }
+  .step .num { font: 600 12px var(--mono); letter-spacing: .1em; color: var(--accent); }
+  .step h3 { margin: 8px 0 12px; font: 400 36px/1.08 var(--serif); letter-spacing: -.01em; }
+  .step p { max-width: 30em; margin: 0 0 12px; color: var(--muted); }
+  .step code { padding: 1px 6px; font-size: 13px; background: #efe8dd; border-radius: 5px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .morph-float, .marquee-track, .caret, .band.on { animation: none !important; }
+    .ghost, .step, .morph-tilt { transition: none !important; }
+  }
 
   section { padding: 56px 0; border-top: 1px solid var(--line); }
   h2 { font: 400 44px/1.05 var(--serif); letter-spacing: -.015em; margin: 0 0 10px; }
@@ -107,7 +169,10 @@
 
   @media (max-width: 900px) {
     .hero, .play, .compare { grid-template-columns: 1fr; }
-    .hero-devices { height: 420px; }
+    .morph { height: 460px; }
+    .story { grid-template-columns: 1fr; gap: 0; }
+    .story-stage { top: 0; z-index: 3; height: 64vh; padding-top: 8px; background: var(--bg); }
+    .step { min-height: 58vh; }
     .controls { position: static; }
   }
 </style>
@@ -116,17 +181,23 @@
 <div class="wrap">
   <header class="top">
     <a class="logo" href="#"><i></i>bezelkit</a>
-    <nav><a href="#why">Why</a><a href="#play">Playground</a><a href="#devices">Devices</a><a href="#docs">API</a><a href="https://github.com/knileshh/bezelkit">GitHub</a></nav>
+    <nav><a href="#why">Why</a><a href="#how">How it works</a><a href="#play">Playground</a><a href="#devices">Devices</a><a href="#docs">API</a><a href="https://github.com/knileshh/bezelkit">GitHub</a></nav>
   </header>
 
   <div class="hero">
     <div>
       <h1>Device frames that <em>actually fit</em> your screenshots.</h1>
       <p class="lede">One zero-dependency web component for iPhone, Android, iPad, MacBook, iMac, Apple Watch and browser windows. It uses real viewport sizes and scales to its container. <code>fit="auto"</code> picks cover, scroll or letterbox so your screenshot never gets stretched or hidden under the notch.</p>
+      <pre class="typed" aria-label="Example markup"><span class="tok-tag">&lt;bezel-device</span> <span class="tok-attr">device</span>=<span class="tok-str">"<span id="typedDevice">iphone-17-pro</span><i class="caret"></i>"</span> <span class="tok-attr">src</span>=<span class="tok-str">"shot.png"</span><span class="tok-tag">&gt;</span></pre><br>
       <div class="install"><span id="installCmd">npm i bezelkit</span><button data-copy="npm i bezelkit">copy</button></div>
     </div>
-    <div class="hero-devices" id="hero"></div>
+    <div class="morph" id="morph">
+      <div class="morph-tilt" id="morphTilt"><div class="morph-float"><bezel-device></bezel-device><bezel-device style="opacity:0"></bezel-device></div></div>
+      <div class="morph-meta"><div class="chip" id="morphChip"></div><div class="dots" id="morphDots"></div></div>
+    </div>
   </div>
+
+  <div class="marquee" aria-hidden="true"><div class="marquee-track" id="marquee"></div></div>
 
   <section id="why">
     <h2>The problem</h2>
@@ -135,6 +206,34 @@
       <div class="card"><div class="bad">Typical mockup</div><h3>Stretched to fill</h3><p>Text gets squashed and the fake notch covers the header.</p><div class="shot"><div class="naive"><img id="naiveImg" alt=""></div></div></div>
       <div class="card"><div class="bad">object-fit: cover</div><h3>Cropped blindly</h3><p>No stretching, but the top and bottom of the screenshot are lost.</p><div class="shot"><bezel-device id="coverDemo" device="iphone-17-pro" fit="cover" style="height:440px"></bezel-device></div></div>
       <div class="card"><div class="good">bezelkit fit="auto"</div><h3>Detects the mismatch</h3><p>Letterboxes using the screenshot's own edge colours, so nothing is lost or distorted.</p><div class="shot"><bezel-device id="autoDemo" device="iphone-17-pro" style="height:440px"></bezel-device></div></div>
+    </div>
+  </section>
+
+  <section id="how">
+    <h2>How <code style="font-size:.8em">fit="auto"</code> thinks</h2>
+    <p class="sub">Scroll through the steps. The dashed outline is your image and the frame is the screen. bezelkit compares their shapes and picks the strategy that loses the least.</p>
+    <div class="story">
+      <div class="story-stage" id="storyStage">
+        <div class="readout">
+          <div><span id="l0">image</span><b id="v0">0.460</b></div><div class="op" id="op0">÷</div>
+          <div><span id="l1">screen</span><b id="v1">0.460</b></div><div class="op" id="op1">=</div>
+          <div><span id="l2">mismatch</span><b id="v2">1.00</b></div>
+          <div class="verdict" id="verdict">fit: cover</div>
+        </div>
+        <div class="stage-wrap" id="stageWrap">
+          <bezel-device id="storyDevice" device="iphone-17-pro"></bezel-device>
+          <div class="ghost" id="ghost"><div class="ghost-fill"></div><div class="ghost-border"></div><span class="ghost-label" id="ghostLabel"></span><span class="ghost-note" id="ghostNote"></span></div>
+          <div class="band" id="bandTop"><span></span></div>
+          <div class="band" id="bandBottom"><span></span></div>
+        </div>
+      </div>
+      <div class="steps">
+        <article class="step" data-step="match"><span class="num">01 · SAME SHAPE</span><h3>Matches within 4%: cover</h3><p>A 1206×2622 screenshot on a 402×874 screen. The shapes agree, so it fills the screen edge to edge and loses at most a few pixels.</p></article>
+        <article class="step" data-step="long"><span class="num">02 · MUCH TALLER</span><h3>A full-page capture: scroll</h3><p>This one is nearly three screens long. Cropping would throw most of it away, so bezelkit keeps the width and lets the screen scroll, the way the real phone would.</p></article>
+        <article class="step" data-step="tall"><span class="num">03 · A LITTLE TALLER</span><h3>Up to 15% taller: pin to top</h3><p>Headers usually matter more than footers, so the image is anchored at the top and the bottom is trimmed. If the tab bar matters, set <code>fit="contain"</code>.</p></article>
+        <article class="step" data-step="wide"><span class="num">04 · WIDER</span><h3>From an older phone: letterbox</h3><p>A 16:9 screenshot on a 19.5:9 screen. It is centred instead of stretched, and the empty bands are painted with colours sampled from the image's own top and bottom rows.</p></article>
+        <article class="step" data-step="safe"><span class="num">05 · LIVE HTML</span><h3>Your markup: safe areas</h3><p>Slotted HTML and iframes are padded clear of the Dynamic Island and home indicator, with a status bar drawn in. For full-bleed layouts, use <code>safe-area="none"</code> and read <code>--bezel-safe-top</code> yourself.</p></article>
+      </div>
     </div>
   </section>
 
@@ -306,26 +405,256 @@ function drawWatch(g, w, h) {
   text(g, '10:09', w - 62, 30, 17, '#fff', 600);
 }
 
-const sampleFor = (d, variant) => {
-  const { w, h } = d.screen;
+const sampleFor = (d, variant, orientation) => {
+  let { w, h } = d.screen;
+  if (orientation === 'landscape') [w, h] = [h, w];
   if (variant === 'long') return shot(w, h * 2.8, { variant: 'long' });
   if (variant === 'mismatch') return d.kind === 'phone' || d.kind === 'tablet' ? shot(w, w * 16 / 9) : shot(w, w * 3 / 4);
   return shot(w, h, { variant: d.kind === 'watch' ? 'watch' : 'app' });
 };
 
-// ─── hero ───
-const hero = document.getElementById('hero');
-const heroItems = [
-  { device: 'macbook-pro-14', style: 'left:0;top:40px;width:88%', color: 'silver' },
-  { device: 'ipad-mini', style: 'right:2%;top:150px;width:30%', color: 'starlight' },
-  { device: 'iphone-17-pro', style: 'left:58%;top:250px;width:19%', color: 'cosmic-orange' },
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+const once = (el, type, ms) => new Promise((r) => {
+  const t = setTimeout(r, ms);
+  el.addEventListener(type, () => { clearTimeout(t); r(); }, { once: true });
+});
+
+// ─── hero: one tag, every device ───
+const HERO = [
+  { device: 'iphone-17-pro', color: 'cosmic-orange' },
+  { device: 'macbook-pro-14', color: 'silver' },
+  { device: 'pixel-10-pro', color: 'porcelain' },
+  { device: 'ipad-pro-11', orientation: 'landscape' },
+  { device: 'apple-watch-ultra' },
+  { device: 'browser-safari', url: 'bezelkit.dev' },
+  { device: 'galaxy-s25-ultra', color: 'titanium-silverblue' },
+  { device: 'imac-24', color: 'blue' },
 ];
-for (const it of heroItems) {
-  const el = document.createElement('bezel-device');
-  el.setAttribute('device', it.device); el.setAttribute('color', it.color); el.style.cssText = it.style;
-  el.setAttribute('src', sampleFor(getDevice(it.device)));
-  hero.append(el);
+const HOLD = 3400;
+const morph = { layers: [...document.querySelectorAll('.morph-float bezel-device')], front: 0, i: 0, busy: false, paused: false, visible: true, timer: 0 };
+const typedEl = document.getElementById('typedDevice');
+const dotsEl = document.getElementById('morphDots');
+
+function configure(el, item) {
+  for (const a of ['color', 'orientation', 'url']) item[a] ? el.setAttribute(a, item[a]) : el.removeAttribute(a);
+  el.setAttribute('device', item.device);
+  el.setAttribute('src', sampleFor(getDevice(item.device), 'app', item.orientation));
 }
+function describe(item) {
+  const d = getDevice(item.device);
+  const [w, h] = item.orientation === 'landscape' ? [d.screen.h, d.screen.w] : [d.screen.w, d.screen.h];
+  document.getElementById('morphChip').innerHTML = `<b>${d.name}</b> · ${w}×${h} CSS px${d.dpr ? ` · @${d.dpr}x` : ''}`;
+  dotsEl.style.setProperty('--hold', `${HOLD}ms`);
+  dotsEl.replaceChildren(...HERO.map((it, k) => {
+    const b = document.createElement('button');
+    b.setAttribute('aria-label', getDevice(it.device).name);
+    b.setAttribute('aria-current', String(k === morph.i));
+    b.onclick = () => go(k);
+    return b;
+  }));
+}
+async function typeDevice(text) {
+  if (reduceMotion) { typedEl.textContent = text; return; }
+  while (typedEl.textContent.length) { typedEl.textContent = typedEl.textContent.slice(0, -1); await sleep(14); }
+  for (const ch of text) { typedEl.textContent += ch; await sleep(34); }
+}
+async function show(i) {
+  if (morph.busy || i === morph.i) return;
+  morph.busy = true;
+  const cur = morph.layers[morph.front], next = morph.layers[1 - morph.front];
+  const ready = once(next, 'bezel-fit', 700);
+  configure(next, HERO[i]);
+  await Promise.all([typeDevice(HERO[i].device), ready]);
+  await frame();
+  morph.i = i;
+  describe(HERO[i]);
+  next.style.zIndex = 2; cur.style.zIndex = 1;
+  const out = cur.animate(
+    [{ opacity: 1, transform: 'none', filter: 'blur(0)' }, { opacity: 0, transform: 'scale(.9) translateY(14px)', filter: 'blur(8px)' }],
+    { duration: reduceMotion ? 1 : 420, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+  const inn = next.animate(
+    [{ opacity: 0, transform: 'scale(1.07) translateY(-14px)', filter: 'blur(8px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }],
+    { duration: reduceMotion ? 1 : 680, delay: reduceMotion ? 0 : 110, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
+  await Promise.all([out.finished, inn.finished]);
+  for (const a of [out, inn]) { a.commitStyles(); a.cancel(); }
+  morph.front = 1 - morph.front;
+  morph.busy = false;
+}
+function schedule() {
+  clearTimeout(morph.timer);
+  if (reduceMotion || morph.paused) return;
+  morph.timer = setTimeout(async () => {
+    if (morph.visible && !document.hidden) await show((morph.i + 1) % HERO.length);
+    schedule();
+  }, HOLD);
+}
+async function go(k) { clearTimeout(morph.timer); await show(k); if (!morph.paused) schedule(); }
+
+configure(morph.layers[0], HERO[0]);
+describe(HERO[0]);
+schedule();
+
+const morphEl = document.getElementById('morph'), tilt = document.getElementById('morphTilt');
+morphEl.addEventListener('pointerenter', () => { morph.paused = true; clearTimeout(morph.timer); dotsEl.classList.add('paused'); });
+morphEl.addEventListener('pointerleave', () => {
+  morph.paused = false;
+  tilt.style.setProperty('--rx', '0deg'); tilt.style.setProperty('--ry', '0deg');
+  dotsEl.classList.remove('paused');
+  describe(HERO[morph.i]);
+  schedule();
+});
+if (!reduceMotion) morphEl.addEventListener('pointermove', (e) => {
+  const r = morphEl.getBoundingClientRect();
+  tilt.style.setProperty('--ry', `${((e.clientX - r.left) / r.width - 0.5) * 14}deg`);
+  tilt.style.setProperty('--rx', `${-((e.clientY - r.top) / r.height - 0.5) * 10}deg`);
+});
+new IntersectionObserver(([en]) => { morph.visible = en.isIntersecting; }).observe(morphEl);
+
+// ─── marquee ───
+const chips = listDevices().map((d) => `<span>${d.name}<b>${d.screen.w}×${d.screen.h}</b></span>`).join('');
+document.getElementById('marquee').innerHTML = chips + chips;
+
+// ─── story: how fit=auto thinks ───
+const story = {
+  el: document.getElementById('storyDevice'), wrap: document.getElementById('stageWrap'), ghost: document.getElementById('ghost'),
+  label: document.getElementById('ghostLabel'), note: document.getElementById('ghostNote'),
+  top: document.getElementById('bandTop'), bottom: document.getElementById('bandBottom'), verdict: document.getElementById('verdict'),
+  step: null, detail: null, loop: 0, wait: 0,
+};
+const STEPS = {
+  match: () => shot(402, 874),
+  long: () => shot(402, 874 * 2.8, { variant: 'long' }),
+  tall: () => shot(402, 402 / 0.4),
+  wide: () => shot(402, 402 * 16 / 9),
+};
+const VERDICT_BG = { cover: '#2e7d4f', scroll: '#2f5fa7', top: '#b5471f', contain: '#6b4fa0', pad: '#1d1a16' };
+const SAFE_HTML = `<div style="min-height:100%;box-sizing:border-box;padding:14px 18px;background:#fffaf3;font:15px/1.45 system-ui,sans-serif;color:#231d17">
+  <div style="display:flex;justify-content:space-between;align-items:center"><b style="font:400 32px Georgia,serif">Inbox</b><span style="padding:2px 10px;border-radius:999px;background:#d2522b;color:#fff;font-weight:600">3</span></div>
+  ${['Your order shipped', 'Sam shared “Week plan”', 'Receipt from Mealwise', 'Weekly digest', 'Security alert', 'New comment', 'Invoice #2291']
+    .map((t, i) => `<div style="margin-top:10px;padding:12px 14px;background:#fff;border:1px solid #eadfce;border-radius:12px"><b>${t}</b><div style="color:#8a7f72;font-size:13px">${i + 1}h ago</div></div>`).join('')}
+</div>`;
+
+function cell(i, label, value, digits = 2, suffix = '') {
+  document.getElementById(`l${i}`).textContent = label;
+  const el = document.getElementById(`v${i}`);
+  if (typeof value !== 'number') { el.textContent = value; return; }
+  const from = parseFloat(el.textContent) || 0, t0 = performance.now();
+  const tick = (t) => {
+    const k = reduceMotion ? 1 : Math.min(1, (t - t0) / 600), e = 1 - (1 - k) ** 3;
+    el.textContent = (from + (value - from) * e).toFixed(digits) + suffix;
+    if (k < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+function setVerdict(text, key) { story.verdict.textContent = text; story.verdict.style.background = VERDICT_BG[key]; }
+function screenBox() {
+  const scr = story.el.shadowRoot.querySelector('.screen').getBoundingClientRect(), w = story.wrap.getBoundingClientRect();
+  return { x: scr.left - w.left, y: scr.top - w.top, W: scr.width, H: scr.height };
+}
+function band(el, g, top, h, html, cls = '') {
+  el.className = `band on ${cls}`;
+  Object.assign(el.style, { left: `${g.x}px`, width: `${g.W}px`, top: `${top}px`, height: `${Math.max(h, 0)}px` });
+  el.firstElementChild.innerHTML = html;
+}
+function stopLoop() { cancelAnimationFrame(story.loop); clearTimeout(story.wait); story.ghost.classList.remove('live'); }
+
+function renderStory() {
+  stopLoop();
+  const { ghost } = story;
+  story.top.className = story.bottom.className = 'band';
+  if (story.step === 'safe') {
+    ghost.style.opacity = 0;
+    const g = screenBox(), spec = story.el.spec, s = g.W / spec.screen.w;
+    band(story.top, g, g.y, spec.safe.top * s, `--bezel-safe-top · ${spec.safe.top}px`);
+    band(story.bottom, g, g.y + g.H - spec.safe.bottom * s, spec.safe.bottom * s, `${spec.safe.bottom}px`);
+    document.getElementById('op0').textContent = '·';
+    document.getElementById('op1').textContent = '→';
+    cell(0, 'safe top', spec.safe.top, 0, 'px');
+    cell(1, 'safe bottom', spec.safe.bottom, 0, 'px');
+    cell(2, 'content box', `${spec.screen.w}×${spec.screen.h - spec.safe.top - spec.safe.bottom}`);
+    setVerdict('safe-area: pad', 'pad');
+    return;
+  }
+  const d = story.detail;
+  if (!d) return;
+  const g = screenBox(), s = g.W / d.screen.w, imgH = g.W / d.mediaRatio;
+  const top = d.fit === 'cover' || d.fit === 'contain' ? g.y + (g.H - imgH) / 2 : g.y;
+  Object.assign(ghost.style, { left: `${g.x}px`, width: `${g.W}px`, top: `${top}px`, height: `${imgH}px`, opacity: 1 });
+  ghost.style.setProperty('--sy', `${g.y - top}px`);
+  ghost.style.setProperty('--sh', `${g.H}px`);
+  ghost.style.setProperty('--hatch', d.fit === 'scroll' ? 'rgba(47,95,167,.35)' : 'rgba(210,82,43,.4)');
+  story.label.textContent = `your image · ${d.media.w}×${d.media.h}`;
+  story.note.textContent = d.fit === 'top' ? `bottom ${Math.round((1 - g.H / imgH) * 100)}% trimmed` : d.fit === 'scroll' ? '↕ scrolls inside the screen' : '';
+  document.getElementById('op0').textContent = '÷';
+  document.getElementById('op1').textContent = '=';
+  cell(0, 'image', d.mediaRatio, 3);
+  cell(1, 'screen', d.screenRatio, 3);
+  cell(2, 'mismatch', d.mismatch, 2);
+  setVerdict(`fit: ${d.fit}`, d.fit);
+
+  if (d.fit === 'contain') {
+    const cs = getComputedStyle(story.el.shadowRoot.querySelector('.media'));
+    const ct = cs.getPropertyValue('--_lb-top').trim() || '#000', cb = cs.getPropertyValue('--_lb-bottom').trim() || '#000';
+    band(story.top, g, g.y, top - g.y, `<i style="background:${ct}"></i>sampled top`, 'lb');
+    band(story.bottom, g, top + imgH, g.y + g.H - top - imgH, `<i style="background:${cb}"></i>sampled bottom`, 'lb');
+  }
+  if (d.fit === 'scroll' && !reduceMotion) {
+    // Let the ghost finish its transition, then drive the real scroll and the outline together.
+    story.wait = setTimeout(() => {
+      const media = story.el.shadowRoot.querySelector('.media');
+      ghost.classList.add('live');
+      const t0 = performance.now();
+      const tick = (t) => {
+        const max = media.scrollHeight - media.clientHeight;
+        const st = ((1 - Math.cos(((t - t0) / 8000) * Math.PI * 2)) / 2) * max;
+        media.scrollTop = st;
+        ghost.style.top = `${top - st * s}px`;
+        ghost.style.setProperty('--sy', `${g.y - top + st * s}px`);
+        story.loop = requestAnimationFrame(tick);
+      };
+      story.loop = requestAnimationFrame(tick);
+    }, 850);
+  }
+}
+
+function activate(step) {
+  if (step === story.step) return;
+  story.step = step;
+  story.detail = null;
+  stopLoop();
+  document.querySelectorAll('.step').forEach((el) => el.classList.toggle('active', el.dataset.step === step));
+  const el = story.el;
+  const media = el.shadowRoot.querySelector('.media');
+  if (media) media.scrollTop = 0;
+  if (step === 'safe') {
+    el.removeAttribute('src');
+    el.setAttribute('safe-area', 'pad');
+    el.setAttribute('chrome', 'on');
+    el.innerHTML = SAFE_HTML;
+    frame().then(() => story.step === 'safe' && renderStory());
+  } else {
+    el.replaceChildren();
+    el.removeAttribute('safe-area');
+    el.removeAttribute('chrome');
+    el.setAttribute('src', STEPS[step]());
+  }
+}
+story.el.addEventListener('bezel-fit', (e) => {
+  const prev = story.detail;
+  const same = prev && prev.fit === e.detail.fit && prev.media.w === e.detail.media.w && prev.media.h === e.detail.media.h;
+  if (story.step === 'safe' || same) return;
+  story.detail = e.detail;
+  renderStory();
+});
+const stepObserver = new IntersectionObserver((entries) => {
+  for (const en of entries) if (en.isIntersecting) activate(en.target.dataset.step);
+}, { rootMargin: '-48% 0px -48% 0px' });
+document.querySelectorAll('.step').forEach((el) => stepObserver.observe(el));
+new ResizeObserver(() => story.step && requestAnimationFrame(renderStory)).observe(story.wrap);
+new IntersectionObserver(([en]) => { if (!en.isIntersecting) stopLoop(); else if (story.step) renderStory(); }).observe(document.getElementById('storyStage'));
+activate('match');
 
 // ─── problem demo ───
 const bad = shot(402, 402 * 16 / 9);
@@ -403,7 +732,7 @@ function apply() {
   if (state.url) { src = state.url; srcLabel = state.url; }
   else if (state.custom) { src = state.custom; srcLabel = state.customName; if (state.customType === 'video') attrs.type = 'video'; }
   else if (state.source === 'html') { pg.innerHTML = HTML_DEMO; attrs['safe-area'] = 'none'; }
-  else { src = sampleFor(d, state.source); srcLabel = state.source === 'long' ? 'long-screenshot.png' : state.source === 'mismatch' ? 'old-16x9-screenshot.png' : 'screenshot.png'; }
+  else { src = sampleFor(d, state.source, state.orientation); srcLabel = state.source === 'long' ? 'long-screenshot.png' : state.source === 'mismatch' ? 'old-16x9-screenshot.png' : 'screenshot.png'; }
   if (src) attrs.src = src;
   if (state.fit !== 'auto') attrs.fit = state.fit;
   if (state.orientation === 'landscape') attrs.orientation = 'landscape';
