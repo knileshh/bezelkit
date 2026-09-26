@@ -81,6 +81,52 @@ const island = { type: 'island', w: 125, h: 37, top: 14 };
 
 // ─── Apple phones ──────────────────────────────────────────────────────────
 
+// iPhone 18 Pro / Pro Max (2026): housings, displays and buttons identical to the 17 Pro / Pro Max drawings;
+// only the Dynamic Island is smaller (15.7 mm → 95 pt). Rear modules reuse the 17 Pro layout.
+defineDevice({
+  id: 'iphone-18-pro-max', name: 'iPhone 18 Pro Max', brand: 'Apple', kind: 'phone', year: 2026, dpr: 3,
+  screen: { w: 440, h: 956, radius: 62 }, bezel: 8.5, rim: 7,
+  cutout: { ...island, w: 95 }, statusBar: 'ios', home: 'indicator', safe: { top: 62, bottom: 34 },
+  buttons: [
+    { side: 'left', at: 186, len: 42 }, { side: 'left', at: 259, len: 68 }, { side: 'left', at: 344, len: 68 },
+    { side: 'right', at: 282, len: 107 }, { side: 'right', at: 624, len: 103, flush: true },
+  ],
+  colors: [['Burgundy', '#5e2a33'], ['Glacier', '#bcc8d6'], ['Silver', '#dcdcda'], ['Black', '#2b2b2d']],
+  back: {
+    finish: 'aluminium', logo: { y: 613 },
+    window: { x: 26.5, y: 323.5, w: 418, h: 593, r: 18 },
+    camera: {
+      plates: [{ x: 0, y: 0, w: 471, h: 285.5, r: '75px 75px 12px 12px' }],
+      parts: [
+        { x: 93, y: 86.5, d: 104.5 }, { x: 93, y: 199, d: 104.5 }, { x: 198, y: 142.5, d: 104.5 },
+        { x: 396, y: 92.5, d: 32, kind: 'flash' }, { x: 396, y: 142.5, d: 7, kind: 'mic' }, { x: 396, y: 193, d: 34, kind: 'lidar' },
+      ],
+    },
+  },
+});
+
+defineDevice({
+  id: 'iphone-18-pro', name: 'iPhone 18 Pro', brand: 'Apple', kind: 'phone', year: 2026, dpr: 3,
+  screen: { w: 402, h: 874, radius: 62 }, bezel: 9, rim: 7,
+  cutout: { ...island, w: 95 }, statusBar: 'ios', home: 'indicator', safe: { top: 62, bottom: 34 },
+  buttons: [
+    { side: 'left', at: 186, len: 42 }, { side: 'left', at: 259, len: 68 }, { side: 'left', at: 344, len: 68 },
+    { side: 'right', at: 282, len: 107 }, { side: 'right', at: 543, len: 103, flush: true },
+  ],
+  colors: [['Burgundy', '#5e2a33'], ['Glacier', '#bcc8d6'], ['Silver', '#dcdcda'], ['Black', '#2b2b2d']],
+  back: {
+    finish: 'aluminium', logo: { y: 563.5 },
+    window: { x: 24.5, y: 298, w: 385, h: 543.5, r: 16 },
+    camera: {
+      plates: [{ x: 0, y: 0, w: 434, h: 263.5, r: '75px 75px 12px 12px' }],
+      parts: [
+        { x: 85, y: 78.5, d: 96.5 }, { x: 85, y: 183, d: 96.5 }, { x: 182.5, y: 131, d: 96.5 },
+        { x: 365, y: 84.5, d: 30, kind: 'flash' }, { x: 365, y: 131, d: 7, kind: 'mic' }, { x: 365, y: 177, d: 32, kind: 'lidar' },
+      ],
+    },
+  },
+});
+
 defineDevice({
   id: 'iphone-17-pro-max', name: 'iPhone 17 Pro Max', brand: 'Apple', kind: 'phone', year: 2025, dpr: 3,
   screen: { w: 440, h: 956, radius: 62 }, bezel: 8.5, rim: 7,
@@ -164,6 +210,22 @@ defineDevice({
   },
 });
 
+// iPhone 17e (2026): its drawing is dimensionally identical to the 16e (notch, buttons, body).
+defineDevice({
+  id: 'iphone-17e', name: 'iPhone 17e', brand: 'Apple', kind: 'phone', year: 2026, dpr: 3,
+  screen: { w: 390, h: 844, radius: 47.33 }, bezel: 15, rim: 6,
+  cutout: { type: 'notch', w: 162, h: 34 }, statusBar: 'ios', home: 'indicator', safe: { top: 47, bottom: 34 },
+  buttons: [
+    { side: 'left', at: 166, len: 46 }, { side: 'left', at: 239, len: 72 }, { side: 'left', at: 324, len: 72 },
+    { side: 'right', at: 262, len: 111 },
+  ],
+  colors: [['Black', '#2a2a2c'], ['White', '#f1f1ef'], ['Soft Pink', '#f0d7d4']],
+  back: {
+    finish: 'glass', logo: { y: 443 },
+    camera: { parts: [{ x: 73.5, y: 73, d: 79 }, { x: 145.5, y: 60.5, d: 22.5, kind: 'flash' }, { x: 145.5, y: 93, d: 5, kind: 'mic' }] },
+  },
+});
+
 defineDevice({
   id: 'iphone-16e', name: 'iPhone 16e', brand: 'Apple', kind: 'phone', year: 2025, dpr: 3,
   screen: { w: 390, h: 844, radius: 47.33 }, bezel: 15, rim: 6,
@@ -196,6 +258,36 @@ defineDevice({
 
 // ─── Android phones ────────────────────────────────────────────────────────
 
+// Pixel 11 Pro (2026) reuses the Pixel 10 Pro panel and body (152.7 × 71.9 mm), so it takes the same
+// 410×914 geometry as the 10 Pro below, including its viewport caveat. Rear visor as on the 10 Pro.
+defineDevice({
+  id: 'pixel-11-pro', name: 'Pixel 11 Pro', brand: 'Google', kind: 'phone', year: 2026, dpr: 3.12,
+  screen: { w: 410, h: 914, radius: 50 }, bezel: 14.5, rim: 5, bodyRadius: 69,
+  cutout: { type: 'hole', d: 31, top: 17 }, statusBar: 'android', home: 'pill', safe: { top: 65, bottom: 24 },
+  buttons: [{ side: 'right', at: 267, len: 72 }, { side: 'right', at: 384, len: 127 }],
+  colors: [['Obsidian', '#232427'], ['Fog', '#c8ccd1'], ['Canyon', '#b0715a'], ['Olive', '#6e735a']],
+  back: {
+    finish: 'glass', logo: { y: 646 },
+    camera: {
+      plates: [{ x: 22.5, y: 52.5, w: 404, h: 107, r: 54, tone: 'polished' }, { x: 32.5, y: 62.5, w: 384, h: 87, r: 43.5, tone: 'dark' }],
+      parts: [
+        { x: 85.5, y: 106, d: 68.5 }, { x: 167.5, y: 106, d: 68.5 }, { x: 249, y: 106, d: 62.5 },
+        { x: 324.5, y: 106, d: 22, kind: 'flash' }, { x: 363.5, y: 106, d: 14, kind: 'sensor' },
+      ],
+    },
+  },
+});
+
+// Pixel 11 (2026): 6.3″ 1080×2424 at 420 dpi → 412×924 @2.625; corner, hole and status bar are the
+// Pixel 9 (tokay) AOSP values for the same panel. Body 152.8 × 72.0 mm.
+defineDevice({
+  id: 'pixel-11', name: 'Pixel 11', brand: 'Google', kind: 'phone', year: 2026, dpr: 2.625,
+  screen: { w: 412, h: 924, radius: 50 }, bezel: 17, rim: 5, bodyRadius: 72,
+  cutout: { type: 'hole', d: 32, top: 17 }, statusBar: 'android', home: 'pill', safe: { top: 66, bottom: 24 },
+  buttons: [{ side: 'right', at: 271, len: 74 }, { side: 'right', at: 391, len: 129 }],
+  colors: [['Obsidian', '#232427'], ['Frost', '#dfe6ec'], ['Pistachio', '#c9d8b0'], ['Hibiscus', '#d9607a']],
+});
+
 // The 410×914 @3.12 viewport is kept: sources conflict on 410 vs 427 (AOSP caiman overlay, which is the
 // Pixel 9 Pro), so bezel, corner, hole, status bar and buttons are the review's 427-scale numbers × 0.96.
 // Body 72.0 × 152.8 mm → 449 × 953 px.
@@ -216,6 +308,24 @@ defineDevice({
       ],
     },
   },
+});
+
+// Galaxy S26 Ultra (2026): 163.6 × 78.1 mm, 1440×3120 → 384×832 @2.8125 (same zoom rules as the S25 Ultra).
+defineDevice({
+  id: 'galaxy-s26-ultra', name: 'Galaxy S26 Ultra', brand: 'Samsung', kind: 'phone', year: 2026, dpr: 2.8125,
+  screen: { w: 384, h: 832, radius: 24 }, bezel: 8, rim: 4, bodyRadius: 36,
+  cutout: { type: 'hole', d: 17, top: 8 }, statusBar: 'android', home: 'pill', safe: { top: 34, bottom: 24 },
+  buttons: [{ side: 'right', at: 161, len: 110 }, { side: 'right', at: 322, len: 59 }],
+  colors: [['Black', '#232426'], ['Cobalt Violet', '#5d5388'], ['Sky Blue', '#aac3dc'], ['White', '#ecece9'], ['Silver Shadow', '#c4c5c7'], ['Pink Gold', '#e5c9bb']],
+});
+
+// Galaxy S26 (2026): 149.6 × 71.7 mm, 1080×2340 → 360×780 @3.
+defineDevice({
+  id: 'galaxy-s26', name: 'Galaxy S26', brand: 'Samsung', kind: 'phone', year: 2026, dpr: 3,
+  screen: { w: 360, h: 780, radius: 38 }, bezel: 9, rim: 4, bodyRadius: 52,
+  cutout: { type: 'hole', d: 18, top: 10 }, statusBar: 'android', home: 'pill', safe: { top: 30, bottom: 24 },
+  buttons: [{ side: 'right', at: 147, len: 105 }, { side: 'right', at: 303, len: 54 }],
+  colors: [['Cobalt Violet', '#5d5388'], ['Sky Blue', '#aac3dc'], ['Black', '#232426'], ['White', '#ecece9'], ['Silver Shadow', '#c4c5c7'], ['Pink Gold', '#e5c9bb']],
 });
 
 // Default Screen zoom: 384 dp wide (1080 / 2.8125 at the out-of-box FHD+). 412×891 is the smaller zoom step.
@@ -359,6 +469,16 @@ defineDevice({
   },
 });
 
+// iPad Air 13″ (M4, 2026): 214.9 × 280.6 mm, 2048×2732 → 1024×1366; rear camera as on the Air 11″.
+defineDevice({
+  id: 'ipad-air-13', name: 'iPad Air 13″ (M4)', brand: 'Apple', kind: 'tablet', year: 2026, dpr: 2,
+  screen: { w: 1024, h: 1366, radius: 18 }, bezel: 42, rim: 4, bodyRadius: 62,
+  cutout: { type: 'camera', side: 'right', d: 8 }, statusBar: 'ipados', home: 'indicator', safe: { top: 24, bottom: 20 },
+  buttons: [{ side: 'top', at: 962, len: 89 }, { side: 'right', at: 101, len: 52 }, { side: 'right', at: 164, len: 52 }],
+  colors: [['Space Gray', '#5b5d62'], ['Blue', '#a8bcd0'], ['Purple', '#bdb3cf'], ['Starlight', '#e9e2d6']],
+  back: { finish: 'aluminium', camera: { parts: [{ x: 56, y: 56, d: 50 }, { x: 56, y: 96, d: 5, kind: 'mic' }] } },
+});
+
 defineDevice({
   id: 'ipad-air-11', name: 'iPad Air 11″ (M4)', brand: 'Apple', kind: 'tablet', year: 2026, dpr: 2,
   screen: { w: 820, h: 1180, radius: 18 }, bezel: 48, rim: 4, bodyRadius: 61,
@@ -376,6 +496,15 @@ defineDevice({
   buttons: [{ side: 'top', at: 82, len: 64 }, { side: 'top', at: 158, len: 64 }, { side: 'top', at: 668, len: 109 }],
   colors: [['Space Gray', '#5b5d62'], ['Blue', '#a9b8cb'], ['Purple', '#b9b0c9'], ['Starlight', '#e9e2d6']],
   back: { finish: 'aluminium', camera: { parts: [{ x: 56, y: 56, d: 52 }, { x: 104, y: 56, d: 20, kind: 'flash' }, { x: 104, y: 84, d: 5, kind: 'mic' }] } },
+});
+
+// Galaxy Tab S11 (2025): 253.8 × 165.3 mm, 11″ 2560×1600 → 800×1280 @2; camera on the portrait right edge.
+defineDevice({
+  id: 'galaxy-tab-s11', name: 'Galaxy Tab S11', brand: 'Samsung', kind: 'tablet', year: 2025, dpr: 2,
+  screen: { w: 800, h: 1280, radius: 16 }, bezel: 43, rim: 3,
+  cutout: { type: 'camera', side: 'right', d: 7 }, statusBar: 'android', home: 'pill', safe: { top: 28, bottom: 20 },
+  buttons: [{ side: 'right', at: 240, len: 55 }, { side: 'right', at: 352, len: 116 }],
+  colors: [['Gray', '#5f6166'], ['Silver', '#d6d7d9']],
 });
 
 // The 800×1280 viewport is kept (876×1400 @2 is unverified). Bezel and keys are the review's mm figures at
@@ -408,6 +537,23 @@ defineDevice({
     camera: {
       plates: [{ x: 32.5, y: 56, w: 202, h: 202, r: '50%', tone: 'dark' }, { x: 78, y: 101.5, w: 111, h: 111, r: '50%', tone: 'dark' }],
       parts: [{ x: 133.5, y: 157, d: 27.5, kind: 'sensor' }, { x: 133.5, y: 122, d: 12.5, kind: 'sensor' }, { x: 133.5, y: 192, d: 12.5, kind: 'sensor' }, { x: 98.5, y: 157, d: 12.5, kind: 'sensor' }, { x: 168.5, y: 157, d: 12.5, kind: 'sensor' }],
+    },
+  },
+});
+
+// Series 12 (46mm, 2026): same display as Series 11, a slightly larger case (40.28 × 46.38 mm) and a much
+// larger cover glass, so the metal rim is thin.
+defineDevice({
+  id: 'apple-watch-series-12', name: 'Apple Watch Series 12 (46mm)', brand: 'Apple', kind: 'watch', year: 2026, dpr: 2,
+  screen: { w: 208, h: 248, radius: 50 }, bezel: 19.75, rim: 5, bodyRadius: 75, pad: { t: 0, r: 16, b: 0, l: 2 },
+  statusBar: 'watch', safe: { top: 0, bottom: 0 },
+  buttons: [{ side: 'right', at: 73, len: 45, w: 14, crown: true }, { side: 'right', at: 151, len: 77, w: 4 }],
+  colors: [['Black', '#232325'], ['Dark Bronze', '#5c4a3d'], ['Light Gold', '#e4d4b9'], ['Space Gray', '#5a5c60'], ['Natural', '#c9c4bb'], ['Radiant Gold', '#d9b98a']],
+  back: {
+    finish: 'aluminium',
+    camera: {
+      plates: [{ x: 28.5, y: 48.5, w: 200.5, h: 200.5, r: '50%', tone: 'dark' }, { x: 72.5, y: 92.5, w: 112.5, h: 112.5, r: '50%', tone: 'dark' }],
+      parts: [{ x: 128.75, y: 148.75, d: 27, kind: 'sensor' }, { x: 128.75, y: 113.75, d: 12.5, kind: 'sensor' }, { x: 128.75, y: 183.75, d: 12.5, kind: 'sensor' }, { x: 93.75, y: 148.75, d: 12.5, kind: 'sensor' }, { x: 163.75, y: 148.75, d: 12.5, kind: 'sensor' }],
     },
   },
 });
@@ -505,6 +651,17 @@ defineDevice({
   id: 'studio-display', name: 'Studio Display', brand: 'Apple', kind: 'desktop', year: 2026, dpr: 2,
   // 623 × 478 mm, tilt-stand depth 168 mm, body ~31 mm deep (VESA spec), at 4.29 px/mm: 13.25 mm border,
   // 478 − 362 mm (VESA body) = 116 mm under the display
+  screen: { w: 2560, h: 1440, radius: 0 }, bezel: 51, rim: 6, chin: 0, stand: { w: 520, h: 482 },
+  solid: { t: 133, lift: 500, foot: { w: 600, d: 720, t: 26 } },
+  cutout: { type: 'camera', side: 'top', d: 8 }, statusBar: 'macos', safe: { top: 24, bottom: 0 },
+  colors: [['Silver', '#cfd1d3']],
+  back: { finish: 'aluminium', stand: 714 },
+});
+
+// Studio Display XDR (2026): same 623 × 362 mm body and 478 mm lowest height as the Studio Display; only
+// the rear vents differ.
+defineDevice({
+  id: 'studio-display-xdr', name: 'Studio Display XDR', brand: 'Apple', kind: 'desktop', year: 2026, dpr: 2,
   screen: { w: 2560, h: 1440, radius: 0 }, bezel: 51, rim: 6, chin: 0, stand: { w: 520, h: 482 },
   solid: { t: 133, lift: 500, foot: { w: 600, d: 720, t: 26 } },
   cutout: { type: 'camera', side: 'top', d: 8 }, statusBar: 'macos', safe: { top: 24, bottom: 0 },

@@ -121,13 +121,13 @@ See the schema at the top of [`src/devices.js`](src/devices.js). To give a devic
 
 ## Devices
 
-30 frames so far:
+41 frames so far:
 
-- **Phones:** iPhone 17 Pro Max, 17 Pro, Air, 17, 16e, SE · Pixel 10 Pro · Galaxy S25 Ultra, S25 · generic Android
+- **Phones:** iPhone 18 Pro Max, 18 Pro, 17 Pro Max, 17 Pro, Air, 17, 17e, 16e, SE · Pixel 11 Pro, 11, 10 Pro · Galaxy S26 Ultra, S26, S25 Ultra, S25 · generic Android (`android-generic`)
 - **Foldables:** iPhone Duo · Galaxy Z Fold7, Z Flip7 · Pixel 10 Pro Fold (aliases `fold`, `flip`)
-- **Tablets:** iPad Pro 13″/11″, iPad Air 11″, iPad mini · Galaxy Tab S10+
-- **Watches:** Apple Watch Ultra, Series 11
-- **Laptops and desktops:** MacBook Pro 14″/16″, MacBook Air 13″/15″, generic 1080p laptop · iMac 24″, Studio Display
+- **Tablets:** iPad Pro 13″/11″ (M5), iPad Air 13″/11″ (M4), iPad mini (A17 Pro) · Galaxy Tab S11, Tab S10+
+- **Watches:** Apple Watch Ultra 4 (`apple-watch-ultra`), Series 12, Series 11
+- **Laptops and desktops:** MacBook Pro 14″/16″, MacBook Air 13″/15″, generic 1080p laptop · iMac 24″, Studio Display, Studio Display XDR
 - **Browser windows:** Chrome-style, Safari-style
 
 Screen sizes come from published CSS-viewport tables. Corner radii, bezels and button positions are measured estimates, and PRs with better numbers are very welcome.
