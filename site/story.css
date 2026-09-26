@@ -152,7 +152,7 @@
   .sheet-card .w-squash { font-size: clamp(28px, 2.4vw, 38px); }
 
   /* ─── lineup ─── */
-  .s-line { height: 210vh; }
+  .s-line { height: 380vh; }
   .line-head { position: absolute; left: var(--pad); top: 110px; z-index: 2; max-width: 560px; }
   .line-floor { position: absolute; left: 0; right: 0; bottom: 0; height: 26vh; background: linear-gradient(rgba(255,255,255,.03), transparent 70%); border-top: 1px solid var(--hair); }
   .line-light { position: absolute; left: 50%; top: 10%; width: 90vw; height: 80vh; transform: translateX(-50%); background: radial-gradient(closest-side, rgb(var(--warm) / .09), transparent); pointer-events: none; }

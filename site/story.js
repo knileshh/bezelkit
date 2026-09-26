@@ -445,7 +445,7 @@ $$('[data-copy]').forEach((b) => b.addEventListener('click', async () => {
 // ─── scroll engine ───────────────────────────────────────────────────────────
 const SCENES = [
   { el: fitScene, update: (p) => { let s = 'intro'; for (const [n, t] of STEPS) if (p >= t) s = n; setFit(s); } },
-  { el: $('#lineup'), update: lineUpdate },
+  { el: $('#lineup'), update: lineUpdate, smooth: 0.075 }, // eased toward the scroll position
   { el: $('#flip'), update: flipUpdate },
   { el: codeScene, update: codeUpdate },
 ];
@@ -464,8 +464,21 @@ if (RM) {
       if (r.bottom < -vh || r.top > vh * 1.5) { if (s === SCENES[3] && cycTimer) codeUpdate(1); continue; }
       const len = r.height - vh;
       const p = len > 0 ? clamp(-r.top / len) : r.top < 0 ? 1 : 0;
+      if (s.smooth) { s.target = p; glide(s); continue; }
       if (s.p !== p) { s.p = p; s.update(p); }
     }
+  };
+  // Smoothed scenes chase their scroll target a little each frame, so wheel steps become one continuous glide.
+  const glide = (s) => {
+    if (s.gliding) return;
+    s.gliding = true;
+    const step = () => {
+      const cur = s.p < 0 || s.p == null ? s.target : s.p;
+      const next = Math.abs(s.target - cur) < 0.0004 ? s.target : cur + (s.target - cur) * s.smooth;
+      s.p = next; s.update(next);
+      if (next !== s.target) requestAnimationFrame(step); else s.gliding = false;
+    };
+    requestAnimationFrame(step);
   };
   const req = () => { if (!queued) { queued = true; requestAnimationFrame(tick); } };
   addEventListener('scroll', req, { passive: true });
