@@ -2,7 +2,7 @@
   "name": "bezelkit",
   "version": "0.1.0",
   "description": "Zero-dependency web component for device mockups (iPhone, Android, iPad, MacBook, iMac, Watch, browser) that fit screenshots correctly.",
-  "homepage": "https://bezelkit.dev",
+  "homepage": "https://www.bezelkit.dev",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/knileshh/bezelkit.git"

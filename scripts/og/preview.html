@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>bezelkit — link preview check</title>
+<style>
+  body { margin: 0; padding: 28px; font: 14px/1.4 system-ui, sans-serif; background: #eceae4; color: #111; }
+  h1 { margin: 0 0 4px; font-size: 22px; } .note { margin: 0 0 22px; color: #555; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 22px; align-items: start; }
+  .cell > b { display: block; margin-bottom: 8px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #666; }
+  .img { display: block; width: 100%; background: #ddd center / cover no-repeat; }
+  /* WhatsApp: large */
+  .wa { background: #0b141a; padding: 18px; border-radius: 14px; }
+  .wa .bub { max-width: 360px; margin-left: auto; background: #005c4b; color: #e9edef; border-radius: 10px; padding: 4px; }
+  .wa .card { background: #025144; border-radius: 7px; overflow: hidden; }
+  .wa .card .img { aspect-ratio: 1.91; }
+  .wa .card .t { padding: 8px 10px 9px; } .wa .card .t b { display: block; font-size: 14px; } .wa .card .t span { display: block; font-size: 12.5px; color: #aebac1; margin-top: 2px; }
+  .wa .card .t i { display: block; font-style: normal; font-size: 12px; color: #8696a0; margin-top: 4px; }
+  .wa .link { padding: 6px 6px 2px; font-size: 14px; color: #53bdeb; }
+  /* WhatsApp: compact (square thumbnail, centre-cropped) */
+  .wa .card.row { display: flex; } .wa .card.row .img { flex: none; width: 88px; aspect-ratio: 1; }
+  /* X */
+  .x { background: #000; padding: 16px; border-radius: 14px; }
+  .x .card { position: relative; border-radius: 16px; overflow: hidden; border: 1px solid #2f3336; }
+  .x .card .img { aspect-ratio: 2 / 1; }
+  .x .card i { position: absolute; left: 12px; bottom: 12px; font-style: normal; font-size: 13px; color: #fff; background: rgba(0,0,0,.77); padding: 1px 6px; border-radius: 4px; }
+  .x .dom { color: #71767b; font-size: 13px; margin-top: 6px; }
+  /* LinkedIn / Facebook */
+  .li, .fb { background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #d8d8d8; }
+  .li .img, .fb .img { aspect-ratio: 1.91; }
+  .li .t { padding: 10px 12px; } .li .t b { display: block; font-size: 14px; } .li .t span { color: #666; font-size: 12px; }
+  .fb .t { padding: 10px 12px; background: #f0f2f5; } .fb .t span { display: block; font-size: 12px; color: #65676b; text-transform: uppercase; } .fb .t b { display: block; font-size: 16px; margin-top: 3px; } .fb .t p { margin: 3px 0 0; font-size: 14px; color: #65676b; }
+  /* Slack */
+  .sl { background: #fff; padding: 14px; border-radius: 10px; border: 1px solid #ddd; }
+  .sl .u { border-left: 4px solid #ddd; padding-left: 12px; } .sl .u .s { font-weight: 700; font-size: 13px; } .sl .u b { display: block; color: #1264a3; font-size: 15px; margin: 2px 0; } .sl .u p { margin: 0 0 8px; }
+  .sl .u .img { max-width: 360px; aspect-ratio: 1.91; border-radius: 8px; }
+  /* iMessage */
+  .im { background: #fff; padding: 16px; border-radius: 14px; }
+  .im .card { max-width: 300px; margin-left: auto; border-radius: 18px; overflow: hidden; background: #e9e9eb; }
+  .im .card .img { aspect-ratio: 1.91; } .im .card .t { padding: 8px 12px 10px; } .im .card .t b { display: block; font-size: 14px; } .im .card .t span { font-size: 13px; color: #6d6d72; }
+  /* Discord */
+  .dc { background: #313338; padding: 16px; border-radius: 10px; color: #dbdee1; }
+  .dc .em { max-width: 432px; background: #2b2d31; border-left: 4px solid #d2522b; border-radius: 4px; padding: 10px 14px 14px; }
+  .dc .em .s { font-size: 12px; color: #b5bac1; } .dc .em b { display: block; color: #00a8fc; margin: 6px 0; font-size: 16px; } .dc .em p { margin: 0 0 12px; font-size: 14px; }
+  .dc .em .img { aspect-ratio: 1.91; border-radius: 4px; }
+  /* crop guides */
+  .guide { position: relative; }
+  .guide img { display: block; width: 100%; }
+  .guide .sq { position: absolute; top: 0; bottom: 0; left: 23.75%; right: 23.75%; outline: 3px dashed #e11d48; background: rgba(225,29,72,.06); }
+  .guide .x2 { position: absolute; left: 0; right: 0; top: 1.19%; bottom: 1.19%; outline: 2px dashed #2563eb; }
+  .guide span { position: absolute; font: 700 12px system-ui; color: #fff; padding: 2px 6px; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <h1>Link preview check</h1>
+  <p class="note" id="meta"></p>
+  <div class="grid" id="grid"></div>
+<script type="module">
+  // Read the real tags from the homepage so this checks what crawlers will see.
+  const html = await (await fetch('../../index.html')).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const m = (k) => doc.querySelector(`meta[property="${k}"], meta[name="${k}"]`)?.content ?? '';
+  const title = m('og:title'), desc = m('og:description'), abs = m('og:image');
+  const img = new URL(abs).pathname.replace(/^\//, '../../') + '?t=' + Date.now(); // same file, served locally
+  const host = new URL(m('og:url')).host;
+  document.getElementById('meta').textContent = `og:image = ${abs} · ${m('og:image:width')}×${m('og:image:height')} · ${m('og:image:type')}`;
+  const bg = `style="background-image:url('${img}')"`;
+  const cells = {
+    'WhatsApp · large preview': `<div class="wa"><div class="bub"><div class="card"><div class="img" ${bg}></div><div class="t"><b>${title}</b><span>${desc}</span><i>${host}</i></div></div><div class="link">https://${host}/</div></div></div>`,
+    'WhatsApp · compact (square crop)': `<div class="wa"><div class="bub"><div class="card row"><div class="img" ${bg}></div><div class="t"><b>${title}</b><span>${desc.slice(0, 70)}…</span><i>${host}</i></div></div><div class="link">https://${host}/</div></div></div>`,
+    'X / Twitter · summary_large_image (2:1)': `<div class="x"><div class="card"><div class="img" ${bg}></div><i>${host}</i></div><div class="dom">From ${host}</div></div>`,
+    'LinkedIn': `<div class="li"><div class="img" ${bg}></div><div class="t"><b>${title}</b><span>${host}</span></div></div>`,
+    'Facebook': `<div class="fb"><div class="img" ${bg}></div><div class="t"><span>${host}</span><b>${title}</b><p>${desc}</p></div></div>`,
+    'Slack': `<div class="sl"><div class="u"><div class="s">bezelkit</div><b>${title}</b><p>${desc}</p><div class="img" ${bg}></div></div></div>`,
+    'iMessage': `<div class="im"><div class="card"><div class="img" ${bg}></div><div class="t"><b>${title}</b><span>${host}</span></div></div></div>`,
+    'Discord': `<div class="dc"><div class="em"><div class="s">${host}</div><b>${title}</b><p>${desc}</p><div class="img" ${bg}></div></div></div>`,
+    'Crop guides (red = square thumbnail, blue = 2:1)': `<div class="guide"><img src="${img}" alt=""><div class="x2"></div><div class="sq"></div><span style="left:25%;top:6px;background:#e11d48">square 630×630</span><span style="right:6px;bottom:10px;background:#2563eb">2:1 crop</span></div>`,
+  };
+  document.getElementById('grid').innerHTML = Object.entries(cells).map(([k, v]) => `<div class="cell"><b>${k}</b>${v}</div>`).join('');
+  document.body.dataset.ready = '1';
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/knileshh/bezelkit?style=flat&logo=github&label=stars)](https://github.com/knileshh/bezelkit/stargazers) [![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) ![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen) ![41 devices](https://img.shields.io/badge/devices-41-orange)
 
-**Most mockups break your screenshots. bezelkit fixes that.** · [bezelkit.dev](https://bezelkit.dev)
+**Most mockups break your screenshots. bezelkit fixes that.** · [bezelkit.dev](https://www.bezelkit.dev)
 
 Text gets stretched, tab bars get cropped and headers disappear under the notch. bezelkit compares your image with the device's real screen and fits it properly.
 
@@ -42,7 +42,7 @@ The gap bezelkit fills: **correct content fitting + real viewports + every devic
 
 ## Using with AI assistants
 
-Point Claude, ChatGPT, Cursor or any coding agent at **[bezelkit.dev/llms-full.txt](https://bezelkit.dev/llms-full.txt)**. It is generated from the source and has everything needed to use bezelkit correctly: every attribute, the fit rules, framework notes, limitations, and all devices with the native pixel size of their screenshots, so the assistant can pick the right frame for each image. Also available: [`llms.txt`](https://bezelkit.dev/llms.txt) (index, per [llmstxt.org](https://llmstxt.org)), [`devices.json`](https://bezelkit.dev/devices.json) (machine-readable registry) and `index.d.ts` (TypeScript types, shipped in the package).
+Point Claude, ChatGPT, Cursor or any coding agent at **[bezelkit.dev/llms-full.txt](https://www.bezelkit.dev/llms-full.txt)**. It is generated from the source and has everything needed to use bezelkit correctly: every attribute, the fit rules, framework notes, limitations, and all devices with the native pixel size of their screenshots, so the assistant can pick the right frame for each image. Also available: [`llms.txt`](https://www.bezelkit.dev/llms.txt) (index, per [llmstxt.org](https://llmstxt.org)), [`devices.json`](https://www.bezelkit.dev/devices.json) (machine-readable registry) and `index.d.ts` (TypeScript types, shipped in the package).
 
 ## Attributes
 

@@ -13,15 +13,15 @@ Key rules: match `device` to the screenshot's native pixel size (see the device 
 
 ## Docs
 
-- [Full reference for LLMs](https://bezelkit.dev/llms-full.txt): every attribute, method, event, the fit algorithm, recipes, framework notes, limitations and all device ids with native resolutions. Start here.
+- [Full reference for LLMs](https://www.bezelkit.dev/llms-full.txt): every attribute, method, event, the fit algorithm, recipes, framework notes, limitations and all device ids with native resolutions. Start here.
 - [README](https://github.com/knileshh/bezelkit#readme): human-oriented overview.
-- [devices.json](https://bezelkit.dev/devices.json): machine-readable device list (id, kind, viewport, DPR, native pixels, finish names).
-- [TypeScript types](https://bezelkit.dev/index.d.ts): element, attributes, events and `defineDevice` spec.
+- [devices.json](https://www.bezelkit.dev/devices.json): machine-readable device list (id, kind, viewport, DPR, native pixels, finish names).
+- [TypeScript types](https://www.bezelkit.dev/index.d.ts): element, attributes, events and `defineDevice` spec.
 
 ## Examples
 
-- [Playground](https://bezelkit.dev/#play): try any device with your own screenshot.
-- [Foldables](https://bezelkit.dev/examples/foldables.html), [back panels and flip](https://bezelkit.dev/examples/back.html), [3D laptops](https://bezelkit.dev/examples/laptops-3d.html), [state matrix](https://bezelkit.dev/examples/states.html).
+- [Playground](https://www.bezelkit.dev/#play): try any device with your own screenshot.
+- [Foldables](https://www.bezelkit.dev/examples/foldables.html), [back panels and flip](https://www.bezelkit.dev/examples/back.html), [3D laptops](https://www.bezelkit.dev/examples/laptops-3d.html), [state matrix](https://www.bezelkit.dev/examples/states.html).
 
 ## Optional
 

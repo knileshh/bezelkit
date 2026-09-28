@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>bezelkit OG card</title>
+<!-- Rendered to assets/og-image.* by scripts/og/render (1200×630). Everything important sits in the
+     centre 630×630 square, which is what WhatsApp and some chat apps show as a thumbnail. -->
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet">
+<script type="module" src="../../src/bezel.js"></script>
+<style>
+  html, body { margin: 0; }
+  body { width: 1200px; height: 630px; overflow: hidden; position: relative; font-family: "Archivo", system-ui, sans-serif; color: #15161a;
+    background: radial-gradient(60% 70% at 50% 78%, #fff2e6 0%, rgba(255,242,230,0) 70%), radial-gradient(40% 50% at 18% 90%, #eef0ff 0%, rgba(238,240,255,0) 70%), #ffffff; }
+  body::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(20,22,30,.09) 1px, transparent 1.2px); background-size: 18px 18px;
+    -webkit-mask-image: radial-gradient(70% 80% at 50% 60%, #000 30%, transparent 80%); mask-image: radial-gradient(70% 80% at 50% 60%, #000 30%, transparent 80%); }
+  .brand { position: absolute; top: 34px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 10px; font: 700 24px/1 "Archivo"; letter-spacing: -.02em; }
+  .brand svg { width: 17px; height: 26px; }
+  .brand span { margin-left: 8px; padding: 5px 10px; font: 500 14px/1 "JetBrains Mono", monospace; color: #5d6068; background: #f4f3ef; border-radius: 999px; letter-spacing: 0; }
+  h1 { position: absolute; top: 80px; left: 0; right: 0; margin: 0; text-align: center; line-height: .9; }
+  h1 .l1 { display: block; font-weight: 900; font-stretch: 118%; font-size: 64px; letter-spacing: -.045em; }
+  h1 .l2 { display: block; margin-top: 2px; font: italic 400 78px/0.95 "Instrument Serif", Georgia, serif; letter-spacing: -.02em; color: #be6822; }
+  .dev { position: absolute; }
+  .dev bezel-device { width: 100%; height: 100%; }
+  .mac { left: 18px; top: 322px; width: 430px; height: 300px; }
+  .ipad { right: 22px; top: 352px; width: 410px; height: 290px; }
+  .phone { left: 50%; top: 262px; width: 250px; height: 460px; transform: translateX(-50%); filter: drop-shadow(0 30px 40px rgba(20,22,30,.22)); }
+  .url { position: absolute; right: 28px; top: 36px; font: 500 15px "JetBrains Mono", monospace; color: #8a8d95; }
+  .tag { position: absolute; left: 28px; top: 36px; font: 500 15px "JetBrains Mono", monospace; color: #8a8d95; }
+</style>
+</head>
+<body>
+  <div class="tag">open source · MIT</div>
+  <div class="url">www.bezelkit.dev</div>
+  <div class="brand"><svg viewBox="0 0 14 22" aria-hidden="true"><rect x=".75" y=".75" width="12.5" height="20.5" rx="3.4" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="4.6" y="2.7" width="4.8" height="1.8" rx=".9" fill="currentColor"/></svg>bezelkit<span>41 device frames</span></div>
+  <h1><span class="l1">Screenshot in.</span><span class="l2">Mockup out.</span></h1>
+  <div class="dev mac"><bezel-device device="macbook-pro-14" variant="deck" color="silver" src="macbook-pro-14.png" shadow="none"></bezel-device></div>
+  <div class="dev ipad"><bezel-device device="ipad-pro-11" orientation="landscape" color="silver" src="ipad-pro-11.png" shadow="none"></bezel-device></div>
+  <div class="dev phone"><bezel-device device="iphone-17-pro" color="cosmic-orange" src="iphone-17-pro.png"></bezel-device></div>
+  <script type="module">
+    // Signal readiness once fonts and every screenshot have loaded, so the renderer never captures a half-drawn card.
+    await document.fonts.ready;
+    const els = [...document.querySelectorAll('bezel-device')];
+    await Promise.all(els.map((el) => el.resolvedFit ? Promise.race([new Promise((r) => el.addEventListener('bezel-fit', r, { once: true })), new Promise((r) => setTimeout(r, 1500))]) : null));
+    await new Promise((r) => setTimeout(r, 300));
+    document.body.dataset.ready = '1';
+  </script>
+</body>
+</html>

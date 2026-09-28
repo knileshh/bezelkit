@@ -1,6 +1,6 @@
 # bezelkit — full reference for AI assistants
 
-> bezelkit is a zero-dependency web component, `<bezel-device>`, that draws accurate device frames (iPhone, Pixel, Galaxy, foldables, iPad, MacBook, iMac, Apple Watch, browser windows) in pure CSS and fits a screenshot, video, live URL or your own HTML into the screen correctly. Screens use each device's real CSS viewport. MIT licensed. Website: https://bezelkit.dev
+> bezelkit is a zero-dependency web component, `<bezel-device>`, that draws accurate device frames (iPhone, Pixel, Galaxy, foldables, iPad, MacBook, iMac, Apple Watch, browser windows) in pure CSS and fits a screenshot, video, live URL or your own HTML into the screen correctly. Screens use each device's real CSS viewport. MIT licensed. Website: https://www.bezelkit.dev
 
 This file is written for LLMs and coding agents. It is complete: you should not need any other page to use bezelkit correctly. Generated from the source on {{DATE}} (v{{VERSION}}, {{COUNT}} devices).
 

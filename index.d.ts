@@ -1,4 +1,4 @@
-// Type definitions for bezelkit — https://bezelkit.dev
+// Type definitions for bezelkit — https://www.bezelkit.dev
 // The element is registered as a side effect of importing the package.
 
 export type FitMode = 'auto' | 'cover' | 'top' | 'contain' | 'scroll' | 'fill' | 'none';

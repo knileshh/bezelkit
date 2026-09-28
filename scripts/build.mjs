@@ -11,5 +11,5 @@ const bezel = read('../src/bezel.js')
 if (/from '\.\//.test(bezel)) throw new Error('build: unexpected relative import left in bezel.js');
 const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 mkdirSync(new URL('../dist/', import.meta.url), { recursive: true });
-writeFileSync(new URL('../dist/bezelkit.js', import.meta.url), `/*! bezelkit v${version} · MIT · https://bezelkit.dev */\n${devices}\n${bezel}`);
+writeFileSync(new URL('../dist/bezelkit.js', import.meta.url), `/*! bezelkit v${version} · MIT · https://www.bezelkit.dev */\n${devices}\n${bezel}`);
 console.log(`dist/bezelkit.js written (v${version})`);

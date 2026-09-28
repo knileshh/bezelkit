@@ -358,7 +358,7 @@ $('.hx-img').src = shots[0].url;
 remeasure();
 
 let gsap = null;
-if (!RM) gsap = await import(GSAP_URL).then((m) => m.gsap || m.default).catch(() => null);
+if (!RM) gsap = await import(GSAP_URL).then((m) => m.gsap || m.default).catch((err) => { console.warn('bezelkit: GSAP failed to load; showing the static hero.', err); return null; });
 if (!gsap) staticComposition();
 else build(gsap);
 
